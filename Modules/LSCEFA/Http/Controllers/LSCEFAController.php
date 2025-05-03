@@ -16,6 +16,28 @@ class LSCEFAController extends Controller
     {
         return view('lscefa::index');
     }
+    public function welcome()
+    {
+    return view('lscefa::welcome');
+    }
+
+public function admin()
+{
+    return view('lscefa::welcome');
+}
+
+
+
+public function intern()
+{
+    return view('lscefa::panelpas');
+}
+
+public function panelpas()
+{
+    return view('lscefa::panelpas');
+}
+
 
     /**
      * Show the form for creating a new resource.
