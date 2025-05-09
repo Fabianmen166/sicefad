@@ -5,4 +5,3 @@
   <p>This view is loaded from module: {!! config('lscefa.name') !!}</p>
 
 @endsection
-

@@ -7,6 +7,6 @@
     <title>Document</title>
 </head>
 <body>
-    <h1>Panel de Pasantes</h1>
+    <h1>Technical Layout</h1>
 </body>
 </html>

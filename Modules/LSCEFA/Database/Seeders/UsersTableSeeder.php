@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Modules\SICA\Entities\Person;
 
+<<<<<<< HEAD
 class UsersTableSeeder extends Seeder
 {
     public function run()
@@ -30,4 +31,21 @@ class UsersTableSeeder extends Seeder
          
        
    }
+=======
+
+class UsersTableSeeder extends Seeder{
+    
+    public function run()
+    {
+        $person = Person::where('document_number', '1075792846')->first();
+        User::updateOrCreate(['nickname' =>'Cmuñoz'], [
+        'person_id' => $person->id,
+        'email' => 'camilomunozvallejo27@gmail.com'          //password: Crmu2846
+        ]);
+
+
+        
+    }
+
+>>>>>>> 8dd0f1a5 (Vista Modulo LSCEFA)
 }
