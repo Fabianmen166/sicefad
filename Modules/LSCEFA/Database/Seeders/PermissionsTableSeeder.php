@@ -50,11 +50,7 @@ class PermissionsTableSeeder extends Seeder
         $permissions_intern = [];
         $app = App::where('name', 'LSCEFA')->first();
 
-<<<<<<< HEAD
         $permission = Permission::updateOrCreate(['slug' => 'LSCEFA.intern.panelpas'], [ // Registro o actualización de permiso
-=======
-        $permission = Permission::updateOrCreate(['slug' => 'lscefa.intern.panelpas'], [ // Registro o actualización de permiso
->>>>>>> 0e4ae791 (aaaaaa)
             'name' => 'Vista de configuración (Pasante)',
             'description' => 'Configuración de parametros generales y testeo de impresión pos',
             'description_english' => 'Configuration of general parameters and post printing test',
