@@ -6,7 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
-
+use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
+use Modules\LSCEFA\Http\Middleware\RedirectIfNotLSCEFA;
 
 class LSCEFAServiceProvider extends ServiceProvider
 {
@@ -31,6 +32,10 @@ class LSCEFAServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
+
+        // Registrar los middlewares
+        $this->app['router']->aliasMiddleware('lscefa.role', CheckLSCEFARole::class);
+        $this->app['router']->aliasMiddleware('lscefa.redirect', RedirectIfNotLSCEFA::class);
     }
 
     /**
@@ -66,7 +71,6 @@ class LSCEFAServiceProvider extends ServiceProvider
     public function registerViews()
     {
         $viewPath = resource_path('views/modules/' . $this->moduleNameLower);
-
         $sourcePath = module_path($this->moduleName, 'Resources/views');
 
         $this->publishes([
@@ -74,6 +78,9 @@ class LSCEFAServiceProvider extends ServiceProvider
         ], ['views', $this->moduleNameLower . '-module-views']);
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->moduleNameLower);
+        
+        // Agregar el namespace del módulo
+        $this->loadViewsFrom($sourcePath, 'lscefa');
     }
 
     /**
@@ -87,8 +94,10 @@ class LSCEFAServiceProvider extends ServiceProvider
 
         if (is_dir($langPath)) {
             $this->loadTranslationsFrom($langPath, $this->moduleNameLower);
+            $this->loadJsonTranslationsFrom($langPath);
         } else {
             $this->loadTranslationsFrom(module_path($this->moduleName, 'Resources/lang'), $this->moduleNameLower);
+            $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'Resources/lang'));
         }
     }
 

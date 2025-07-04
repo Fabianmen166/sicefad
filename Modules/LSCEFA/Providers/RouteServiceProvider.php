@@ -8,11 +8,13 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 class RouteServiceProvider extends ServiceProvider
 {
     /**
-     * The module namespace to assume when generating URLs to actions.
+     * This namespace is applied to your controller routes.
+     *
+     * In addition, it is set as the URL generator's root namespace.
      *
      * @var string
      */
-    protected $moduleNamespace = 'Modules\LSCEFA\Http\Controllers';
+    protected $namespace = 'Modules\LSCEFA\Http\Controllers';
 
     /**
      * Called before routes are registered.
@@ -23,6 +25,9 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Registrar el middleware solo para este módulo
+        $router = $this->app['router'];
+        $router->aliasMiddleware('lscefa.role', \Modules\LSCEFA\Http\Middleware\CheckLSCEFARole::class);
         parent::boot();
     }
 
@@ -33,8 +38,6 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function map()
     {
-        $this->mapApiRoutes();
-
         $this->mapWebRoutes();
     }
 
@@ -48,8 +51,8 @@ class RouteServiceProvider extends ServiceProvider
     protected function mapWebRoutes()
     {
         Route::middleware('web')
-            ->namespace($this->moduleNamespace)
-            ->group(module_path('LSCEFA', '/Routes/web.php'));
+            ->namespace($this->namespace)
+            ->group(module_path('LSCEFA', 'Routes/web.php'));
     }
 
     /**
@@ -63,7 +66,7 @@ class RouteServiceProvider extends ServiceProvider
     {
         Route::prefix('api')
             ->middleware('api')
-            ->namespace($this->moduleNamespace)
+            ->namespace($this->namespace)
             ->group(module_path('LSCEFA', '/Routes/api.php'));
     }
 }

@@ -3,7 +3,6 @@
 namespace Modules\LSCEFA\Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class LSCEFADatabaseSeeder extends Seeder
@@ -16,16 +15,25 @@ class LSCEFADatabaseSeeder extends Seeder
     public function run()
     {
         DB::beginTransaction();
-
-        $this->call(AppTableSeeder::class);
-        $this->call(PeopleTableSeeder::class);
-        $this->call(UsersTableSeeder::class);
-        $this->call(RolesTableSeeder::class);
-        $this->call(PermissionsTableSeeder::class);
-        
-        DB::commit();
-           
-        
+        try {
+            // Primero ejecutamos el seeder de la aplicación
+            $this->call(AppTableSeeder::class);
+            
+            // Luego ejecutamos el seeder de personas
+            $this->call(PeopleTableSeeder::class);
+            
+            // Después ejecutamos el seeder de usuarios
+            $this->call(UsersTableSeeder::class);
+            
+            // Finalmente ejecutamos los seeders de roles y permisos
+            $this->call(RolesTableSeeder::class);
+            $this->call(PermissionsTableSeeder::class);
+            
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }
 

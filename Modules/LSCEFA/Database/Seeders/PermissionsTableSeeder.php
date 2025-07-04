@@ -16,66 +16,621 @@ class PermissionsTableSeeder extends Seeder
      */
     public function run()
     {
-
-        $permissions_admin = []; // Almacenar permisos para rol
-        // Consultar aplicación SICA para registrar los roles
+        // Consultar la aplicación LSCEFA una sola vez
         $app = App::where('name', 'LSCEFA')->first();
-
 
         // Permisos Rol (Administrador)
-        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.index'], [ // Registro o actualización de permiso
+        $permissions_admin = [];
+        
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.index'], [
             'name' => 'Vista de configuración (Administrador)',
-            'description' => 'Configuración de parametros generales y testeo de impresión pos',
-            'description_english' => 'Configuration of general parameters and post printing test',
+            'description' => 'Configuración de parámetros generales y testeo de impresión POS',
+            'description_english' => 'Configuration of general parameters and POS printing test',
             'app_id' => $app->id
         ]);
-
-        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.welcome'], [ // Registro o actualización de permiso
-            'name' => 'Vista de configuración (Administrador)',
-            'description' => 'Configuración de parametros generales y testeo de impresión pos',
-            'description_english' => 'Configuration of general parameters and post printing test',
-            'app_id' => $app->id
-        ]);
-
         $permissions_admin[] = $permission->id;
-        $rol_admin = Role::where('slug', 'lscefa.admin')->first(); // Rol Administrador
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.welcome'], [
+            'name' => 'Panel de administrador',
+            'description' => 'Acceso al panel de administración de LSCEFA',
+            'description_english' => 'Access to the LSCEFA administration panel',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $rol_admin = Role::where('slug', 'lscefa.admin')->first();
         $rol_admin->permissions()->syncWithoutDetaching($permissions_admin);
 
-
-
-
-
         // Permisos Rol (Pasante)
-
         $permissions_intern = [];
-        $app = App::where('name', 'LSCEFA')->first();
-
-        $permission = Permission::updateOrCreate(['slug' => 'LSCEFA.intern.panelpas'], [ // Registro o actualización de permiso
-            'name' => 'Vista de configuración (Pasante)',
-            'description' => 'Configuración de parametros generales y testeo de impresión pos',
-            'description_english' => 'Configuration of general parameters and post printing test',
+        
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.intern.panelpas'], [
+            'name' => 'Panel de pasante',
+            'description' => 'Acceso al panel de pasantes para tareas asignadas',
+            'description_english' => 'Access to the intern panel for assigned tasks',
             'app_id' => $app->id
         ]);
-        
         $permissions_intern[] = $permission->id;
-        $rol_intern = Role::where('slug', 'lscefa.intern')->first(); // Rol Pasante
+
+        $rol_intern = Role::where('slug', 'lscefa.intern')->first();
         $rol_intern->permissions()->syncWithoutDetaching($permissions_intern);
 
-
-
-
-         // Permisos Rol (Personal Tecnico)
-         
+        // Permisos Rol (Personal Técnico)
         $permissions_technical = [];
-        $app = App::where('name', 'LSCEFA')->first(); 
-        $permission = Permission::updateOrCreate(['slug' => 'lscefa.technical.panelpas'], [ // Registro o actualización de permiso
-            'name' => 'Vista de configuración (Personal Tecnico)',
-            'description' => 'recolección, preparación y análisis de muestras',
-            'description_english' => 'Collection, preparation and analysis of samples',
+        
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.technical.panel'], [
+            'name' => 'Panel técnico',
+            'description' => 'Acceso al panel de personal técnico',
+            'description_english' => 'Access to technical staff panel',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permission->id;
-        $rol_technical = Role::where('slug', 'lscefa.technical')->first(); // Rol Pasante
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.technical.samples'], [
+            'name' => 'Gestión de muestras',
+            'description' => 'Acceso a la gestión de muestras',
+            'description_english' => 'Access to samples management',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permission->id;
+
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        // Permisos Rol (Gestión de Calidad)
+        $permissions_quality = [];
+        
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.dashboard'], [
+            'name' => 'Panel de Gestión de Calidad',
+            'description' => 'Acceso al panel de gestión de calidad',
+            'description_english' => 'Access to the quality management panel',
+            'app_id' => $app->id
+        ]);
+        $permissions_quality[] = $permission->id;
+
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permissions_quality);
+
+        // Permisos CRUD Tipos de Cliente (estructura igual a CAFETO)
+        $permisos_admin_customer_types = [];
+        $permisos_quality_customer_types = [];
+        // index
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.index'], [
+            'name' => 'Ver listado de Tipos de Cliente (Admin)',
+            'description' => 'Puede ver el listado de tipos de cliente (admin)',
+            'description_english' => 'Can view customer types list (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.index'], [
+            'name' => 'Ver listado de Tipos de Cliente (Quality)',
+            'description' => 'Puede ver el listado de tipos de cliente (quality)',
+            'description_english' => 'Can view customer types list (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // create
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.create'], [
+            'name' => 'Crear Tipo de Cliente (Admin)',
+            'description' => 'Puede acceder al formulario de creación de tipos de cliente (admin)',
+            'description_english' => 'Can access customer type creation form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.create'], [
+            'name' => 'Crear Tipo de Cliente (Quality)',
+            'description' => 'Puede acceder al formulario de creación de tipos de cliente (quality)',
+            'description_english' => 'Can access customer type creation form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // store
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.store'], [
+            'name' => 'Registrar Tipo de Cliente (Admin)',
+            'description' => 'Puede registrar un nuevo tipo de cliente (admin)',
+            'description_english' => 'Can store a new customer type (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.store'], [
+            'name' => 'Registrar Tipo de Cliente (Quality)',
+            'description' => 'Puede registrar un nuevo tipo de cliente (quality)',
+            'description_english' => 'Can store a new customer type (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // edit
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.edit'], [
+            'name' => 'Editar Tipo de Cliente (Admin)',
+            'description' => 'Puede acceder al formulario de edición de tipos de cliente (admin)',
+            'description_english' => 'Can access customer type edit form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.edit'], [
+            'name' => 'Editar Tipo de Cliente (Quality)',
+            'description' => 'Puede acceder al formulario de edición de tipos de cliente (quality)',
+            'description_english' => 'Can access customer type edit form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // update
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.update'], [
+            'name' => 'Actualizar Tipo de Cliente (Admin)',
+            'description' => 'Puede actualizar un tipo de cliente (admin)',
+            'description_english' => 'Can update a customer type (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.update'], [
+            'name' => 'Actualizar Tipo de Cliente (Quality)',
+            'description' => 'Puede actualizar un tipo de cliente (quality)',
+            'description_english' => 'Can update a customer type (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // destroy
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customer_types.destroy'], [
+            'name' => 'Eliminar Tipo de Cliente (Admin)',
+            'description' => 'Puede eliminar un tipo de cliente (admin)',
+            'description_english' => 'Can delete a customer type (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customer_types[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customer_types.destroy'], [
+            'name' => 'Eliminar Tipo de Cliente (Quality)',
+            'description' => 'Puede eliminar un tipo de cliente (quality)',
+            'description_english' => 'Can delete a customer type (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customer_types[] = $perm->id;
+        // Asignación de permisos a roles
+        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_customer_types);
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customer_types);
+
+        // Permisos CRUD Servicios
+        $permisos_admin_services = [];
+        $permisos_quality_services = [];
+        // index
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.index'], [
+            'name' => 'Ver listado de Servicios (Admin)',
+            'description' => 'Puede ver el listado de servicios (admin)',
+            'description_english' => 'Can view services list (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.index'], [
+            'name' => 'Ver listado de Servicios (Quality)',
+            'description' => 'Puede ver el listado de servicios (quality)',
+            'description_english' => 'Can view services list (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // create
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.create'], [
+            'name' => 'Crear Servicio (Admin)',
+            'description' => 'Puede acceder al formulario de creación de servicios (admin)',
+            'description_english' => 'Can access service creation form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.create'], [
+            'name' => 'Crear Servicio (Quality)',
+            'description' => 'Puede acceder al formulario de creación de servicios (quality)',
+            'description_english' => 'Can access service creation form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // store
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.store'], [
+            'name' => 'Registrar Servicio (Admin)',
+            'description' => 'Puede registrar un nuevo servicio (admin)',
+            'description_english' => 'Can store a new service (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.store'], [
+            'name' => 'Registrar Servicio (Quality)',
+            'description' => 'Puede registrar un nuevo servicio (quality)',
+            'description_english' => 'Can store a new service (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // edit
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.edit'], [
+            'name' => 'Editar Servicio (Admin)',
+            'description' => 'Puede acceder al formulario de edición de servicios (admin)',
+            'description_english' => 'Can access service edit form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.edit'], [
+            'name' => 'Editar Servicio (Quality)',
+            'description' => 'Puede acceder al formulario de edición de servicios (quality)',
+            'description_english' => 'Can access service edit form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // update
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.update'], [
+            'name' => 'Actualizar Servicio (Admin)',
+            'description' => 'Puede actualizar un servicio (admin)',
+            'description_english' => 'Can update a service (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.update'], [
+            'name' => 'Actualizar Servicio (Quality)',
+            'description' => 'Puede actualizar un servicio (quality)',
+            'description_english' => 'Can update a service (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // destroy
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.services.destroy'], [
+            'name' => 'Eliminar Servicio (Admin)',
+            'description' => 'Puede eliminar un servicio (admin)',
+            'description_english' => 'Can delete a service (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_services[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.services.destroy'], [
+            'name' => 'Eliminar Servicio (Quality)',
+            'description' => 'Puede eliminar un servicio (quality)',
+            'description_english' => 'Can delete a service (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_services[] = $perm->id;
+        // Asignación de permisos a roles
+        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_services);
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_services);
+
+        // Permisos para Service Packages
+        $permisos_admin_service_packages = [];
+        $permisos_quality_service_packages = [];
+
+        // index
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.index'], [
+            'name' => 'Ver listado de Paquetes de Servicio (Admin)',
+            'description' => 'Puede ver el listado de paquetes de servicio (admin)',
+            'description_english' => 'Can view service packages list (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.index'], [
+            'name' => 'Ver listado de Paquetes de Servicio (Quality)',
+            'description' => 'Puede ver el listado de paquetes de servicio (quality)',
+            'description_english' => 'Can view service packages list (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // create
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.create'], [
+            'name' => 'Crear Paquete de Servicio (Admin)',
+            'description' => 'Puede acceder al formulario de creación de paquetes de servicio (admin)',
+            'description_english' => 'Can access service package creation form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.create'], [
+            'name' => 'Crear Paquete de Servicio (Quality)',
+            'description' => 'Puede acceder al formulario de creación de paquetes de servicio (quality)',
+            'description_english' => 'Can access service package creation form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // store
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.store'], [
+            'name' => 'Registrar Paquete de Servicio (Admin)',
+            'description' => 'Puede registrar un nuevo paquete de servicio (admin)',
+            'description_english' => 'Can store a new service package (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.store'], [
+            'name' => 'Registrar Paquete de Servicio (Quality)',
+            'description' => 'Puede registrar un nuevo paquete de servicio (quality)',
+            'description_english' => 'Can store a new service package (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // edit
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.edit'], [
+            'name' => 'Editar Paquete de Servicio (Admin)',
+            'description' => 'Puede acceder al formulario de edición de paquetes de servicio (admin)',
+            'description_english' => 'Can access service package edit form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.edit'], [
+            'name' => 'Editar Paquete de Servicio (Quality)',
+            'description' => 'Puede acceder al formulario de edición de paquetes de servicio (quality)',
+            'description_english' => 'Can access service package edit form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // update
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.update'], [
+            'name' => 'Actualizar Paquete de Servicio (Admin)',
+            'description' => 'Puede actualizar un paquete de servicio (admin)',
+            'description_english' => 'Can update a service package (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.update'], [
+            'name' => 'Actualizar Paquete de Servicio (Quality)',
+            'description' => 'Puede actualizar un paquete de servicio (quality)',
+            'description_english' => 'Can update a service package (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // destroy
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.service_packages.destroy'], [
+            'name' => 'Eliminar Paquete de Servicio (Admin)',
+            'description' => 'Puede eliminar un paquete de servicio (admin)',
+            'description_english' => 'Can delete a service package (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_service_packages[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.service_packages.destroy'], [
+            'name' => 'Eliminar Paquete de Servicio (Quality)',
+            'description' => 'Puede eliminar un paquete de servicio (quality)',
+            'description_english' => 'Can delete a service package (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_service_packages[] = $perm->id;
+
+        // Permisos para Customers
+        $permisos_admin_customers = [];
+        $permisos_quality_customers = [];
+
+        // index
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.index'], [
+            'name' => 'Ver listado de Clientes (Admin)',
+            'description' => 'Puede ver el listado de clientes (admin)',
+            'description_english' => 'Can view customers list (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.index'], [
+            'name' => 'Ver listado de Clientes (Quality)',
+            'description' => 'Puede ver el listado de clientes (quality)',
+            'description_english' => 'Can view customers list (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // create
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.create'], [
+            'name' => 'Crear Cliente (Admin)',
+            'description' => 'Puede acceder al formulario de creación de clientes (admin)',
+            'description_english' => 'Can access customer creation form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.create'], [
+            'name' => 'Crear Cliente (Quality)',
+            'description' => 'Puede acceder al formulario de creación de clientes (quality)',
+            'description_english' => 'Can access customer creation form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // store
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.store'], [
+            'name' => 'Registrar Cliente (Admin)',
+            'description' => 'Puede registrar un nuevo cliente (admin)',
+            'description_english' => 'Can store a new customer (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.store'], [
+            'name' => 'Registrar Cliente (Quality)',
+            'description' => 'Puede registrar un nuevo cliente (quality)',
+            'description_english' => 'Can store a new customer (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // edit
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.edit'], [
+            'name' => 'Editar Cliente (Admin)',
+            'description' => 'Puede acceder al formulario de edición de clientes (admin)',
+            'description_english' => 'Can access customer edit form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.edit'], [
+            'name' => 'Editar Cliente (Quality)',
+            'description' => 'Puede acceder al formulario de edición de clientes (quality)',
+            'description_english' => 'Can access customer edit form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // update
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.update'], [
+            'name' => 'Actualizar Cliente (Admin)',
+            'description' => 'Puede actualizar un cliente (admin)',
+            'description_english' => 'Can update a customer (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.update'], [
+            'name' => 'Actualizar Cliente (Quality)',
+            'description' => 'Puede actualizar un cliente (quality)',
+            'description_english' => 'Can update a customer (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // destroy
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.destroy'], [
+            'name' => 'Eliminar Cliente (Admin)',
+            'description' => 'Puede eliminar un cliente (admin)',
+            'description_english' => 'Can delete a customer (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_customers[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.destroy'], [
+            'name' => 'Eliminar Cliente (Quality)',
+            'description' => 'Puede eliminar un cliente (quality)',
+            'description_english' => 'Can delete a customer (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_customers[] = $perm->id;
+
+        // Asignar todos los permisos a los roles
+        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_service_packages);
+        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_customers);
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_service_packages);
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
+
+        // Permisos CRUD Cotizaciones
+        $permisos_admin_quotes = [];
+        $permisos_quality_quotes = [];
+        // index
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.index'], [
+            'name' => 'Ver listado de Cotizaciones (Admin)',
+            'description' => 'Puede ver el listado de cotizaciones (admin)',
+            'description_english' => 'Can view quotes list (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.index'], [
+            'name' => 'Ver listado de Cotizaciones (Quality)',
+            'description' => 'Puede ver el listado de cotizaciones (quality)',
+            'description_english' => 'Can view quotes list (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // create
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.create'], [
+            'name' => 'Crear Cotización (Admin)',
+            'description' => 'Puede acceder al formulario de creación de cotizaciones (admin)',
+            'description_english' => 'Can access quote creation form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.create'], [
+            'name' => 'Crear Cotización (Quality)',
+            'description' => 'Puede acceder al formulario de creación de cotizaciones (quality)',
+            'description_english' => 'Can access quote creation form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // store
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.store'], [
+            'name' => 'Registrar Cotización (Admin)',
+            'description' => 'Puede registrar una nueva cotización (admin)',
+            'description_english' => 'Can store a new quote (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.store'], [
+            'name' => 'Registrar Cotización (Quality)',
+            'description' => 'Puede registrar una nueva cotización (quality)',
+            'description_english' => 'Can store a new quote (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // edit
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.edit'], [
+            'name' => 'Editar Cotización (Admin)',
+            'description' => 'Puede acceder al formulario de edición de cotizaciones (admin)',
+            'description_english' => 'Can access quote edit form (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.edit'], [
+            'name' => 'Editar Cotización (Quality)',
+            'description' => 'Puede acceder al formulario de edición de cotizaciones (quality)',
+            'description_english' => 'Can access quote edit form (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // update
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.update'], [
+            'name' => 'Actualizar Cotización (Admin)',
+            'description' => 'Puede actualizar una cotización (admin)',
+            'description_english' => 'Can update a quote (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.update'], [
+            'name' => 'Actualizar Cotización (Quality)',
+            'description' => 'Puede actualizar una cotización (quality)',
+            'description_english' => 'Can update a quote (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // destroy
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.destroy'], [
+            'name' => 'Eliminar Cotización (Admin)',
+            'description' => 'Puede eliminar una cotización (admin)',
+            'description_english' => 'Can delete a quote (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.destroy'], [
+            'name' => 'Eliminar Cotización (Quality)',
+            'description' => 'Puede eliminar una cotización (quality)',
+            'description_english' => 'Can delete a quote (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // show
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.show'], [
+            'name' => 'Ver detalle de Cotización (Admin)',
+            'description' => 'Puede ver el detalle de una cotización (admin)',
+            'description_english' => 'Can view quote details (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.show'], [
+            'name' => 'Ver detalle de Cotización (Quality)',
+            'description' => 'Puede ver el detalle de una cotización (quality)',
+            'description_english' => 'Can view quote details (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // pdf
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.pdf'], [
+            'name' => 'Descargar PDF de Cotización (Admin)',
+            'description' => 'Puede descargar el PDF de una cotización (admin)',
+            'description_english' => 'Can download quote PDF (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.pdf'], [
+            'name' => 'Descargar PDF de Cotización (Quality)',
+            'description' => 'Puede descargar el PDF de una cotización (quality)',
+            'description_english' => 'Can download quote PDF (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // upload
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.upload'], [
+            'name' => 'Subir comprobante de Cotización (Admin)',
+            'description' => 'Puede subir comprobantes de cotización (admin)',
+            'description_english' => 'Can upload quote files (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.upload'], [
+            'name' => 'Subir comprobante de Cotizacion (Quality)',
+            'description' => 'Puede subir comprobantes de cotización (quality)',
+            'description_english' => 'Can upload quote files (quality)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        // Asignación de permisos a roles
+        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_quotes);
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_quotes);
     }
 }

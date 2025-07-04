@@ -5,138 +5,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="icon" href="{{ asset('images/Favicon2.png')}}" type="image/x-icon">
-    <title>Gestion de Unidad de Cultivos</title>
+    <link rel="icon" href="{{ asset('images/Favicon2.png') }}" type="image/x-icon">
+    <title>Bienvenido Admin @yield('title')</title>
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
-        href="{{ asset('AdminLTE/https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback') }}">
+        href="{{ asset('adminlte/https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback') }}">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
     <!-- Theme style -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/dist/css/adminlte.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
     <!-- overlayScrollbars -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
     <script src="{{ asset('js/app.js') }}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --sena-green: #39B54A;
+            --sena-dark-green: #2E8B3E;
+            --sena-light-green: #D1E7DD;
+            --sena-hover-green: #4CC55D;
+            --sidebar-width: 250px;
+            --header-height: 60px;
+            --transition-speed: 0.3s;
+        }
+
+        /* Animación de pulso para el logo */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .logo-sena {
+            animation: pulse 2s infinite;
+            transition: transform var(--transition-speed) ease-in-out;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        /* Estilo general */
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .main-sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            background-color: white;
+            border-right: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) ease-in-out;
+        }
+
+        .content-wrapper {
+            margin-left: var(--sidebar-width);
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            transition: margin var(--transition-speed) ease-in-out;
+        }
+
+        /* Navbar styling */
+        .main-header {
+            background: white !important;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            height: var(--header-height);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--sena-dark-green) !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--sena-green) !important;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .dropdown-item {
+            padding: 0.7rem 1.5rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--sena-light-green);
+            color: var(--sena-dark-green);
+        }
+
+        /* Sidebar styling */
+        .brand-link {
+            border-bottom: 2px solid var(--sena-green);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            text-decoration: none;
+            background: white;
+            transition: all var(--transition-speed) ease;
+            flex-direction: row-reverse;
+        }
+
+        .brand-text {
+            color: var(--sena-dark-green) !important;
+            font-weight: 700 !important;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-sidebar .nav-item {
+            margin: 4px 8px;
+        }
+
+        .nav-sidebar .nav-item > .nav-link {
+            color: var(--sena-green);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .nav-sidebar .nav-item > .nav-link:hover {
+            background-color: var(--sena-light-green);
+            color: var(--sena-dark-green);
+            transform: translateX(5px);
+        }
+
+        .nav-sidebar .nav-item > .nav-link.active {
+            background-color: var(--sena-green);
+            color: white;
+            box-shadow: 0 2px 4px rgba(57, 181, 74, 0.2);
+        }
+
+        .nav-sidebar .nav-item > .nav-link i {
+            margin-right: 10px;
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            padding: 1.25rem;
+        }
+
+        /* Button styling */
+        .btn {
+            border-radius: 8px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .btn-primary {
+            background-color: var(--sena-green);
+            border-color: var(--sena-green);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--sena-hover-green);
+            border-color: var(--sena-hover-green);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(57, 181, 74, 0.2);
+        }
+
+        /* Footer styling */
+        .main-footer {
+            background-color: white !important;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            color: #6c757d !important;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sena-green);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sena-dark-green);
+        }
+    </style>
 </head>
 
-<body class="hold-transition dark-mode sidebar-mini layout-fixed layout-navbar-fixed layout-footer-fixed">
+<body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
-        <!-- Preloader -->
-        <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__wobble" src="{{ asset('images/images.png') }}" alt="AdminLTELogo" height="100"
-                width="150">
-        </div>
-
-        <nav class="main-header navbar navbar-expand navbar-white">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
             <!-- Left navbar links -->
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" style="color: #343a40" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-                </li>
-                <li class="nav-item d-none d-sm-inline-block">
-                    <a href="#" class="nav-link text-success">Home</a>
-                </li>
-             
-            </ul>
-
-            <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
-           
-
-                <!-- Messages Dropdown Menu -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <i class="far fa-comments"></i>
-                        <span class="badge badge-danger navbar-badge">3</span>
+                    <a id="navbarDropdown" class="nav-link dropdown-toggle text-dark fw-bold" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {{ Auth::user() ? Auth::user()->name : 'Usuario' }}
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <a href="#" class="dropdown-item">
-                            <div class="media">
-                                <img src="{{ asset('AdminLTE/dist/img/user1-128x128.jpg') }}" alt="User Avatar"
-                                    class="img-size-50 mr-3 img-circle">
-                                <div class="media-body">
-                                    <h3 class="dropdown-item-title">
-                                        Brad Diesel
-                                        <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
-                                    </h3>
-                                    <p class="text-sm">Call me whenever you can...</p>
-                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                                </div>
-                            </div>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <div class="media">
-                                <img src="{{ asset('AdminLTE/dist/img/user8-128x128.jpg') }}" alt="User Avatar"
-                                    class="img-size-50 img-circle mr-3">
-                                <div class="media-body">
-                                    <h3 class="dropdown-item-title">
-                                        John Pierce
-                                        <span class="float-right text-sm text-muted"><i class="fas fa-star"></i></span>
-                                    </h3>
-                                    <p class="text-sm">I got your message bro</p>
-                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                                </div>
-                            </div>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <div class="media">
-                                <img src="{{ asset('AdminLTE/dist/img/user3-128x128.jpg') }}" alt="User Avatar"
-                                    class="img-size-50 img-circle mr-3">
-                                <div class="media-body">
-                                    <h3 class="dropdown-item-title">
-                                        Nora Silvester
-                                        <span class="float-right text-sm text-warning"><i
-                                                class="fas fa-star"></i></span>
-                                    </h3>
-                                    <p class="text-sm">The subject goes here</p>
-                                    <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-                                </div>
-                            </div>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
-                    </div>
-                </li>
-                <!-- Notifications Dropdown Menu -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <i class="far fa-bell"></i>
-                        <span class="badge badge-warning navbar-badge">15</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item dropdown-header">15 Notifications</span>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-envelope mr-2"></i> 4 new messages
-                            <span class="float-right text-muted text-sm">3 mins</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-users mr-2"></i> 8 friend requests
-                            <span class="float-right text-muted text-sm">12 hours</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-file mr-2"></i> 3 new reports
-                            <span class="float-right text-muted text-sm">2 days</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
-                    </div>
-                </li>
-                <li class="nav-item dropdown">
-                    <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
-                                         document.getElementById('logout-form').submit();">
-                            Cerrar Sesión
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                        <a class="dropdown-item" href="{{ route('logout') }}"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            {{ __('Cerrar Sesión') }}
                         </a>
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                             @csrf
@@ -146,49 +243,49 @@
             </ul>
         </nav>
 
-        <aside class="main-sidebar sidebar-dark-primary elevation-4" style="background-color: white;">
-            <!-- Brand Logo -->
-            <a href="index3.html" class="brand-link" style="background-color: white;">
-                <img src="{{ asset('AdminLTE/dist/img/AdminLTELogo.png') }}" alt="AdminLTE Logo"
-                    class="brand-image img-circle elevation-3" style="opacity: .8">
-                <span class="brand-text font-weight-dark">Agrosoft</span>
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-success-green elevation-4">
+            <a href="#" class="brand-link">
+                <span class="brand-text font-weight-light">SLCEFA</span>
+                <img src="https://www.sena.edu.co/Style%20Library/alayout/images/logoSena.png" width="50px" class="logo-sena">
             </a>
-
             <div class="sidebar">
-                <center>
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                  <span class="text-dark">Panel Administrador</span>
-                    <div class="info">
-                        <a href="#" class="d-block"></a>
-                    </div>
-                </div>
-            </center>
-
-                <!-- SidebarSearch Form -->
-
-
+                <!-- Sidebar Menu -->
                 <nav class="mt-2">
-                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
-                        data-accordion="false">
-
-
-
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false" style="gap: 8px;">
+                        <!-- Cotizaciones -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link" style="color: rgb(10, 172, 48)">
-                                <i class="nav-icon fas fa-seedling"></i>
-                                <p>Cultivos</p>
+                            <a href="{{ route('lscefa.quality.quotes.index') }}" class="nav-link">
+                                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                                <p>Cotizaciones</p>
                             </a>
                         </li>
+                        <!-- Clientes -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link" style="color: rgb(10, 172, 48)">
-                                <i class="nav-icon fas fa-calendar-check"></i>
-                                <p>Actividades</p>
+                            <a href="{{ route('lscefa.quality.customers.index') }}" class="nav-link">
+                                <i class="fas fa-users nav-icon"></i>
+                                <p>Clientes</p>
                             </a>
                         </li>
+                        <!-- Servicios -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link" style="color: rgb(10, 172, 48)">
-                                <i class="nav-icon fas fa-tools"></i>
-                                <p>Herramientas</p>
+                            <a href="{{ route('lscefa.quality.services.index') }}" class="nav-link">
+                                <i class="fas fa-cogs nav-icon"></i>
+                                <p>Servicios</p>
+                            </a>
+                        </li>
+                        <!-- Paquetes de Servicio -->
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.quality.service_packages.index') }}" class="nav-link">
+                                <i class="fas fa-box nav-icon"></i>
+                                <p>Paquetes de Servicio</p>
+                            </a>
+                        </li>
+                        <!-- Tipos de Cliente -->
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.quality.customer_types.index') }}" class="nav-link">
+                                <i class="fas fa-user-tag nav-icon"></i>
+                                <p>Tipos de Cliente</p>
                             </a>
                         </li>
                     </ul>
@@ -196,53 +293,41 @@
             </div>
         </aside>
 
+        <!-- Content Wrapper -->
         <div class="content-wrapper">
-            @yield('content')
+            <!-- Content Header (Page header) -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-2">
+                        <div class="col-sm-6">
+                            <h1 class="m-0">@yield('title')</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    @yield('content')
+                </div>
+            </section>
         </div>
 
-        <!-- Control Sidebar -->
-        <aside class="control-sidebar control-sidebar-dark">
-            <!-- Control sidebar content goes here -->
-        </aside>
-
-        <footer class="main-footer"
-            style="width: 100%; position: fixed; bottom: 0; left: 0; background-color: #343a40; color: white; padding: 10px 20px;">
-            <strong>Copyright © 2023-2025
-                <a href="#" style="color: #3c8dbc;">GDF</a>.
-            </strong>
-            All rights reserved.
-            <div class="float-right d-none d-sm-inline-block">
-                <b>Version</b> 3.2.0
-            </div>
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <strong>Copyright © {{ date('Y') }} <a href="#">SENA</a>.</strong>
+            Todos los derechos reservados.
         </footer>
     </div>
 
+    <!-- REQUIRED SCRIPTS -->
     <!-- jQuery -->
-    <script src="{{ asset('AdminLTE/plugins/jquery/jquery.min.js') }}"></script>
-    <!-- jQuery UI 1.11.4 -->
-    <script src="{{ asset('AdminLTE/plugins/jquery-ui/jquery-ui.min.js') }}"></script>
-    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-    <script>
-        $.widget.bridge('uibutton', $.ui.button)
-    </script>
-    <!-- Bootstrap 4 -->
-    <script src="{{ asset('AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <!-- overlayScrollbars -->
-    <script src="{{ asset('AdminLTE/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
-    <!-- AdminLTE App -->
-    <script src="{{ asset('AdminLTE/dist/js/adminlte.js') }}"></script>
-    <!-- PAGE PLUGINS -->
-    <!-- jQuery Mapael -->
-    <script src="{{ asset('AdminLTE/plugins/jquery-mousewheel/jquery.mousewheel.js') }}"></script>
-    <script src="{{ asset('AdminLTE-/plugins/raphael/raphael.min.js') }}"></script>
-    <script src="{{ asset('AdminLTE/plugins/jquery-mapael/jquery.mapael.min.js') }}"></script>
-    <script src="{{ asset('AdminLTE/plugins/jquery-mapael/maps/usa_states.min.js') }}"></script>
-    <!-- ChartJS -->
-    <script src="{{ asset('AdminLTE/plugins/chart.js/Chart.min.js') }}"></script>
-    <!-- AdminLTE for demo purposes -->
-    <script src="{{ asset('AdminLTE/dist/js/demo.js') }}"></script>
-    <!-- AdminLTE dashboard demo -->
-    <script src="{{ asset('AdminLTE/dist/js/pages/dashboard2.js') }}"></script>
+    <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap -->
+    <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- AdminLTE -->
+    <script src="{{ asset('adminlte/dist/js/adminlte.js') }}"></script>
+    @stack('scripts')
 </body>
-
 </html>
