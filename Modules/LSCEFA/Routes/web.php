@@ -38,7 +38,7 @@ Route::middleware(['lang'])->group(function(){
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             Route::get('/technical/panel', [LSCEFAController::class, 'technical'])->name('lscefa.technical.panel');
             Route::get('/technical/samples', [LSCEFAController::class, 'samples'])->name('lscefa.technical.samples');
- 
+            Route::get('/technical/analyses', [\Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController::class, 'index'])->name('lscefa.technical.analyses.index');
         });
 
         // Rutas protegidas por rol para admin y gestión de calidad
@@ -84,15 +84,23 @@ Route::middleware(['lang'])->group(function(){
 
             // Rutas adicionales para cotizaciones (PDF y carga de archivos)
             Route::get('quotes/{quote}/pdf', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'pdf'])->name('lscefa.quality.quotes.pdf');
-            Route::get('quotes/upload/{quote}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])->name('lscefa.quality.quotes.upload.form');
-            Route::post('quotes/upload/{quote}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'upload'])->name('lscefa.quality.quotes.upload');
+
+            // Rutas para subir comprobante
+            Route::get('quotes/{quote}/upload', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'uploadForm'])->name('lscefa.quality.quotes.upload');
+            Route::post('quotes/{quote}/upload', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'upload'])->name('lscefa.quality.quotes.upload.post');
+
+            // Ruta para iniciar procesos por terreno
+            Route::post('quotes/{quote}/process/start', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'startProcess'])->name('lscefa.quality.process.start');
+
+            // Rutas para procesos (igual que en proyecto_formativo)
+            Route::get('processes', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'allProcessesIndex'])->name('lscefa.quality.processes.index');
+            Route::get('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'processShow'])->name('lscefa.quality.processes.show');
+            Route::delete('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'destroyProcess'])->name('lscefa.quality.processes.destroy');
         });
 
-        
-Route::get('lscefa/clientes/buscar', [\Modules\LSCEFA\Http\Controllers\CustomerController::class, 'searchAjax'])->name('lscefa.quality.customers.searchAjax');
-Route::get('lscefa/servicios/buscar', [\Modules\LSCEFA\Http\Controllers\ServiceController::class, 'searchAjax'])->name('lscefa.quality.services.searchAjax');
-Route::get('lscefa/paquetes/buscar', [\Modules\LSCEFA\Http\Controllers\ServicePackageController::class, 'searchAjax'])->name('lscefa.quality.service_packages.searchAjax');
-Route::get('lscefa/cotizaciones/buscar', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'searchAjax'])->name('lscefa.quality.quotes.searchAjax');
+        Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
+        ->name('lscefa.quality.quotes.upload.form')
+        ->middleware(['auth', 'haveaccess:lscefa.quality.quotes.upload']);
 
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');

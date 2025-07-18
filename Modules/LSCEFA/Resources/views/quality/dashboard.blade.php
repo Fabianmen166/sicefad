@@ -27,6 +27,26 @@
                             </div>
                         </div>
 
+                        <!-- Procesos Iniciados -->
+                        @php
+                            $user = auth()->user();
+                        @endphp
+                        @if($user && ($user->havePermission('lscefa.quality.processes.index') || $user->havePermission('lscefa.admin.processes.index')))
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-warning">
+                                    <h3 class="card-title text-white">Procesos Iniciados</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p>Ver y gestionar todos los procesos iniciados en el sistema.</p>
+                                    <a href="{{ route('lscefa.quality.processes.index') }}" class="btn btn-warning text-white">
+                                        <i class="fas fa-tasks"></i> Ver Procesos Iniciados
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Estándares de Calidad -->
                         <div class="col-md-4">
                             <div class="card">

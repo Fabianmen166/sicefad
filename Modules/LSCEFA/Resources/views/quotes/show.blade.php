@@ -16,11 +16,6 @@
                     <p><strong>ID de Cotización:</strong> {{ $quote->quote_id }}</p>
                     <p><strong>Creado por:</strong> {{ $quote->user->name ?? 'N/A' }}</p>
                     <p><strong>Total:</strong> ${{ number_format($quote->total, 2) }}</p>
-                    @if ($quote->archivo)
-                        <p><strong>Comprobante:</strong> <a href="{{ Storage::url('comprobantes/' . $quote->archivo) }}" target="_blank">Ver Comprobante</a></p>
-                    @else
-                        <p><strong>Comprobante:</strong> No subido</p>
-                    @endif
                 </div>
             </div>
             <h6 class="mt-4">Servicios y Paquetes por Unidad</h6>
@@ -99,12 +94,19 @@
                 <a href="{{ route('lscefa.quality.quotes.index') }}" class="btn btn-secondary">Volver</a>
                 <a href="{{ route('lscefa.quality.quotes.edit', $quote->quote_id) }}" class="btn btn-primary">Editar</a>
                 <a href="{{ route('lscefa.quality.quotes.pdf', $quote->quote_id) }}" class="btn btn-info">Descargar PDF</a>
-                <a href="{{ route('lscefa.quality.quotes.upload.form', $quote->quote_id) }}" class="btn btn-warning">Subir Comprobante</a>
                 <form action="{{ route('lscefa.quality.quotes.destroy', $quote->quote_id) }}" method="POST" style="display:inline-block;">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de eliminar esta cotización?')">Eliminar</button>
                 </form>
+                @php
+                    $user = auth()->user();
+                    $hasQualityRole = $user && $user->roles->contains('slug', 'lscefa.quality');
+                    $hasAdminRole = $user && $user->roles->contains('slug', 'lscefa.admin');
+                @endphp
+                @if($hasQualityRole || $hasAdminRole)
+                    <a href="{{ route('lscefa.quality.quotes.upload', $quote->quote_id) }}" class="btn btn-success">Subir Comprobante</a>
+                @endif
             </div>
         </div>
     </div>

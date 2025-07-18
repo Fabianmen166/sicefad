@@ -56,9 +56,16 @@
                                                 <a class="dropdown-item" href="{{ route('lscefa.quality.quotes.pdf', $quote->quote_id) }}">
                                                     <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
                                                 </a>
-                                                <a class="dropdown-item" href="{{ route('lscefa.quality.quotes.upload.form', $quote->quote_id) }}">
-                                                    <i class="fas fa-upload mr-2"></i>Subir Comprobante
-                                                </a>
+                                                @php
+                                                    $user = auth()->user();
+                                                    $hasQualityRole = $user && $user->roles->contains('slug', 'lscefa.quality');
+                                                    $hasAdminRole = $user && $user->roles->contains('slug', 'lscefa.admin');
+                                                @endphp
+                                                @if($hasQualityRole || $hasAdminRole)
+                                                    <a class="dropdown-item" href="{{ route('lscefa.quality.quotes.upload', $quote->quote_id) }}">
+                                                        <i class="fas fa-upload mr-2"></i>Subir Comprobante
+                                                    </a>
+                                                @endif
                                                 <div class="dropdown-divider"></div>
                                                 <form action="{{ route('lscefa.quality.quotes.destroy', $quote->quote_id) }}" method="POST">
                                                     @csrf

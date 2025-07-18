@@ -288,6 +288,17 @@
                                 <p>Tipos de Cliente</p>
                             </a>
                         </li>
+                        @php
+                            $user = auth()->user();
+                        @endphp
+                        @if($user && ($user->havePermission('lscefa.quality.processes.index') || $user->havePermission('lscefa.admin.processes.index')))
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.quality.processes.index') }}" class="nav-link">
+                                    <i class="nav-icon fas fa-tasks"></i>
+                                    <p>Procesos Iniciados</p>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </nav>
             </div>

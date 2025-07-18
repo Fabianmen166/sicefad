@@ -8,6 +8,7 @@ use Modules\SICA\Entities\Permission;
 use Modules\SICA\Entities\Role;
 
 class PermissionsTableSeeder extends Seeder
+
 {
     /**
      * Run the database seeds.
@@ -70,6 +71,15 @@ class PermissionsTableSeeder extends Seeder
             'name' => 'Gestión de muestras',
             'description' => 'Acceso a la gestión de muestras',
             'description_english' => 'Access to samples management',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permission->id;
+
+        // Permiso para ver el listado de análisis técnicos
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.index'], [
+            'name' => 'Ver listado de Análisis Técnicos',
+            'description' => 'Puede ver el listado de procesos pendientes para análisis técnico',
+            'description_english' => 'Can view the list of pending processes for technical analysis',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permission->id;
@@ -614,21 +624,76 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_quality_quotes[] = $perm->id;
-        // upload
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.quotes.upload'], [
-            'name' => 'Subir comprobante de Cotización (Admin)',
-            'description' => 'Puede subir comprobantes de cotización (admin)',
-            'description_english' => 'Can upload quote files (admin)',
-            'app_id' => $app->id
-        ]);
-        $permisos_admin_quotes[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.upload'], [
-            'name' => 'Subir comprobante de Cotizacion (Quality)',
-            'description' => 'Puede subir comprobantes de cotización (quality)',
-            'description_english' => 'Can upload quote files (quality)',
+// Permiso para ver y subir comprobante de cotización
+$perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.upload'], [
+    'name' => 'Ver y subir comprobante de Cotización (Quality)',
+    'description' => 'Puede ver el formulario y subir comprobantes de cotización (quality)',
+    'description_english' => 'Can view the form and upload quote files (quality)',
+    'app_id' => $app->id
+]);
+$permisos_quality_quotes[] = $perm->id;
+        $permissions_admin[] = $perm->id;
+
+        // Permiso para iniciar procesos por terreno
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.process.start'], [
+            'name' => 'Iniciar procesos por terreno',
+            'description' => 'Puede iniciar y gestionar procesos asociados a cotizaciones por terreno',
+            'description_english' => 'Can start and manage processes associated with quotes by unit/land',
             'app_id' => $app->id
         ]);
         $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        // Permiso para ver el listado global de procesos iniciados
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.processes.index'], [
+            'name' => 'Ver listado de procesos iniciados (Quality)',
+            'description' => 'Puede ver el listado global de procesos iniciados',
+            'description_english' => 'Can view the global list of started processes',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.processes.index'], [
+            'name' => 'Ver listado de procesos iniciados (Admin)',
+            'description' => 'Puede ver el listado global de procesos iniciados (admin)',
+            'description_english' => 'Can view the global list of started processes (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        // Permiso para ver el detalle de un proceso individual
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.processes.show'], [
+            'name' => 'Ver detalle de proceso (Quality)',
+            'description' => 'Puede ver el detalle individual de un proceso',
+            'description_english' => 'Can view the detail of a process',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.processes.show'], [
+            'name' => 'Ver detalle de proceso (Admin)',
+            'description' => 'Puede ver el detalle individual de un proceso (admin)',
+            'description_english' => 'Can view the detail of a process (admin)',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        // Permiso para eliminar un proceso
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.processes.destroy'], [
+            'name' => 'Eliminar proceso (Quality)',
+            'description' => 'Puede eliminar procesos desde la gestión de calidad',
+            'description_english' => 'Can delete processes from quality management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.processes.destroy'], [
+            'name' => 'Eliminar proceso (Admin)',
+            'description' => 'Puede eliminar procesos desde la gestión de admin',
+            'description_english' => 'Can delete processes from admin management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
         // Asignación de permisos a roles
         $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_quotes);
         $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_quotes);

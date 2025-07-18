@@ -1,4 +1,4 @@
-@extends('lscefa::layouts.master')
+@extends('lscefa::layouts.technical')
 
 @section('title', 'Panel de Personal Técnico')
 

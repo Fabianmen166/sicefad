@@ -12,6 +12,8 @@ use Modules\LSCEFA\Models\ServicePackage;
 use Modules\LSCEFA\Models\Quote;
 use Modules\LSCEFA\Models\QuoteService;
 use Illuminate\Routing\Controller;
+use Modules\LSCEFA\Models\Process;
+use Modules\LSCEFA\Models\ServiceProcessDetail;
 
 class QuoteController extends Controller
 {
@@ -352,42 +354,201 @@ class QuoteController extends Controller
         return $pdf->download('cotizacion_' . $quote->quote_id . '.pdf');
     }
 
-    public function showUploadForm($id)
+    public function uploadForm($quote_id)
     {
-        $quote = Quote::with(['quoteServices'])->findOrFail($id);
-        $unitCount = 1;
-        $unitIndexes = [];
-        foreach ($quote->quoteServices as $qs) {
-            if (isset($qs->unit_index)) {
-                $unitIndexes[] = $qs->unit_index;
-            }
+        $quote = Quote::with(['quoteServices'])->findOrFail($quote_id);
+        $quoteServices = $quote->quoteServices ?? collect();
+        // Calcular unitCount correctamente
+        $unitIndexes = $quoteServices->pluck('unit_index')->unique()->values();
+        $unitCount = $unitIndexes->count() > 0 ? $unitIndexes->max() + 1 : 1;
+        // Agrupar servicios por terreno
+        $servicesPerUnit = [];
+        foreach ($quoteServices as $quoteService) {
+            $unitIdx = $quoteService->unit_index ?? 0;
+            $servicesPerUnit[$unitIdx][] = $quoteService;
         }
-        if (count($unitIndexes) > 0) {
-            $unitCount = count(array_unique($unitIndexes));
-        } else {
-            $unitCount = $quote->quoteServices->count() > 0 ? $quote->quoteServices->count() : 1;
+        $user = auth()->user();
+        if (!$user || (!$user->havePermission('lscefa.quality.quotes.upload') && !$user->havePermission('lscefa.admin.quotes.upload'))) {
+            abort(403, 'No tienes permisos para subir comprobantes.');
         }
-        return view('quotes.upload', compact('quote', 'unitCount'));
+        return view('lscefa::quotes.upload', compact('quote', 'unitCount', 'servicesPerUnit'));
     }
 
-    public function upload(Request $request, $id)
+    public function upload(Request $request, $quote_id)
     {
-        dd($request->method());
+        $user = auth()->user();
+        
+        if (!$user || (!$user->havePermission('lscefa.quality.quotes.upload') && !$user->havePermission('lscefa.admin.quotes.upload'))) {
+            abort(403, 'No tienes permisos para subir comprobantes.');
+        }
         $request->validate([
             'archivo' => 'required|file|mimes:pdf,jpg,png|max:2048',
         ]);
-        try {
-            $quote = Quote::findOrFail($id);
-            if ($request->hasFile('archivo')) {
-                $file = $request->file('archivo');
-                $filename = 'quote_' . $quote->quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/comprobantes', $filename);
-                $quote->file = $filename;
-                $quote->save();
-            }
-            return redirect()->route('lscefa.quality.quotes.index')->with('success', 'Comprobante de pago subido exitosamente.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error al subir el archivo: ' . $e->getMessage());
+        $quote = Quote::findOrFail($quote_id);
+        if ($request->hasFile('archivo')) {
+            $file = $request->file('archivo');
+            $filename = 'quote_' . $quote->quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('public/comprobantes/' . $quote->quote_id, $filename);
+            $quoteFile = new \Modules\LSCEFA\Models\QuoteFile([
+                'filename' => $filename,
+                'path' => $path,
+                'mime' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+            ]);
+            $quote->files()->save($quoteFile);
+            // Redirigir nuevamente al formulario de comprobante
+            return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)->with('success', 'Comprobante subido correctamente.');
         }
+        return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)->with('error', 'No se pudo subir el comprobante.');
+    }
+
+    public function startProcess(Request $request, $quote_id)
+    {
+        $user = auth()->user();
+        
+        if (!$user || (!$user->havePermission('lscefa.quality.process.start') && !$user->havePermission('lscefa.admin.process.start'))) {
+            abort(403, 'No tienes permisos para iniciar procesos.');
+        }
+
+        $request->validate([
+            'comunicacion_cliente' => 'required|string|min:10',
+            'dias_procesar' => 'required|integer|min:1|max:365',
+            'unit_count' => 'required|integer|min:1',
+            'archivo_comunicacion' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:5120',
+            'descriptions.*' => 'required|string|min:3',
+            'item_codes.*' => 'required|string|min:3',
+            'services.*' => 'required|string',
+        ], [
+            'comunicacion_cliente.required' => 'La comunicación con el cliente es obligatoria.',
+            'comunicacion_cliente.min' => 'La comunicación con el cliente debe tener al menos 10 caracteres.',
+            'archivo_comunicacion.mimes' => 'El archivo debe ser PDF, Word (.doc, .docx) o Excel (.xls, .xlsx).',
+            'archivo_comunicacion.max' => 'El archivo no puede superar los 5MB.',
+        ]);
+
+        $quote = Quote::with(['quoteServices'])->where('quote_id', $quote_id)->firstOrFail();
+        
+        $unitCount = $request->input('unit_count');
+        $services = $request->input('services', []);
+
+        try {
+            DB::beginTransaction();
+
+            // Manejar el archivo de comunicación si se subió
+            $communicationFile = null;
+            if ($request->hasFile('archivo_comunicacion')) {
+                $file = $request->file('archivo_comunicacion');
+                $filename = 'comunicacion_' . $quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/comunicaciones', $filename);
+                $communicationFile = $filename;
+            }
+
+            for ($unitIndex = 0; $unitIndex < $unitCount; $unitIndex++) {
+                $description = $request->input("descriptions.$unitIndex");
+                $itemCode = $request->input("item_codes.$unitIndex");
+                $selectedServiceIds = $services[$unitIndex] ?? [];
+                if (is_string($selectedServiceIds)) {
+                    $selectedServiceIds = json_decode($selectedServiceIds, true) ?? [];
+                }
+
+                // Crear el proceso (unidad)
+                $process = Process::create([
+                    'process_id' => 'PRC-' . time() . '-' . $unitIndex,
+                    'quote_id' => $quote_id,
+                    'item_code' => $itemCode,
+                    'status' => 'pending',
+                    'client_communication' => $request->input('comunicacion_cliente'),
+                    'communication_file' => $communicationFile,
+                    'processing_days' => $request->input('dias_procesar'),
+                    'reception_date' => now(),
+                    'description' => $description,
+                    'sampling_place' => $request->input('lugar_muestreo'),
+                    'sampling_date' => $request->input('fecha_muestreo'),
+                    'reception_responsible' => auth()->user()->id,
+                    'delivery_date' => now()->addDays($request->input('dias_procesar')),
+                ]);
+
+                // Crear los ServiceProcessDetail para cada servicio asociado a esta unidad
+                $unitServices = $quote->quoteServices->where('unit_index', $unitIndex);
+                foreach ($unitServices as $qs) {
+                    if ($qs->service_id) { // Solo servicios individuales
+                        ServiceProcessDetail::create([
+                            'process_id' => $process->process_id,
+                            'service_id' => $qs->service_id,
+                            'status' => 'pending',
+                            'result' => null,
+                            'file' => null,
+                            'observations' => null,
+                        ]);
+                    }
+                    // Si es un paquete, agregar todos los servicios incluidos
+                    if ($qs->service_package_id && $qs->servicePackage) {
+                        $includedServices = $qs->servicePackage->included_services;
+                        if (is_array($includedServices)) {
+                            foreach ($includedServices as $includedServiceId) {
+                                ServiceProcessDetail::create([
+                                    'process_id' => $process->process_id,
+                                    'service_id' => $includedServiceId,
+                                    'status' => 'pending',
+                                    'result' => null,
+                                    'file' => null,
+                                    'observations' => null,
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            // Redirigir a la vista global de procesos iniciados
+            return redirect()->route('lscefa.quality.processes.index')
+                ->with('success', 'Procesos iniciados exitosamente para todas las unidades.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al iniciar procesos: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error al iniciar los procesos: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    public function processesIndex($quote_id)
+    {
+        $quote = Quote::with(['processes'])->findOrFail($quote_id);
+        $processes = $quote->processes;
+        return view('lscefa::quotes.processes_index', compact('quote', 'processes'));
+    }
+
+    public function allProcessesIndex(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
+            abort(403, 'No tienes permisos para ver el listado global de procesos.');
+        }
+        $processes = \Modules\LSCEFA\Models\Process::with('quote')->orderBy('created_at', 'desc')->paginate(20);
+        return view('lscefa::quotes.processes_global', compact('processes'));
+    }
+
+    public function processShow($process_id)
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
+            abort(403, 'No tienes permisos para ver el detalle del proceso.');
+        }
+        $process = Process::with('quote')->findOrFail($process_id);
+        return view('lscefa::quotes.process_show', compact('process'));
+    }
+
+    public function destroyProcess($process_id)
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
+            abort(403, 'No tienes permisos para eliminar procesos.');
+        }
+        $process = Process::findOrFail($process_id);
+        $process->delete();
+        return redirect()->route('lscefa.quality.processes.index')->with('success', 'Proceso eliminado correctamente.');
     }
 } 

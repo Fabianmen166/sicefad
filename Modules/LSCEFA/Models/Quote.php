@@ -27,4 +27,8 @@ class Quote extends Model
     {
         return $this->hasMany(QuoteFile::class, 'quote_id');
     }
+    public function processes()
+    {
+        return $this->hasMany(Process::class, 'quote_id', 'quote_id');
+    }
 } 
