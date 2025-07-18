@@ -3,7 +3,13 @@
 @section('title', 'Dashboard de Calidad')
 
 @section('contenido')
-<div class="container-fluid">
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h2 class="fw-bold text-success">Panel de Gestión de Calidad</h2>
+            <hr>
+        </div>
+    </div>
     <div class="row">
         <div class="col-12">
             <div class="card">
