@@ -18,6 +18,7 @@ use Modules\LSCEFA\Http\Controllers\ServiceController;
 use Modules\LSCEFA\Http\Controllers\ServicePackageController;
 use Modules\LSCEFA\Http\Controllers\CustomerController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
+use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -38,7 +39,7 @@ Route::middleware(['lang'])->group(function(){
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             Route::get('/technical/panel', [LSCEFAController::class, 'technical'])->name('lscefa.technical.panel');
             Route::get('/technical/samples', [LSCEFAController::class, 'samples'])->name('lscefa.technical.samples');
-            Route::get('/technical/analyses', [\Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController::class, 'index'])->name('lscefa.technical.analyses.index');
+            Route::get('/technical/analyses', [TechnicalAnalysisController::class, 'index'])->name('lscefa.technical.analyses.index');
         });
 
         // Rutas protegidas por rol para admin y gestión de calidad
@@ -105,4 +106,7 @@ Route::middleware(['lang'])->group(function(){
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     });
+
+    // Rutas para Analisis de humedad
+     Route::get('admin/inventory/create', 'create')->name('ptventa.admin.inventory.create'); // Formulario de registro de entrada de inventario (Administrador)
 });

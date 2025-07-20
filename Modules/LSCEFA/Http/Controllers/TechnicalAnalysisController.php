@@ -13,7 +13,7 @@ class TechnicalAnalysisController extends Controller
     {
         $user = Auth::user();
         // Obtener todos los procesos pendientes con sus detalles de servicio
-        $processes = \Modules\LSCEFA\Models\Process::with(['quote', 'serviceProcessDetails.service'])
+        $processes = Process::with(['quote', 'serviceProcessDetails.service'])
             ->orderBy('reception_date', 'desc')
             ->paginate(20);
 
