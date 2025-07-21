@@ -108,5 +108,5 @@ Route::middleware(['lang'])->group(function(){
     });
 
     // Rutas para Analisis de humedad
-     Route::get('admin/inventory/create', 'create')->name('ptventa.admin.inventory.create'); // Formulario de registro de entrada de inventario (Administrador)
+     // Formulario de registro de entrada de inventario (Administrador)
 });
