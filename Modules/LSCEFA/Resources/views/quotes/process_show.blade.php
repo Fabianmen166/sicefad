@@ -13,13 +13,6 @@
                     <strong>Fecha de Inicio:</strong> {{ $process->reception_date }}<br>
                     <strong>Item Code:</strong> {{ $process->item_code }}<br>
                     <strong>Comunicación con el Cliente:</strong> {{ $process->client_communication }}<br>
-                    <strong>Archivo de Comunicación:</strong>
-                    @if($process->communication_file)
-                        <a href="{{ asset('storage/comunicaciones/' . $process->communication_file) }}" class="btn btn-info btn-sm" target="_blank">Descargar Archivo</a>
-                    @else
-                        N/A
-                    @endif
-                    <br>
                     <strong>Días para Procesar:</strong> {{ $process->processing_days }}<br>
                     <strong>Fecha de Recepción:</strong> {{ $process->reception_date }}<br>
                 </div>
@@ -27,14 +20,31 @@
                     <strong>Descripción:</strong> {{ $process->description }}<br>
                     <strong>Lugar de Muestreo:</strong> {{ $process->sampling_place ?? 'No especificado' }}<br>
                     <strong>Fecha de Muestreo:</strong> {{ $process->sampling_date ?? 'No especificada' }}<br>
-                    <strong>Responsable de Recepción:</strong> 
-                    @if($process->reception_responsible && $process->quote && $process->quote->user)
-                        {{ $process->quote->user->name ?? $process->reception_responsible }}
+                    @php
+                        $responsable = \App\Models\User::find($process->reception_responsible);
+                    @endphp
+                    <strong>Responsable de Recepción:</strong>
+                    @if($responsable)
+                        {{ $responsable->nickname }}
                     @else
                         {{ $process->reception_responsible }}
                     @endif
                     <br>
                     <strong>Fecha de Entrega:</strong> {{ $process->delivery_date }}<br>
+                    <strong>Comprobante de Cotización:</strong>
+                    @if($process->quote && $process->quote->file)
+                        <a href="{{ route('lscefa.comprobante_file.download', ['quote_id' => $process->quote->quote_id, 'filename' => $process->quote->file]) }}" class="btn btn-info btn-sm" target="_blank">Descargar Comprobante</a>
+                    @else
+                        N/A
+                    @endif
+                    <br>
+                    <strong>Archivo de Comunicación:</strong>
+                    @if($process->communication_file)
+                        <a href="{{ route('lscefa.communication_file.download', ['filename' => $process->communication_file]) }}" class="btn btn-info btn-sm" target="_blank">Descargar Archivo</a>
+                    @else
+                        N/A
+                    @endif
+                    <br>
                 </div>
             </div>
         </div>

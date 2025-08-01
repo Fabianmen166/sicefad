@@ -159,25 +159,6 @@
             </form>
         </div>
     </li>
-    @if(isset($roles))
-        @if(in_array('lscefa.admin', $roles))
-            <li class="nav-item">
-                <a href="{{ route('lscefa.admin.welcome') }}" class="btn btn-primary mt-2">Ir al Dashboard de Administración</a>
-            </li>
-        @elseif(in_array('lscefa.quality', $roles))
-            <li class="nav-item">
-                <a href="{{ route('lscefa.quality.dashboard') }}" class="btn btn-primary mt-2">Ir al Dashboard de Calidad</a>
-            </li>
-        @elseif(in_array('lscefa.intern', $roles))
-            <li class="nav-item">
-                <a href="{{ route('lscefa.intern.panelpas') }}" class="btn btn-primary mt-2">Ir al Panel de Pasante</a>
-            </li>
-        @elseif(in_array('lscefa.technical', $roles))
-            <li class="nav-item">
-                <a href="{{ route('lscefa.technical.panel') }}" class="btn btn-primary mt-2">Ir al Panel Técnico</a>
-            </li>
-        @endif
-    @endif
 </ul>
     </div>
     </a>

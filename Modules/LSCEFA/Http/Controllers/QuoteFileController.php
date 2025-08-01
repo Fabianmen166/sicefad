@@ -25,11 +25,15 @@ class QuoteFileController extends Controller
         $quote = Quote::findOrFail($quote_id);
         if ($request->hasFile('archivo')) {
             $file = $request->file('archivo');
-            $filename = 'quote_' . $quote->quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/comprobantes/' . $quote->quote_id, $filename);
+            $filename = $file->getClientOriginalName();
+            $path = base_path('sicefa/Modules/LSCEFA/storage/comprobantes/' . $quote->quote_id);
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+            $file->move($path, $filename);
             $quoteFile = new QuoteFile([
                 'filename' => $filename,
-                'path' => $path,
+                'path' => $path . '/' . $filename,
                 'mime' => $file->getClientMimeType(),
                 'size' => $file->getSize(),
             ]);

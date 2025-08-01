@@ -14,7 +14,7 @@
                 <div class="col-md-6">
                     <h6>Información de la Cotización</h6>
                     <p><strong>ID de Cotización:</strong> {{ $quote->quote_id }}</p>
-                    <p><strong>Creado por:</strong> {{ $quote->user->name ?? 'N/A' }}</p>
+                    <p><strong>Creado por:</strong> {{ $quote->user && $quote->user->nickname ? $quote->user->nickname : 'Usuario no disponible' }}</p>
                     <p><strong>Total:</strong> ${{ number_format($quote->total, 2) }}</p>
                 </div>
             </div>

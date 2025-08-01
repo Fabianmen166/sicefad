@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceProcessDetail extends Model
 {
-    protected $table = 'service_process_details';
     protected $fillable = [
         'process_id',
         'service_id',
@@ -24,5 +23,15 @@ class ServiceProcessDetail extends Model
     public function service()
     {
         return $this->belongsTo(Service::class, 'service_id', 'services_id');
+    }
+
+    public function phAnalysis()
+    {
+        return $this->hasOne(PhAnalysis::class, 'analysis_id');
+    }
+
+    public function conductivityAnalysis()
+    {
+        return $this->hasOne(ConductivityAnalysis::class, 'analysis_id');
     }
 } 

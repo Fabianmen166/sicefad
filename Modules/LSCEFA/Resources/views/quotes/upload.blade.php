@@ -18,27 +18,12 @@
                 </div>
             @endif
             <!-- Formulario para Subir Comprobante -->
-            <form action="{{ route('lscefa.quality.quotes.upload', $quote->quote_id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="form-group">
-                    <label for="archivo">Seleccionar Comprobante:</label>
-                    <input type="file" name="archivo" id="archivo" class="form-control" required>
-                    @error('archivo')
-                        <span class="text-danger">{{ $message }}</span>
-                    @enderror
-                </div>
-                <button type="submit" class="btn btn-primary">Subir Comprobante</button>
-                <a href="{{ route('lscefa.quality.quotes.show', $quote->quote_id) }}" class="btn btn-secondary">Volver</a>
-            </form>
-
-            <!-- Sección para Gestionar Procesos por Terreno -->
-            <hr>
-            <h3>Gestionar Procesos por Terreno</h3>
             @php
                 $unitCount = $unitCount ?? 1;
                 if ($unitCount < 1) $unitCount = 1;
                 $existingProcesses = $quote->processes && $quote->processes->count() > 0 ? $quote->processes : collect();
                 // $servicesPerUnit ya viene del controlador
+                $maxFileSize = 40; // Tamaño máximo en MB
             @endphp
             @if ($existingProcesses->count() > 0)
                 <div class="alert alert-info">
@@ -50,8 +35,23 @@
                     No se han definido unidades para esta cotización.
                 </div>
             @else
-                <form action="{{ route('lscefa.quality.process.start', $quote->quote_id) }}" method="POST" id="process-form" enctype="multipart/form-data">
+                <form action="{{ route('lscefa.quality.process.start', $quote->quote_id) }}" method="POST" id="process-form" enctype="multipart/form-data" onsubmit="return validateForm()">
                     @csrf
+                    <div class="form-group">
+                        <label for="archivo">Seleccionar Comprobante <span class="text-danger">*</span>:</label>
+                        <input type="file" name="archivo" id="archivo" class="form-control" required 
+                               accept="image/jpeg,image/png,application/pdf"
+                               data-max-size="{{ $maxFileSize * 1024 * 1024 }}">
+                        <small class="form-text text-muted">
+                            Formatos permitidos: JPG, PNG, PDF. Tamaño máximo: {{ $maxFileSize }}MB
+                        </small>
+                        <div id="fileError" class="text-danger d-none">
+                            El archivo seleccionado excede el tamaño máximo permitido de {{ $maxFileSize }}MB.
+                        </div>
+                        @error('archivo')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                    </div>
                     <input type="hidden" name="unit_count" value="{{ $unitCount }}">
                     <div class="form-group">
                         <label for="comunicacion_cliente">Comunicación con el Cliente <span class="text-danger">*</span>:</label>
@@ -148,10 +148,78 @@
                             <input type="hidden" name="services[{{ $unitIndex }}]" value="{{ json_encode($unitServiceIds) }}" />
                         </div>
                     @endforeach
-                    <button type="submit" class="btn btn-success mt-4">Iniciar Procesos para Todas las Unidades</button>
+                    <button type="submit" class="btn btn-success mt-4">Iniciar Proceso</button>
                 </form>
             @endif
         </div>
     </div>
 </div>
-@endsection 
+
+@push('scripts')
+<script>
+    // Validación de tamaño de archivo antes de enviar el formulario
+    function validateForm() {
+        const fileInput = document.getElementById('archivo');
+        const maxSize = fileInput.getAttribute('data-max-size');
+        const fileError = document.getElementById('fileError');
+        
+        if (fileInput.files.length > 0) {
+            const fileSize = fileInput.files[0].size;
+            
+            if (fileSize > maxSize) {
+                fileError.classList.remove('d-none');
+                // Mostrar notificación Toastr si está disponible
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(`El archivo es demasiado grande. El tamaño máximo permitido es ${Math.round(maxSize / (1024 * 1024))}MB.`);
+                } else {
+                    alert(`Error: El archivo es demasiado grande. El tamaño máximo permitido es ${Math.round(maxSize / (1024 * 1024))}MB.`);
+                }
+                fileInput.value = ''; // Limpiar el campo de archivo
+                return false;
+            } else {
+                fileError.classList.add('d-none');
+            }
+        }
+        return true;
+    }
+
+    // Validación en tiempo real cuando se selecciona un archivo
+    document.getElementById('archivo').addEventListener('change', function(e) {
+        const maxSize = this.getAttribute('data-max-size');
+        const fileError = document.getElementById('fileError');
+        
+        if (this.files.length > 0) {
+            const fileSize = this.files[0].size;
+            
+            if (fileSize > maxSize) {
+                fileError.classList.remove('d-none');
+                // Mostrar notificación Toastr si está disponible
+                if (typeof toastr !== 'undefined') {
+                    toastr.error(`El archivo es demasiado grande. El tamaño máximo permitido es ${Math.round(maxSize / (1024 * 1024))}MB.`);
+                } else {
+                    alert(`Error: El archivo es demasiado grande. El tamaño máximo permitido es ${Math.round(maxSize / (1024 * 1024))}MB.`);
+                }
+                this.value = ''; // Limpiar el campo de archivo
+            } else {
+                fileError.classList.add('d-none');
+            }
+        }
+    });
+</script>
+@endpush
+
+<style>
+    /* Estilos para la notificación de error */
+    .d-none {
+        display: none !important;
+    }
+    .text-danger {
+        color: #dc3545;
+    }
+    .form-text {
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #6c757d;
+    }
+</style>
+@endsection

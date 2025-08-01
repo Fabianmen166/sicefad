@@ -102,7 +102,7 @@ class QuoteController extends Controller
                     if (!empty($service['service_id']) && ($service['quantity'] ?? 1) > 0) {
                         $quantity = $service['quantity'] ?? 1;
                         $serviceModel = Service::findOrFail($service['service_id']);
-                        $subtotal = $serviceModel->price * $quantity;
+                        $subtotal = $serviceModel->precio * $quantity;
                         $total += $subtotal;
                         QuoteService::create([
                             'quote_id' => $quote->quote_id,
@@ -260,7 +260,7 @@ class QuoteController extends Controller
                     if (!empty($service['service_id']) && ($service['quantity'] ?? 1) > 0) {
                         $quantity = $service['quantity'] ?? 1;
                         $serviceModel = Service::findOrFail($service['service_id']);
-                        $subtotal = $serviceModel->price * $quantity;
+                        $subtotal = $serviceModel->precio * $quantity;
                         $total += $subtotal;
                         QuoteService::create([
                             'quote_id' => $quote->quote_id,
@@ -368,8 +368,13 @@ class QuoteController extends Controller
             $servicesPerUnit[$unitIdx][] = $quoteService;
         }
         $user = auth()->user();
-        if (!$user || (!$user->havePermission('lscefa.quality.quotes.upload') && !$user->havePermission('lscefa.admin.quotes.upload'))) {
-            abort(403, 'No tienes permisos para subir comprobantes.');
+        if (!$user || !(
+            $user->havePermission('lscefa.quality.quotes.upload') ||
+            $user->havePermission('lscefa.admin.quotes.upload') ||
+            $user->havePermission('lscefa.quality.process.start') ||
+            $user->havePermission('lscefa.admin.process.start')
+        )) {
+            abort(403, 'No tienes permisos para esta acción.');
         }
         return view('lscefa::quotes.upload', compact('quote', 'unitCount', 'servicesPerUnit'));
     }
@@ -378,7 +383,12 @@ class QuoteController extends Controller
     {
         $user = auth()->user();
         
-        if (!$user || (!$user->havePermission('lscefa.quality.quotes.upload') && !$user->havePermission('lscefa.admin.quotes.upload'))) {
+        if (!$user || !(
+            $user->havePermission('lscefa.quality.quotes.upload') ||
+            $user->havePermission('lscefa.admin.quotes.upload') ||
+            $user->havePermission('lscefa.quality.process.start') ||
+            $user->havePermission('lscefa.admin.process.start')
+        )) {
             abort(403, 'No tienes permisos para subir comprobantes.');
         }
         $request->validate([
@@ -406,11 +416,17 @@ class QuoteController extends Controller
     {
         $user = auth()->user();
         
-        if (!$user || (!$user->havePermission('lscefa.quality.process.start') && !$user->havePermission('lscefa.admin.process.start'))) {
-            abort(403, 'No tienes permisos para iniciar procesos.');
+        if (!$user || !(
+            $user->havePermission('lscefa.quality.quotes.upload') ||
+            $user->havePermission('lscefa.admin.quotes.upload') ||
+            $user->havePermission('lscefa.quality.process.start') ||
+            $user->havePermission('lscefa.admin.process.start')
+        )) {
+            abort(403, 'No tienes permisos para esta acción.');
         }
 
         $request->validate([
+            'archivo' => 'required|file|mimes:pdf,jpg,png|max:2048',
             'comunicacion_cliente' => 'required|string|min:10',
             'dias_procesar' => 'required|integer|min:1|max:365',
             'unit_count' => 'required|integer|min:1',
@@ -419,6 +435,9 @@ class QuoteController extends Controller
             'item_codes.*' => 'required|string|min:3',
             'services.*' => 'required|string',
         ], [
+            'archivo.required' => 'El comprobante es obligatorio.',
+            'archivo.mimes' => 'El comprobante debe ser PDF o imagen.',
+            'archivo.max' => 'El comprobante no puede superar los 2MB.',
             'comunicacion_cliente.required' => 'La comunicación con el cliente es obligatoria.',
             'comunicacion_cliente.min' => 'La comunicación con el cliente debe tener al menos 10 caracteres.',
             'archivo_comunicacion.mimes' => 'El archivo debe ser PDF, Word (.doc, .docx) o Excel (.xls, .xlsx).',
@@ -433,12 +452,33 @@ class QuoteController extends Controller
         try {
             DB::beginTransaction();
 
+            // Crear directorios si no existen
+            $comprobantesPath = module_path('LSCEFA') . '/storage/app/comprobantes/' . $quote->quote_id;
+            $comunicacionesPath = module_path('LSCEFA') . '/storage/app/comunicaciones';
+            
+            if (!file_exists($comprobantesPath)) {
+                mkdir($comprobantesPath, 0777, true);
+            }
+            if (!file_exists($comunicacionesPath)) {
+                mkdir($comunicacionesPath, 0777, true);
+            }
+
+            // Guardar comprobante obligatorio
+            $comprobanteFilename = null;
+            if ($request->hasFile('archivo')) {
+                $file = $request->file('archivo');
+                $comprobanteFilename = 'quote_' . $quote->quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move($comprobantesPath, $comprobanteFilename);
+                $quote->file = $comprobanteFilename;
+                $quote->save();
+            }
+
             // Manejar el archivo de comunicación si se subió
             $communicationFile = null;
             if ($request->hasFile('archivo_comunicacion')) {
                 $file = $request->file('archivo_comunicacion');
-                $filename = 'comunicacion_' . $quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/comunicaciones', $filename);
+                $filename = 'com_' . time() . '_' . $file->getClientOriginalName();
+                $file->move($comunicacionesPath, $filename);
                 $communicationFile = $filename;
             }
 
@@ -484,15 +524,17 @@ class QuoteController extends Controller
                     if ($qs->service_package_id && $qs->servicePackage) {
                         $includedServices = $qs->servicePackage->included_services;
                         if (is_array($includedServices)) {
-                            foreach ($includedServices as $includedServiceId) {
-                                ServiceProcessDetail::create([
-                                    'process_id' => $process->process_id,
-                                    'service_id' => $includedServiceId,
-                                    'status' => 'pending',
-                                    'result' => null,
-                                    'file' => null,
-                                    'observations' => null,
-                                ]);
+                            foreach ($includedServices as $includedService) {
+                                if (is_numeric($includedService)) {
+                                    ServiceProcessDetail::create([
+                                        'process_id' => $process->process_id,
+                                        'service_id' => $includedService,
+                                        'status' => 'pending',
+                                        'result' => null,
+                                        'file' => null,
+                                        'observations' => null,
+                                    ]);
+                                }
                             }
                         }
                     }
@@ -503,7 +545,7 @@ class QuoteController extends Controller
 
             // Redirigir a la vista global de procesos iniciados
             return redirect()->route('lscefa.quality.processes.index')
-                ->with('success', 'Procesos iniciados exitosamente para todas las unidades.');
+                ->with('success', 'Comprobante subido e inicio de procesos exitoso para todas las unidades.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -550,5 +592,46 @@ class QuoteController extends Controller
         $process = Process::findOrFail($process_id);
         $process->delete();
         return redirect()->route('lscefa.quality.processes.index')->with('success', 'Proceso eliminado correctamente.');
+    }
+
+    /**
+     * Descargar archivo de comunicación guardado en el módulo.
+     */
+    public function downloadCommunicationFile($filename)
+    {
+        $user = auth()->user();
+        if (!$user) {
+            abort(403, 'Debe iniciar sesión para descargar archivos.');
+        }
+        
+        $path = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $filename;
+        
+        if (!file_exists($path)) {
+            abort(404, 'Archivo no encontrado');
+        }
+        
+        return response()->download($path);
+    }
+
+    /**
+     * Descargar comprobante guardado en el módulo.
+     */
+    public function downloadComprobante($quote_id, $filename)
+    {
+        // Verificar autenticación
+        if (!auth()->check()) {
+            abort(403, 'Debe iniciar sesión para descargar archivos.');
+        }
+        
+        // Construir la ruta del archivo
+        $path = module_path('LSCEFA') . '/storage/app/comprobantes/' . $quote_id . '/' . $filename;
+        
+        // Verificar que el archivo exista
+        if (!file_exists($path)) {
+            abort(404, 'Archivo no encontrado');
+        }
+        
+        // Permitir la descarga a cualquier usuario autenticado
+        return response()->download($path);
     }
 } 

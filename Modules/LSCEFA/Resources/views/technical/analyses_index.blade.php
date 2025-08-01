@@ -4,6 +4,7 @@
 
 @section('content')
 <div class="container py-4">
+    <!-- Enlaces a análisis específicos -->
     <div class="card shadow">
         <h5 class="card-header">Procesos Técnicos Pendientes</h5>
         <div class="card-body">

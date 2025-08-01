@@ -17,6 +17,7 @@ use Modules\LSCEFA\Http\Controllers\CustomerTypeController;
 use Modules\LSCEFA\Http\Controllers\ServiceController;
 use Modules\LSCEFA\Http\Controllers\ServicePackageController;
 use Modules\LSCEFA\Http\Controllers\CustomerController;
+use Modules\LSCEFA\Http\Controllers\QuoteController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
@@ -28,8 +29,11 @@ Route::middleware(['lang'])->group(function(){
 
         // Rutas protegidas por rol
         Route::middleware(['auth', 'lscefa.role:lscefa.admin'])->group(function () {
-            Route::get('/admin/welcome', [LSCEFAController::class, 'admin'])->name('lscefa.admin.welcome');
-            Route::get('/admin/config', [LSCEFAController::class, 'config'])->name('lscefa.admin.config');
+            Route::get('/admin/welcome', [LSCEFAController::class, 'admin'])
+                ->name('lscefa.admin.welcome');
+                
+            Route::get('/admin/config', [LSCEFAController::class, 'config'])
+                ->name('lscefa.admin.config');
         });
 
         Route::middleware(['auth', 'lscefa.role:lscefa.intern'])->group(function () {
@@ -40,7 +44,23 @@ Route::middleware(['lang'])->group(function(){
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             Route::get('/technical/panel', [LSCEFAController::class, 'technical'])->name('lscefa.technical.panel');
             Route::get('/technical/samples', [LSCEFAController::class, 'samples'])->name('lscefa.technical.samples');
-            Route::get('/technical/analyses', [TechnicalAnalysisController::class, 'index'])->name('lscefa.technical.analyses.index');
+            Route::get('/technical/analyses', [\Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController::class, 'index'])->name('lscefa.technical.analyses.index');
+            
+            // Rutas para análisis de pH
+            Route::get('/ph-analyses', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'index'])->name('lscefa.ph_analysis.index');
+            Route::get('/ph-analyses/process-all', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'processAll'])->name('lscefa.ph_analysis.process_all');
+            Route::post('/ph-analyses/store', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'storePhAnalysis'])->name('lscefa.ph_analysis.store');
+            Route::get('/ph-analyses/{processId}/{serviceId}', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'phAnalysis'])->name('lscefa.ph_analysis.ph_analysis');
+            Route::post('/ph-analyses/{processId}/{serviceId}', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'storePhAnalysis'])->name('lscefa.ph_analysis.store_ph_analysis');
+            Route::get('/ph-analyses/report/{analysisId}', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'downloadPhReport'])->name('lscefa.ph_analysis.download_report');
+            Route::post('/ph-analyses/batch', [\Modules\LSCEFA\Http\Controllers\PhAnalysisController::class, 'batchPhAnalysis'])->name('lscefa.ph_analysis.batch_ph_analysis');
+
+            // Rutas para análisis de Conductividad
+            Route::get('/conductivity-analyses', [\Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController::class, 'index'])->name('lscefa.conductivity_analysis.index');
+            Route::post('/conductivity-analyses/batch', [\Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController::class, 'batchConductivityAnalysis'])->name('lscefa.conductivity_analysis.batch_conductivity_analysis');
+            Route::get('/conductivity-analyses/process-all', [\Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController::class, 'processAll'])->name('lscefa.conductivity_analysis.process_all');
+            Route::get('/conductivity-analyses/{processId}/{serviceId}', [\Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController::class, 'show'])->name('lscefa.conductivity_analysis.show');
+            Route::post('/conductivity-analyses/store', [\Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController::class, 'storeConductivityAnalysis'])->name('lscefa.conductivity_analysis.store');
         });
 
         // Rutas protegidas por rol para admin y gestión de calidad
@@ -57,11 +77,8 @@ Route::middleware(['lang'])->group(function(){
 
             // Rutas para servicios
             Route::get('/services', [ServiceController::class, 'index'])->name('lscefa.quality.services.index');
-            Route::get('/services/create', [ServiceController::class, 'create'])->name('lscefa.quality.services.create');
-            Route::post('/services', [ServiceController::class, 'store'])->name('lscefa.quality.services.store');
             Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('lscefa.quality.services.edit');
             Route::put('/services/{service}', [ServiceController::class, 'update'])->name('lscefa.quality.services.update');
-            Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('lscefa.quality.services.destroy');
 
             // Rutas para paquetes de servicio
             Route::get('/service_packages', [ServicePackageController::class, 'index'])->name('lscefa.quality.service_packages.index');
@@ -100,9 +117,19 @@ Route::middleware(['lang'])->group(function(){
             Route::delete('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'destroyProcess'])->name('lscefa.quality.processes.destroy');
         });
 
+        Route::middleware(['auth'])->group(function () {
+            // Rutas de descarga de archivos
+            Route::get('communication-file/{filename}', [QuoteController::class, 'downloadCommunicationFile'])
+                ->name('lscefa.communication_file.download');
+                
+            Route::get('comprobante-file/{quote_id}/{filename}', [QuoteController::class, 'downloadComprobante'])
+                ->name('lscefa.comprobante_file.download');
+        });
+
+        // Ruta para subir archivos (mantener esta ruta como está si es necesaria para usuarios no autenticados)
         Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
-        ->name('lscefa.quality.quotes.upload.form')
-        ->middleware(['auth', 'haveaccess:lscefa.quality.quotes.upload']);
+            ->name('lscefa.quality.quotes.upload.form')
+            ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
 
          // Rutas para Analisis de humedad
         Route::get('/technical/analyses/humidity', [HumidityAnalysisController::class, 'index'])->name('lscefa.technical.analyses.humidity.index');

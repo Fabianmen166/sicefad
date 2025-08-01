@@ -536,12 +536,6 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permisos_quality_customers[] = $perm->id;
 
-        // Asignar todos los permisos a los roles
-        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_service_packages);
-        $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_customers);
-        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_service_packages);
-        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
-
         // Permisos CRUD Cotizaciones
         $permisos_admin_quotes = [];
         $permisos_quality_quotes = [];
@@ -673,7 +667,7 @@ $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.quotes.upload'], [
     'app_id' => $app->id
 ]);
 $permisos_quality_quotes[] = $perm->id;
-        $permissions_admin[] = $perm->id;
+$permisos_admin_quotes[] = $perm->id;
 
         // Permiso para iniciar procesos por terreno
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.process.start'], [
@@ -753,5 +747,137 @@ $permisos_quality_quotes[] = $perm->id;
        // ]);
         //$permissions_unitmanager[] = $permission->id; // Almacenar permiso para rol 
 
+        // Permisos para análisis de pH (Personal Técnico)
+        $permisos_technical_ph = [];
+        
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.index'], [
+            'name' => 'Ver gestión de análisis de pH',
+            'description' => 'Puede ver la gestión de análisis de pH',
+            'description_english' => 'Can view pH analysis management',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.process_all'], [
+            'name' => 'Procesar todos los análisis de pH',
+            'description' => 'Puede procesar todos los análisis de pH pendientes',
+            'description_english' => 'Can process all pending pH analyses',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.store'], [
+            'name' => 'Guardar análisis de pH',
+            'description' => 'Puede guardar análisis de pH',
+            'description_english' => 'Can store pH analysis',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.ph_analysis'], [
+            'name' => 'Ver formulario de análisis de pH',
+            'description' => 'Puede ver el formulario de análisis de pH',
+            'description_english' => 'Can view pH analysis form',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.store_ph_analysis'], [
+            'name' => 'Guardar análisis de pH específico',
+            'description' => 'Puede guardar un análisis de pH específico',
+            'description_english' => 'Can store a specific pH analysis',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.download_report'], [
+            'name' => 'Descargar reporte de pH',
+            'description' => 'Puede descargar reportes de análisis de pH',
+            'description_english' => 'Can download pH analysis reports',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.batch_ph_analysis'], [
+            'name' => 'Procesar lote de análisis de pH',
+            'description' => 'Puede procesar lotes de análisis de pH',
+            'description_english' => 'Can process batches of pH analyses',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        // Asignar permisos de pH al rol técnico
+        $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_ph);
+
+        // Permiso para descargar archivos de comunicación
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.communication_file.download'], [
+            'name' => 'Descargar archivo de comunicación (Quality)',
+            'description' => 'Puede descargar archivos de comunicación desde la gestión de calidad',
+            'description_english' => 'Can download communication files from quality management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+
+        // Permiso para descargar comprobantes
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.comprobante_file.download'], [
+            'name' => 'Descargar comprobante de cotización (Quality)',
+            'description' => 'Puede descargar comprobantes de cotización desde la gestión de calidad',
+            'description_english' => 'Can download quote receipts from quality management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+
+        // Permisos para análisis de conductividad (Personal Técnico)
+        $permisos_technical_conductivity = [];
+        
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.index'], [
+            'name' => 'Ver gestión de análisis de conductividad',
+            'description' => 'Permite ver el listado y gestión de análisis de conductividad',
+            'description_english' => 'Can view conductivity analysis management',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_conductivity[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.batch_conductivity_analysis'], [
+            'name' => 'Procesar lote de análisis de conductividad',
+            'description' => 'Permite seleccionar y procesar lotes de análisis de conductividad',
+            'description_english' => 'Can process batches of conductivity analyses',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_conductivity[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.process_all'], [
+            'name' => 'Ver formulario de procesamiento de lote de conductividad',
+            'description' => 'Permite acceder al formulario de procesamiento de lotes de análisis de conductividad',
+            'description_english' => 'Can access the form for processing conductivity batches',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_conductivity[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.show'], [
+            'name' => 'Procesar análisis de conductividad individual',
+            'description' => 'Permite procesar un análisis de conductividad individualmente',
+            'description_english' => 'Can process a specific conductivity analysis',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_conductivity[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.store'], [
+            'name' => 'Guardar análisis de conductividad',
+            'description' => 'Permite guardar análisis de conductividad',
+            'description_english' => 'Can store conductivity analysis',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_conductivity[] = $perm->id;
+
+        // Asignar permisos de conductividad al rol técnico
+        $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_conductivity);
+
+        // Asignar todos los permisos al rol de administrador al final del método run()
+        $adminRole = Role::where('slug', 'lscefa.admin')->first();
+        $allPermissions = Permission::where('app_id', $app->id)->pluck('id')->toArray();
+        $adminRole->permissions()->syncWithoutDetaching($allPermissions);
     }
 }

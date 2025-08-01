@@ -7,9 +7,6 @@
     <div class="row mb-4">
         <div class="col-12 text-center">
             <h2 class="fw-bold text-success">Servicios</h2>
-            <a href="{{ route('lscefa.quality.services.create') }}" class="btn btn-primary float-right">
-                <i class="fas fa-plus"></i> Nuevo Servicio
-            </a>
             <hr>
         </div>
     </div>
@@ -50,15 +47,8 @@
                         <td>{{ $service->acreditado ? 'Sí' : 'No' }}</td>
                         <td>
                             <a href="{{ route('lscefa.quality.services.edit', $service) }}" class="btn btn-sm btn-info">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit"></i> Editar
                             </a>
-                            <form action="{{ route('lscefa.quality.services.destroy', $service) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Está seguro de eliminar este servicio?')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </form>
                         </td>
                     </tr>
                 @endforeach
@@ -67,4 +57,4 @@
         {{ $services->links() }}
     </div>
 </div>
-@endsection 
+@endsection

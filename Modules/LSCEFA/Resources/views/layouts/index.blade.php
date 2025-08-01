@@ -133,22 +133,27 @@
         <a href="/">Inicio</a>
     </div>
 
-    @if(isset($roles))
-        @php
-            $roles_lower = array_map('strtolower', $roles);
-        @endphp
-        {{-- <pre style="color:black;background:#fff;padding:10px;z-index:999;position:absolute;top:60px;right:10px;max-width:400px;">Roles: {{ print_r($roles, true) }}</pre> --}}
-        @if(in_array('lscefa.admin', $roles_lower))
-            <a href="{{ route('lscefa.admin.welcome') }}" class="btn-login" style="margin-left:auto;">Ir al Dashboard de Administración</a>
-        @elseif(in_array('lscefa.quality', $roles_lower))
-            <a href="{{ route('lscefa.quality.dashboard') }}" class="btn-login" style="margin-left:auto; background-color:#43a047;">Ir al Dashboard de Calidad</a>
-        @elseif(in_array('lscefa.intern', $roles_lower))
-            <a href="{{ route('lscefa.intern.panelpas') }}" class="btn-login" style="margin-left:auto; background-color:#0288d1;">Ir al Panel de Pasante</a>
-        @elseif(in_array('lscefa.technical', $roles_lower))
-            <a href="{{ route('lscefa.technical.panel') }}" class="btn-login" style="margin-left:auto; background-color:#fbc02d; color:#333;">Ir al Panel Técnico</a>
-        @endif
-    @endif
-    </div>
+  @if(Auth::check() && checkRol('lscefa.admin'))
+                    <li class="nav-item d-none d-sm-inline-block">
+                        <a href="{{ route('lscefa.admin.welcome') }}" class="nav-link @if (Route::is('lscefa.admin.*')) active @endif">Administración</a>
+                    </li>
+          @endif
+          @if(Auth::check() && checkRol('lscefa.intern'))
+                    <li class="nav-item d-none d-sm-inline-block">
+                        <a href="{{ route('lscefa.intern.panelpas') }}" class="nav-link @if (Route::is('lscefa.intern.*')) active @endif">Pasante</a>
+                    </li>
+          @endif
+          @if(Auth::check() && checkRol('lscefa.technical'))
+                    <li class="nav-item d-none d-sm-inline-block">
+                        <a href="{{ route('lscefa.technical.panel') }}" class="nav-link @if (Route::is('lscefa.technical.*')) active @endif">Personal Técnico</a>
+                    </li>
+          @endif
+          @if(Auth::check() && checkRol('lscefa.quality'))
+                    <li class="nav-item d-none d-sm-inline-block">
+                        <a href="{{ route('lscefa.quality.dashboard') }}" class="nav-link @if (Route::is('lscefa.quality.*')) active @endif">Gestión de Calidad</a>
+                    </li>
+          @endif
+</div>
 
 
     <!-- Contenido principal -->

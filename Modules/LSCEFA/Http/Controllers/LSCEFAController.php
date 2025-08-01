@@ -23,10 +23,21 @@ class LSCEFAController extends Controller
         if (auth()->check()) {
             $user = auth()->user();
             $roles = $user->roles()->pluck('slug')->toArray();
-            // Mostrar la página de bienvenida principal (lscefa::index) con el botón de dashboard
-            return view('lscefa::index', compact('user', 'roles'));
+
+            if (in_array('lscefa.admin', $roles)) {
+                return redirect()->route('lscefa.admin.welcome');
+            }
+            if (in_array('lscefa.quality', $roles)) {
+                return redirect()->route('lscefa.quality.dashboard');
+            }
+            if (in_array('lscefa.intern', $roles)) {
+                return redirect()->route('lscefa.intern.panelpas');
+            }
+            if (in_array('lscefa.technical', $roles)) {
+                return redirect()->route('lscefa.technical.panel');
+            }
         }
-        // Si no está autenticado, muestra la vista por defecto
+        // Si no está autenticado o no tiene roles, muestra la vista por defecto
         return view('lscefa::index');
     }
 
