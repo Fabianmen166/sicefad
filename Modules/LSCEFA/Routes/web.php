@@ -19,6 +19,7 @@ use Modules\LSCEFA\Http\Controllers\ServicePackageController;
 use Modules\LSCEFA\Http\Controllers\CustomerController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
+use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -103,10 +104,18 @@ Route::middleware(['lang'])->group(function(){
         ->name('lscefa.quality.quotes.upload.form')
         ->middleware(['auth', 'haveaccess:lscefa.quality.quotes.upload']);
 
+         // Rutas para Analisis de humedad
+        Route::get('/technical/analyses/humidity', [HumidityAnalysisController::class, 'index'])->name('lscefa.technical.analyses.humidity.index');
+       Route::get('/technical/analyses/humidity/process/{processId}/{serviceId}', [HumidityAnalysisController::class, 'humidityAnalysis'])->name('lscefa.technical.analyses.humidity.process');
+        Route::post('/technical/analyses/humidity/store', [HumidityAnalysisController::class, 'storeHumidityAnalysis'])->name('lscefa.technical.analyses.humidity.store');
+
+    //});
+     // Route::post('/admin/units/productive_units/environment_pus/store', [UnitController::class, 'environment_pus_store'])->name('sica.admin.units.productive_units.environment_pus.store'); /* Registrar asociación de ambiente y unidad productiva (Administrador) */
+      
+
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     });
 
-    // Rutas para Analisis de humedad
-     // Formulario de registro de entrada de inventario (Administrador)
+         
 });

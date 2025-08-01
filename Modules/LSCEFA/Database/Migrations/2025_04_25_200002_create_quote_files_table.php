@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('quote_files', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('quote_id');
+            $table->string('quote_id');
             $table->string('filename');
             $table->string('path');
             $table->string('mime');

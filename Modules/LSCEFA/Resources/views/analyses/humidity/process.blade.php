@@ -1,27 +1,11 @@
-@extends('layouts.app')
+@extends('lscefa::layouts.technical')
 
 @section('title', 'Procesar Análisis de Humedad')
 
-@section('contenido')
+@section('content')
     <div class="content-wrapper">
         <!-- Content Header -->
-        <section class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1>Procesar Análisis de Humedad</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="{{ route('personal_tecnico.dashboard') }}">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('humidity_analysis.index') }}">Gestión de
-                                    Humedad</a></li>
-                            <li class="breadcrumb-item active">Procesar Análisis</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </section>
+
         <!-- Para mensajes de Campos no ingresados -->
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -33,12 +17,12 @@
                 </ul>
             </div>
         @endif
-        <!-- Main Content -->
-        <form
-            action="{{ route('humidity_analysis.store_humidity_analysis', [$process->process_id, $humidityAnalysis->service_id]) }}"
-            method="POST">
-            @csrf
 
+        <!-- Main Content -->
+        <form action="{{ route('lscefa.technical.analyses.humidity.store') }}" method="POST">
+            @csrf
+             <input type="hidden" name="process_id" value="{{ $process->process_id }}">
+            <input type="hidden" name="service_id" value="{{ $service->services_id }}">
             <section class="content">
                 <div class="container-fluid">
                     @if (session('success'))
@@ -67,28 +51,32 @@
                                     <input type="text" class="form-control" id="proceso"
                                         value="{{ $process->process_id }}" readonly>
                                 </div>
-
                                 <!-- Servicio (solo lectura) -->
                                 <div class="form-group col-md-3">
                                     <label for="servicio">Servicios Involucrados</label>
                                     <input type="text" class="form-control" id="servicio"
                                         value="{{ $humidityAnalysis->service->descripcion ?? 'Humedad' }}" readonly>
                                 </div>
-
                                 <!-- Consecutivo -->
                                 <div class="form-group col-md-3">
                                     <label for="consecutivo_no">Consecutivo No.</label>
-                                    <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no">
+                                    <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no"
+                                        value="{{ old('consecutivo_no') }}">
                                 </div>
                             </div>
-
                             <div class="form-row mt-2">
                                 <!-- Fecha del análisis -->
-                                <div class="form-group col-md-3"> <label for="fecha_analisis">Fecha del Análisis</label>
+                                <div class="form-group col-md-3">
+                                    <label for="fecha_analisis">Fecha del Análisis</label>
                                     <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis"
                                         value="{{ old('fecha_analisis') }}">
                                 </div>
-
+                                <!--fecha fin del analis -->
+                                <div class="form-group col-md-3">
+                                    <label for="fecha_fin_analisis">Fecha fin del Análisis</label>
+                                    <input type="date" class="form-control" id="fecha_fin_analisis" name="fecha_fin_analisis"
+                                        value="{{ old('fecha_fin_analisis') }}">
+                                </div>
                                 <!-- Analista (solo lectura) -->
                                 <div class="form-group col-md-3">
                                     <label for="analista">Analista</label>
@@ -96,7 +84,6 @@
                                         value="{{ Auth::user()->name ?? 'N/A' }}" readonly>
                                 </div>
                             </div>
-
                         </div>
 
                         <!-- DETALLES DEL EQUIPO -->
@@ -112,21 +99,18 @@
                                         <input type="time" class="form-control" name="hora_ingreso_horno"
                                             id="hora_ingreso_horno" value="{{ old('hora_ingreso_horno') }}">
                                     </div>
-
                                     <!-- Hora salida del horno -->
                                     <div class="col-md-3 mb-3">
                                         <label for="hora_salida_horno">Hora salida del horno</label>
                                         <input type="time" class="form-control" name="hora_salida_horno"
                                             id="hora_salida_horno" value="{{ old('hora_salida_horno') }}">
                                     </div>
-
                                     <!-- Temperatura del horno -->
                                     <div class="col-md-3 mb-3">
                                         <label for="temperatura_horno">Temperatura del horno (°C)</label>
                                         <input type="number" step="any" class="form-control" name="temperatura_horno"
                                             id="temperatura_horno" value="{{ old('temperatura_horno') }}">
                                     </div>
-
                                     <!-- Resolución instrumental -->
                                     <div class="col-md-3 mb-3">
                                         <label for="resolucion_instrumental">Resolución instrumental</label>
@@ -134,7 +118,6 @@
                                             id="resolucion_instrumental" value="{{ old('resolucion_instrumental') }}">
                                     </div>
                                 </div>
-
                                 <div class="row">
                                     <!-- Nombre del método -->
                                     <div class="col-md-4 mb-3">
@@ -142,14 +125,12 @@
                                         <input type="text" class="form-control" name="nombre_metodo"
                                             id="nombre_metodo" value="{{ old('nombre_metodo') }}">
                                     </div>
-
                                     <!-- Equipo utilizado -->
                                     <div class="col-md-4 mb-3">
                                         <label for="equipo_utilizado">Equipo Utilizado</label>
                                         <input type="text" class="form-control" name="equipo_utilizado"
                                             id="equipo_utilizado" value="{{ old('equipo_utilizado') }}">
                                     </div>
-
                                     <!-- Unidades de reporte del equipo -->
                                     <div class="col-md-4 mb-3">
                                         <label for="unidades_reporte_equipo">Unidades de Reporte del Equipo</label>
@@ -157,7 +138,6 @@
                                             id="unidades_reporte_equipo" value="{{ old('unidades_reporte_equipo') }}">
                                     </div>
                                 </div>
-
                                 <div class="row">
                                     <!-- Intervalo del método -->
                                     <div class="col-md-4 mb-3">
@@ -168,13 +148,13 @@
                                 </div>
                             </div>
                         </div>
+
                         <!-- CONTROLES DE CALIDAD -->
                         <div class="card mt-3">
                             <div class="card-header py-2">
                                 <h6 class="mb-0">Controles de Calidad Analíticos</h6>
                             </div>
                             <div class="card-body p-2">
-
                                 <!-- Muestra Fortificada -->
                                 <div class="border p-2 mb-2">
                                     <h6 class="mb-2">Muestra Fortificada</h6>
@@ -183,13 +163,15 @@
                                             <label class="small">Masa suelo (g)</label>
                                             <input type="number" step="any" id="masa_suelo"
                                                 name="controles_analiticos[masa_suelo]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.masa_suelo') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">Masa agua (g)</label>
                                             <input type="number" step="any" id="masa_agua"
                                                 name="controles_analiticos[masa_agua]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.masa_agua') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">Masa suelo seco (g)</label>
@@ -207,19 +189,22 @@
                                             <label class="small">ID Muestra</label>
                                             <input type="text" id="identificacion_mf"
                                                 name="controles_analiticos[identificacion_mf]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.identificacion_mf') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">% Humedad obtenida</label>
                                             <input type="number" step="any" id="humedad_obtenida"
                                                 name="controles_analiticos[humedad_obtenida]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.humedad_obtenida') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">% Humedad fortificada</label>
                                             <input type="number" step="any" id="humedad_fortificada"
                                                 name="controles_analiticos[humedad_fortificada]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.humedad_fortificada') }}">
                                         </div>
                                         <div class="col-2">
                                             <label class="small">%REC</label>
@@ -235,7 +220,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Muestra Referencia -->
                                 <div class="border p-2 mb-2">
                                     <h6 class="mb-2">Muestra Referencia</h6>
@@ -244,19 +228,22 @@
                                             <label class="small">ID Muestra</label>
                                             <input type="text" id="identificacion_mr"
                                                 name="controles_analiticos[identificacion_mr]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.identificacion_mr') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">Valor Referencia</label>
                                             <input type="number" step="any" id="valor_referencia"
                                                 name="controles_analiticos[valor_referencia]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.valor_referencia') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">Valor Obtenido</label>
                                             <input type="number" step="any" id="valor_obtenido"
                                                 name="controles_analiticos[valor_obtenido]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.valor_obtenido') }}">
                                         </div>
                                         <div class="col-2">
                                             <label class="small">%REC</label>
@@ -272,7 +259,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Duplicado Muestra -->
                                 <div class="border p-2 mb-2">
                                     <h6 class="mb-2">Duplicado Muestra</h6>
@@ -281,19 +267,22 @@
                                             <label class="small">ID Muestra</label>
                                             <input type="text" id="identificacion_dm"
                                                 name="controles_analiticos[identificacion_dm]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.identificacion_dm') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">% Réplica 1</label>
                                             <input type="number" step="any" id="humedad_replica_1"
                                                 name="controles_analiticos[humedad_replica_1]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.humedad_replica_1') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">% Réplica 2</label>
                                             <input type="number" step="any" id="humedad_replica_2"
                                                 name="controles_analiticos[humedad_replica_2]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.humedad_replica_2') }}">
                                         </div>
                                         <div class="col-2">
                                             <label class="small">% DPR</label>
@@ -308,7 +297,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Blanco del método -->
                                 <div class="border p-2 mb-2">
                                     <h6 class="mb-2">Blanco del método</h6>
@@ -317,25 +305,29 @@
                                             <label class="small">Identificación</label>
                                             <input type="text" id="identificacion_bm"
                                                 name="controles_analiticos[identificacion_bm]"
-                                                class="form-control form-control-sm">
+                                                class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.identificacion_bm') }}">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">Resultado</label>
                                             <input type="number" step="any" id="resultado_blanco"
                                                 name="controles_analiticos[resultado_blanco]"
                                                 class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.resultado_blanco') }}"
                                                 oninput="evaluarAceptabilidadBlanco()">
                                         </div>
                                         <div class="col-3">
                                             <label class="small">LCM</label>
                                             <input type="number" step="any" id="lcm"
                                                 name="controles_analiticos[lcm]" class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.lcm') }}"
                                                 oninput="evaluarAceptabilidadBlanco()">
                                         </div>
                                         <div class="col-2">
                                             <label class="small">Rango del Método</label>
-                                            <input type="text" name="controles_calidad[blanco][rango_metodo]"
-                                                id="rango_metodo" class="form-control form-control-sm">
+                                            <input type="text" name="controles_analiticos[rango_metodo]"
+                                                id="rango_metodo" class="form-control form-control-sm"
+                                                value="{{ old('controles_analiticos.rango_metodo') }}">
                                         </div>
                                         <div class="col-1">
                                             <label class="small">Aceptable</label>
@@ -348,11 +340,12 @@
                                 <div class="mt-2">
                                     <label class="small">Observaciones</label>
                                     <textarea name="controles_calidad[observaciones]" id="observaciones" rows="2"
-                                        class="form-control form-control-sm"></textarea>
+                                        class="form-control form-control-sm">{{ old('controles_calidad.observaciones') }}</textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <!-- REGISTRO DE MUESTRAS -->
                     <div class="card mt-3">
                         <div class="card-header py-2">
@@ -375,14 +368,14 @@
                                     <tr>
                                         <td><input type="text" id="codigo_interno" name="codigo_interno" class="form-control" required>
                                         </td>
-                                        <td><input type="number" step="0.0001" id=" peso_capsula" name="peso_capsula"
+                                        <td><input type="number" step="0.0001" id="peso_capsula" name="peso_capsula"
                                                 class="form-control pc" required></td>
-                                        <td><input type="number" step="0.0001" name="peso_muestra"
-                                                class="form-control muestra" required></td>
+                                        <td><input type="number" step="0.0001"  id="peso_muestra" name="peso_muestra"
+                                                class="form-control muestra"></td>
                                         <td><input type="number" step="0.0001" id="peso_capsula_muestra_humedad" name="peso_capsula_muestra_humedad"
                                                 class="form-control pmh" readonly></td>
                                         <td><input type="number" step="0.0001" id="peso_capsula_muestra_seca" name="peso_capsula_muestra_seca"
-                                                class="form-control pms" required></td>
+                                                class="form-control pms" ></td>
                                         <td><input type="text" name="porcentaje_humedad"
                                                 class="form-control humedad" readonly></td>
                                         <td><input type="text" name="observaciones" class="form-control"></td>
@@ -402,14 +395,12 @@
                     <div class="card">
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">Guardar Análisis de Humedad</button>
-                            <a href="{{ route('humidity_analysis.index') }}" class="btn btn-secondary">Cancelar</a>
+                            <a href="" class="btn btn-secondary">Cancelar</a>
                         </div>
                     </div>
                     <script src="{{ asset('js/controles_analiticos.js') }}"></script>
-
             </section>
         </form>
-
     </div>
 
     <script>
@@ -418,7 +409,7 @@
             document.getElementById('masa_suelo').addEventListener('input', calcularFortificada);
             document.getElementById('humedad_obtenida').addEventListener('input', calcularFortificada);
             document.getElementById('masa_agua').addEventListener('input', calcularFortificada);
-            document.getElementById('humedad_fortificada_teorica').addEventListener('input', calcularFortificada);
+            document.getElementById('humedad_fortificada').addEventListener('input', calcularFortificada);
 
             function calcularFortificada() {
                 const masaSuelo = parseFloat(document.getElementById('masa_suelo').value) || 0;
@@ -427,17 +418,23 @@
                 const humedadFortificada = parseFloat(document.getElementById('humedad_fortificada')
                     .value) || 0;
 
-                const masaSueloSeco = masaSuelo * (100 / (humedadObtenida + 100));
-                document.getElementById('masa_suelo_seco').value = masaSueloSeco.toFixed(4);
+                if (masaSuelo > 0 && humedadObtenida >= 0) {
+                    const masaSueloSeco = masaSuelo * (100 / (humedadObtenida + 100));
+                    document.getElementById('masa_suelo_seco').value = masaSueloSeco.toFixed(4);
 
-                const humedadTeorica = (((masaSuelo + masaAgua) - masaSueloSeco) / masaSueloSeco) * 100;
-                document.getElementById('humedad_fortificada_teorica').value = humedadTeorica.toFixed(2);
+                    if (masaAgua > 0) {
+                        const humedadTeorica = (((masaSuelo + masaAgua) - masaSueloSeco) / masaSueloSeco) * 100;
+                        document.getElementById('humedad_fortificada_teorica').value = humedadTeorica.toFixed(2);
 
-                const recuperacion = (humedadFortificada / humedadTeorica) * 100;
-                document.getElementById('recuperacion').value = recuperacion.toFixed(2);
+                        if (humedadFortificada > 0 && humedadTeorica > 0) {
+                            const recuperacion = (humedadFortificada / humedadTeorica) * 100;
+                            document.getElementById('recuperacion').value = recuperacion.toFixed(2);
 
-                const aceptable = (recuperacion >= 70 && recuperacion <= 130) ? "Aceptable" : "No aceptable";
-                document.getElementById('aceptable_fortificada').value = aceptable;
+                            const aceptable = (recuperacion >= 70 && recuperacion <= 130) ? "Aceptable" : "No aceptable";
+                            document.getElementById('aceptable_fortificada').value = aceptable;
+                        }
+                    }
+                }
             }
 
             // Muestra Referencia - Cálculo %REC
@@ -448,12 +445,14 @@
                 const valorReferencia = parseFloat(document.getElementById('valor_referencia').value) || 0;
                 const valorObtenido = parseFloat(document.getElementById('valor_obtenido').value) || 0;
 
-                const recuperacionReferencia = Math.abs(valorObtenido) / valorReferencia * 100;
-                document.getElementById('recuperacion_referencia').value = recuperacionReferencia.toFixed(2);
+                if (valorReferencia > 0) {
+                    const recuperacionReferencia = Math.abs(valorObtenido) / valorReferencia * 100;
+                    document.getElementById('recuperacion_referencia').value = recuperacionReferencia.toFixed(2);
 
-                const aceptableRef = (recuperacionReferencia >= 70 && recuperacionReferencia <= 130) ? "Aceptable" :
-                    "No aceptable";
-                document.getElementById('aceptable_referencia').value = aceptableRef;
+                    const aceptableRef = (recuperacionReferencia >= 70 && recuperacionReferencia <= 130) ? "Aceptable" :
+                        "No aceptable";
+                    document.getElementById('aceptable_referencia').value = aceptableRef;
+                }
             }
 
             // Duplicado Muestra - Cálculo %DPR
@@ -464,11 +463,13 @@
                 const replica1 = parseFloat(document.getElementById('humedad_replica_1').value) || 0;
                 const replica2 = parseFloat(document.getElementById('humedad_replica_2').value) || 0;
 
-                const dpr = Math.abs(replica1 - replica2) / ((replica1 + replica2) / 2) * 100;
-                document.getElementById('dpr').value = dpr.toFixed(2);
+                if (replica1 > 0 && replica2 > 0) {
+                    const dpr = Math.abs(replica1 - replica2) / ((replica1 + replica2) / 2) * 100;
+                    document.getElementById('dpr').value = dpr.toFixed(2);
 
-                const aceptableDup = (dpr < 25) ? "Aceptable" : "No aceptable";
-                document.getElementById('aceptable_duplicado').value = aceptableDup;
+                    const aceptableDup = (dpr < 25) ? "Aceptable" : "No aceptable";
+                    document.getElementById('aceptable_duplicado').value = aceptableDup;
+                }
             }
         });
     </script>
@@ -482,67 +483,65 @@
             if (!isNaN(resultado) && !isNaN(lcm)) {
                 if (resultado <= lcm) {
                     aceptableField.value = "Aceptable";
-
                 } else {
                     aceptableField.value = "No Aceptable";
-
                 }
             } else {
                 aceptableField.value = "";
-                aceptableField.style.color = "black";
             }
         }
     </script>
+
     <script>
-    function calcularValores(row) {
-        const pcInput = row.querySelector('.pc');
-        const muestraInput = row.querySelector('.muestra');
-        const pmsInput = row.querySelector('.pms');
-        const pmhInput = row.querySelector('.pmh');
-        const humedadInput = row.querySelector('.humedad');
+        function calcularValores(row) {
+            const pcInput = row.querySelector('.pc');
+            const muestraInput = row.querySelector('.muestra');
+            const pmsInput = row.querySelector('.pms');
+            const pmhInput = row.querySelector('.pmh');
+            const humedadInput = row.querySelector('.humedad');
 
-        const pc = parseFloat(pcInput?.value.replace(',', '.')) || 0;
-        const muestra = parseFloat(muestraInput?.value.replace(',', '.')) || 0;
-        const pms = parseFloat(pmsInput?.value.replace(',', '.')) || 0;
+            const pc = parseFloat(pcInput?.value.replace(',', '.')) || 0;
+            const muestra = parseFloat(muestraInput?.value.replace(',', '.')) || 0;
+            const pms = parseFloat(pmsInput?.value.replace(',', '.')) || 0;
 
-        // Calcular Pmh: Pc + Muestra
-        const pmh = pc + muestra;
-        pmhInput.value = pmh > 0 ? pmh.toFixed(4) : '';
+            // Calcular Pmh: Pc + Muestra
+            const pmh = pc + muestra;
+            pmhInput.value = pmh > 0 ? pmh.toFixed(4) : '';
 
-        // Calcular % Humedad si hay datos válidos
-        if (pmh > 0 && pc > 0 && pms > 0 && (pmh - pc) !== 0) {
-            const humedad = ((pmh - pms) / (pmh - pc)) * 100;
-            humedadInput.value = humedad.toFixed(2);
-        } else {
-            humedadInput.value = '';
+            // Calcular % Humedad si hay datos válidos
+            if (pmh > 0 && pc > 0 && pms > 0 && (pmh - pc) !== 0) {
+                const humedad = ((pmh - pms) / (pmh - pc)) * 100;
+                humedadInput.value = humedad.toFixed(2);
+            } else {
+                humedadInput.value = '';
+            }
         }
-    }
 
-    function agregarFila() {
-        const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
-        const newRow = table.rows[0].cloneNode(true);
+        function agregarFila() {
+            const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
+            const newRow = table.rows[0].cloneNode(true);
 
-        newRow.querySelectorAll('input').forEach(input => {
-            input.value = '';
+            newRow.querySelectorAll('input').forEach(input => {
+                input.value = '';
+            });
+
+            table.appendChild(newRow);
+        }
+
+        function quitarFila() {
+            const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
+            if (table.rows.length > 1) {
+                table.deleteRow(table.rows.length - 1);
+            }
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.closest('tr') &&
+                (e.target.classList.contains('pc') || 
+                 e.target.classList.contains('muestra') || 
+                 e.target.classList.contains('pms'))) {
+                calcularValores(e.target.closest('tr'));
+            }
         });
-
-        table.appendChild(newRow);
-    }
-
-    function quitarFila() {
-        const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
-        if (table.rows.length > 1) {
-            table.deleteRow(table.rows.length - 1);
-        }
-    }
-
-    document.addEventListener('input', function(e) {
-        if (e.target.closest('tr') &&
-            (e.target.classList.contains('pc') || 
-             e.target.classList.contains('muestra') || 
-             e.target.classList.contains('pms'))) {
-            calcularValores(e.target.closest('tr'));
-        }
-    });
-</script>
-
+    </script>
+@endsection

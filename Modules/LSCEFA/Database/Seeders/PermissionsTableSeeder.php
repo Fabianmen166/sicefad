@@ -17,6 +17,12 @@ class PermissionsTableSeeder extends Seeder
      */
     public function run()
     {
+         // Definir arreglos de PERMISOS que van ser asignados a los ROLES
+        $permissions_admin = [];
+        $permissions_quality = [];    
+        $permissions_technical = [];
+        $permissions_intern = [];
+
         // Consultar la aplicación LSCEFA una sola vez
         $app = App::where('name', 'LSCEFA')->first();
 
@@ -84,6 +90,41 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_technical[] = $permission->id;
 
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+         // Permisos para Analisis de humedad
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.humidity.index'], [
+            'name' => 'Ver listado de Análisis de Humedad (Technical)',
+            'description' => 'Puede ver el listado de análisis de humedad (technical)',
+            'description_english' => 'Can view humidity analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.humidity.process'], [
+            'name' => 'Ver listado de Análisis de Humedad (Technical)',
+            'description' => 'Puede ver el listado de análisis de humedad (technical)',
+            'description_english' => 'Can view humidity analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+         // Permisos para ingresar los resultados de humedad
+       $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.humidity.store'], [
+            'name' => 'guardar los Análisis de Humedad (Technical)',
+            'description' => 'Puede guardar  los análisis de humedad (technical)',
+            'description_english' => 'Can process humidity analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
@@ -697,5 +738,20 @@ $permisos_quality_quotes[] = $perm->id;
         // Asignación de permisos a roles
         $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_quotes);
         $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_quotes);
+
+       
+       
+
+
+        
+        // Listado de unidades productivas disponibles (Gestor Unidades)
+       // $permission = Permission::updateOrCreate(['slug' => 'sica.unitmanager.units.productive_unit.index'], [ // Registro o actualización de permiso
+        //    'name' => 'Listado de unidades productivas disponibles (Gestor Unidades)',
+         //   'description' => 'Listado de unidades productivas disponibles',
+          //  'description_english' => 'List of available productive units',
+          //  'app_id' => $app->id
+       // ]);
+        //$permissions_unitmanager[] = $permission->id; // Almacenar permiso para rol 
+
     }
 }
