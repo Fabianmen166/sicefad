@@ -67,14 +67,67 @@
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         @php $user = auth()->user(); @endphp
-                        @if($user && $user->havePermission('lscefa.technical.analyses.index'))
+                        
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.index') }}" class="nav-link {{ request()->routeIs('lscefa.technical.analyses.index') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-vials"></i>
                                 <p>Análisis Técnicos</p>
                             </a>
                         </li>
-                        @endif
+                       
+                       
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Gestión de pH</p>
+                                </a>
+                            </li>
+                       
+                        <!-- Gestión de Análisis de humedad -->
+                      
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p> Humedad</p>
+                                </a>
+                            </li>
+                        
+                                                
+                      
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Conductividad</p>
+                                </a>
+                            </li>
+                        
+
+                        
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Intercambio Catiónico</p>
+                                </a>
+                            </li>
+                        
+
+                        
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Fósforo</p>
+                                </a>
+                            </li>
+                        
+
+                        
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Bases Cambiables</p>
+                                </a>
+                            </li>
+                        
                     </ul>
                 </nav>
             </div>
