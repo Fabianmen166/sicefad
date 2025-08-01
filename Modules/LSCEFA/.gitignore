@@ -1,0 +1,11 @@
+# Ignorar archivos de storage del módulo
+storage/
+storage/comprobantes/
+storage/comunicaciones/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Logs
+*.log 
