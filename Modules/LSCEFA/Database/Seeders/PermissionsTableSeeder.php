@@ -128,6 +128,213 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
+        // Permisos para Análisis de Intercambio Catiónico
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.index'], [
+            'name' => 'Ver listado de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede ver el listado de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can view cationic exchange analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.process'], [
+            'name' => 'Procesar Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede procesar análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can process cationic exchange analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.store'], [
+            'name' => 'Guardar Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede guardar análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can store cationic exchange analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.edit'], [
+            'name' => 'Editar Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede editar análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can edit cationic exchange analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.update'], [
+            'name' => 'Actualizar Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede actualizar análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can update cationic exchange analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.destroy'], [
+            'name' => 'Eliminar Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede eliminar análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can delete cationic exchange analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.show'], [
+            'name' => 'Ver detalle de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede ver el detalle de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can view cationic exchange analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.report'], [
+            'name' => 'Generar reporte de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede generar reportes de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can generate cationic exchange analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para procesamiento por lotes de análisis de intercambio catiónico
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede procesar múltiples análisis de intercambio catiónico por lotes (technical)',
+            'description_english' => 'Can process multiple cationic exchange analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can access the batch processing form for cationic exchange analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can save batch processing of cationic exchange analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        // Permisos para Análisis de Fósforo
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.index'], [
+            'name' => 'Ver listado de Análisis de Fósforo (Technical)',
+            'description' => 'Puede ver el listado de análisis de fósforo (technical)',
+            'description_english' => 'Can view phosphorus analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.process'], [
+            'name' => 'Procesar Análisis de Fósforo (Technical)',
+            'description' => 'Puede procesar análisis de fósforo (technical)',
+            'description_english' => 'Can process phosphorus analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.store'], [
+            'name' => 'Guardar Análisis de Fósforo (Technical)',
+            'description' => 'Puede guardar análisis de fósforo (technical)',
+            'description_english' => 'Can save phosphorus analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.edit'], [
+            'name' => 'Editar Análisis de Fósforo (Technical)',
+            'description' => 'Puede editar análisis de fósforo (technical)',
+            'description_english' => 'Can edit phosphorus analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.update'], [
+            'name' => 'Actualizar Análisis de Fósforo (Technical)',
+            'description' => 'Puede actualizar análisis de fósforo (technical)',
+            'description_english' => 'Can update phosphorus analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.destroy'], [
+            'name' => 'Eliminar Análisis de Fósforo (Technical)',
+            'description' => 'Puede eliminar análisis de fósforo (technical)',
+            'description_english' => 'Can delete phosphorus analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.show'], [
+            'name' => 'Ver detalle de Análisis de Fósforo (Technical)',
+            'description' => 'Puede ver el detalle de análisis de fósforo (technical)',
+            'description_english' => 'Can view phosphorus analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.report'], [
+            'name' => 'Generar reporte de Análisis de Fósforo (Technical)',
+            'description' => 'Puede generar reportes de análisis de fósforo (technical)',
+            'description_english' => 'Can generate phosphorus analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para procesamiento por lotes de análisis de fósforo
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Fósforo (Technical)',
+            'description' => 'Puede procesar múltiples análisis de fósforo por lotes (technical)',
+            'description_english' => 'Can process multiple phosphorus analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Fósforo (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de fósforo (technical)',
+            'description_english' => 'Can access the batch processing form for phosphorus analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.phosphorus.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Fósforo (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de fósforo (technical)',
+            'description_english' => 'Can save batch processing of phosphorus analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
         // Permisos Rol (Gestión de Calidad)
         $permissions_quality = [];
         

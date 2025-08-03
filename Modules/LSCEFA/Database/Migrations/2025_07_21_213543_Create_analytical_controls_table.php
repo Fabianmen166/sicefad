@@ -18,29 +18,47 @@ class CreateAnalyticalControlsTable extends Migration
              $table->string('process_id');
              $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
             
-            // Campos de controle analíticos
-            $table->decimal('masa_suelo', 10, 4)->nullable();
-            $table->decimal('masa_agua', 10, 4)->nullable();
-            $table->decimal('masa_suelo_seco', 10, 4)->nullable();
-            $table->decimal('humedad_fortificada_teorica', 10, 4)->nullable();
-            $table->decimal('humedad_obtenida', 10, 4)->nullable();
-            $table->decimal('humedad_fortificada', 10, 4)->nullable();
-            $table->decimal('recuperacion', 10, 4)->nullable();
-            $table->string('valor_referencia')->nullable();
-            $table->string('valor_obtenido')->nullable();
-            $table->string('blanco_metodo')->nullable();
-            $table->string('resultado')->nullable();
-            $table->string('limite_cuantificacion_metodo')->nullable();
-            $table->string('rango_metodo')->nullable();
-            $table->decimal('humedad_replica_1', 10, 4)->nullable();
-            $table->decimal('humedad_replica_2', 10, 4)->nullable();
-            $table->decimal('dpr', 10, 4)->nullable();
-            $table->string('identificacion_mf')->nullable(); // ID para muestra fortificada
-            $table->string('identificacion_mr')->nullable(); // ID para muestra de referencia
-            $table->string('identificacion_dm')->nullable(); // ID para muestra duplicada
-            $table->string('identificacion_bm')->nullable(); // ID para muestra de blanco
-            $table->enum('estado', ['Aceptable', 'No Aceptable'])->nullable();
-            $table->text('observaciones')->nullable();
+            // Campos de controle analíticos para CIC
+            // 1. Blanco método
+            $table->string('blanco_identificacion')->nullable();
+            $table->decimal('blanco_lcm', 8, 2)->nullable();
+            $table->decimal('blanco_valor_leido', 8, 2)->nullable();
+            $table->string('blanco_aceptable')->nullable();
+            $table->text('blanco_observaciones')->nullable();
+
+            // 2. Control de Laboratorio (CRM/SRM)
+            $table->string('error_identificacion')->nullable();
+            $table->decimal('error_valor_teorico', 8, 2)->nullable();
+            $table->decimal('error_valor_leido', 8, 2)->nullable();
+            $table->decimal('error_porcentaje', 8, 2)->nullable();
+            $table->string('error_aceptable')->nullable();
+            $table->text('error_observaciones')->nullable();
+
+            // 3. Recuperación de Estándar (Spike Recovery)
+            $table->string('recuperacion_identificacion')->nullable();
+            $table->decimal('recuperacion_valor_teorico', 8, 2)->nullable();
+            $table->decimal('recuperacion_valor_leido', 8, 2)->nullable();
+            $table->decimal('recuperacion_porcentaje', 8, 2)->nullable();
+            $table->string('recuperacion_aceptable')->nullable();
+            $table->text('recuperacion_observaciones')->nullable();
+
+            // 4. Duplicados (DPR/RPD)
+            $table->string('dpr_identificacion')->nullable();
+            $table->decimal('dpr_replica1', 8, 2)->nullable();
+            $table->decimal('dpr_replica2', 8, 2)->nullable();
+            $table->decimal('dpr_porcentaje', 8, 2)->nullable();
+            $table->string('dpr_aceptable')->nullable();
+            $table->text('dpr_observaciones')->nullable();
+            
+            // Campos específicos para controles analíticos de Fósforo
+            // 1. Controles Analíticos (Estándar A y B)
+            $table->json('controles_analiticos')->nullable();
+            
+            // 2. DPR de Curva de Calibración
+            $table->decimal('dpr_duplicado_a', 8, 4)->nullable();
+            $table->decimal('dpr_duplicado_b', 8, 4)->nullable();
+            $table->decimal('dpr_resultado', 8, 4)->nullable();
+            $table->string('dpr_aceptabilidad')->nullable();
             
             $table->timestamps();
         });
