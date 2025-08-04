@@ -53,23 +53,40 @@
                             </a>
                         </li>
 
-
+                         
+                        <!-- Gestión de pH -->
                         <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                            <a href="{{ route('lscefa.ph_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.ph_analysis.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Gestión de pH</p>
+                                <p>Análisis de pH</p>
                             </a>
                         </li>
-
+                       
+                        <!-- Análisis de Conductividad -->
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.conductivity_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.conductivity_analysis.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tint"></i>
+                                <p>Conductividad</p>
+                            </a>
+                        </li>
+                       
+                       
                         <!-- Gestión de Análisis de humedad -->
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.humidity.index') }}"
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.humidity.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Humedad</p>
-                            </a>
-                        </li>
-
+                      
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p> Humedad</p>
+                                </a>
+                            </li>
+                        
+                            <li class="nav-item">
+                                <a href="" class="nav-link text-success">
+                                    <i class="nav-icon fas fa-flask"></i>
+                                    <p>Intercambio Catiónico</p>
+                                </a>
+                            </li>
+                        
 
 
                         <li class="nav-item">

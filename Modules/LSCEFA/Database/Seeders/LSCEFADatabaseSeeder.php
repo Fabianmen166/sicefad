@@ -36,4 +36,3 @@ class LSCEFADatabaseSeeder extends Seeder
         }
     }
 }
-

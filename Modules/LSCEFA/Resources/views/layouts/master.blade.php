@@ -299,6 +299,17 @@
                                 </a>
                             </li>
                         @endif
+                        
+                        <!-- Menú de Administración - Solo visible para administradores -->
+                       
+                            
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.admin.users.index') }}" class="nav-link {{ request()->routeIs('lscefa.admin.users.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-users-cog"></i>
+                                    <p>Gestión de Usuarios</p>
+                                </a>
+                            </li>
+                      
                     </ul>
                 </nav>
             </div>
@@ -327,7 +338,7 @@
 
         <!-- Main Footer -->
         <footer class="main-footer">
-            <strong>Copyright © {{ date('Y') }} <a href="#">SENA</a>.</strong>
+            <strong>Copyright &copy; {{ date('Y') }} <a href="#">SENA</a>.</strong>
             Todos los derechos reservados.
         </footer>
     </div>

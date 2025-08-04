@@ -68,21 +68,25 @@
                                 <div class="service-container">
                                     <div class="service-row mb-3" data-service-index="0">
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label for="units_0_services_0" class="form-label">Servicio</label>
-                                                <select class="form-control service-select" name="units[0][services][0][service_id]" id="units_0_services_0">
-                                                    <option value="">Seleccione un servicio</option>
-                                                    @foreach ($services as $service)
-                                                        <option value="{{ $service->services_id }}" data-price="{{ $service->precio }}">
-                                                            {{ $service->descripcion }} ({{ $service->precio }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="input-group">
+                                                    <select class="form-control service-select" name="units[0][services][0][service_id]" id="units_0_services_0">
+                                                        <option value="">Seleccione un servicio</option>
+                                                        @foreach ($services as $service)
+                                                            <option value="{{ $service->services_id }}" data-price="{{ $service->precio }}">
+                                                                {{ $service->descripcion }} ({{ $service->precio }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="units_0_quantities_0" class="form-label">Cantidad</label>
-                                                <input type="number" class="form-control quantity" name="units[0][services][0][quantity]" id="units_0_quantities_0" min="1" value="1">
-                                            </div>
+                                            <input type="hidden" class="form-control quantity" name="units[0][services][0][quantity]" value="1">
                                             <div class="col-md-3">
                                                 <label class="form-label">Subtotal</label>
                                                 <input type="text" class="form-control subtotal" readonly value="0">
@@ -99,21 +103,25 @@
                                 <div class="package-container">
                                     <div class="package-row mb-3" data-package-index="0">
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label for="units_0_packages_0" class="form-label">Paquete</label>
-                                                <select class="form-control package-select" name="units[0][packages][0][package_id]" id="units_0_packages_0">
-                                                    <option value="">Seleccione un paquete</option>
-                                                    @foreach ($servicePackages as $servicePackage)
-                                                        <option value="{{ $servicePackage->service_package_id }}" data-price="{{ $servicePackage->price }}">
-                                                            {{ $servicePackage->name }} ({{ $servicePackage->price }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="input-group">
+                                                    <select class="form-control package-select" name="units[0][packages][0][package_id]" id="units_0_packages_0">
+                                                        <option value="">Seleccione un paquete</option>
+                                                        @foreach ($servicePackages as $servicePackage)
+                                                            <option value="{{ $servicePackage->service_package_id }}" data-price="{{ $servicePackage->price }}">
+                                                                {{ $servicePackage->name }} ({{ $servicePackage->price }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="units_0_package_quantities_0" class="form-label">Cantidad</label>
-                                                <input type="number" class="form-control quantity" name="units[0][packages][0][quantity]" id="units_0_package_quantities_0" min="1" value="1">
-                                            </div>
+                                            <input type="hidden" class="form-control quantity" name="units[0][packages][0][quantity]" value="1">
                                             <div class="col-md-3">
                                                 <label class="form-label">Subtotal</label>
                                                 <input type="text" class="form-control subtotal" readonly value="0">
@@ -165,12 +173,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     function calculateSubtotal(row) {
         const select = row.querySelector('.service-select, .package-select');
-        const quantity = row.querySelector('.quantity');
         const subtotal = row.querySelector('.subtotal');
-        if (!select || !quantity || !subtotal) return 0;
+        if (!select || !subtotal) return 0;
         const price = parseFloat(select.options[select.selectedIndex]?.dataset.price || 0);
-        const qty = parseInt(quantity.value) || 1;
-        const subtotalValue = price * qty;
+        const subtotalValue = price;
         subtotal.value = subtotalValue.toFixed(2);
         return subtotalValue;
     }
@@ -204,35 +210,31 @@ document.addEventListener('DOMContentLoaded', () => {
         newRow.dataset.serviceIndex = serviceIndex;
         newRow.innerHTML = `
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="units_${unitIndex}_services_${serviceIndex}" class="form-label">Servicio</label>
-                    <select class="form-control service-select" name="units[${unitIndex}][services][${serviceIndex}][service_id]" id="units_${unitIndex}_services_${serviceIndex}">
-                        <option value="">Seleccione un servicio</option>
-                        ${servicesData.map(s => `<option value="${s.services_id}" data-price="${s.precio}">${s.descripcion} (${s.precio})</option>`).join('')}
-                    </select>
+                    <div class="input-group">
+                        <select class="form-control service-select" name="units[${unitIndex}][services][${serviceIndex}][service_id]" id="units_${unitIndex}_services_${serviceIndex}">
+                            <option value="">Seleccione un servicio</option>
+                            ${servicesData.map(s => `<option value="${s.services_id}" data-price="${s.precio}">${s.descripcion} (${s.precio})</option>`).join('')}
+                        </select>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-danger delete-service-btn" ${serviceIndex === 0 ? 'style="display: none;"' : ''}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="units_${unitIndex}_quantities_${serviceIndex}" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control quantity" name="units[${unitIndex}][services][${serviceIndex}][quantity]" id="units_${unitIndex}_quantities_${serviceIndex}" min="1" value="1">
-                </div>
-                <div class="col-md-3">
+                <input type="hidden" class="form-control quantity" name="units[${unitIndex}][services][${serviceIndex}][quantity]" value="1">
+                <div class="col-md-4">
                     <label class="form-label">Subtotal</label>
                     <input type="text" class="form-control subtotal" readonly value="0">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger delete-service-btn">Eliminar</button>
                 </div>
             </div>
         `;
         serviceContainer.appendChild(newRow);
         const select = newRow.querySelector('.service-select');
-        const quantity = newRow.querySelector('.quantity');
         const deleteBtn = newRow.querySelector('.delete-service-btn');
         select.addEventListener('change', () => {
-            calculateSubtotal(newRow);
-            calculateTotal();
-        });
-        quantity.addEventListener('input', () => {
             calculateSubtotal(newRow);
             calculateTotal();
         });
@@ -251,35 +253,31 @@ document.addEventListener('DOMContentLoaded', () => {
         newRow.dataset.packageIndex = packageIndex;
         newRow.innerHTML = `
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="units_${unitIndex}_packages_${packageIndex}" class="form-label">Paquete</label>
-                    <select class="form-control package-select" name="units[${unitIndex}][packages][${packageIndex}][package_id]" id="units_${unitIndex}_packages_${packageIndex}">
-                        <option value="">Seleccione un paquete</option>
-                        ${servicePackages.map(p => `<option value="${p.service_package_id}" data-price="${p.price}">${p.name} (${p.price})</option>`).join('')}
-                    </select>
+                    <div class="input-group">
+                        <select class="form-control package-select" name="units[${unitIndex}][packages][${packageIndex}][package_id]" id="units_${unitIndex}_packages_${packageIndex}">
+                            <option value="">Seleccione un paquete</option>
+                            ${servicePackages.map(p => `<option value="${p.service_package_id}" data-price="${p.price}">${p.name} (${p.price})</option>`).join('')}
+                        </select>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-danger delete-package-btn" ${packageIndex === 0 ? 'style="display: none;"' : ''}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="units_${unitIndex}_package_quantities_${packageIndex}" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control quantity" name="units[${unitIndex}][packages][${packageIndex}][quantity]" id="units_${unitIndex}_package_quantities_${packageIndex}" min="1" value="1">
-                </div>
-                <div class="col-md-3">
+                <input type="hidden" class="form-control quantity" name="units[${unitIndex}][packages][${packageIndex}][quantity]" value="1">
+                <div class="col-md-4">
                     <label class="form-label">Subtotal</label>
                     <input type="text" class="form-control subtotal" readonly value="0">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger delete-package-btn">Eliminar</button>
                 </div>
             </div>
         `;
         packageContainer.appendChild(newRow);
         const select = newRow.querySelector('.package-select');
-        const quantity = newRow.querySelector('.quantity');
         const deleteBtn = newRow.querySelector('.delete-package-btn');
         select.addEventListener('change', () => {
-            calculateSubtotal(newRow);
-            calculateTotal();
-        });
-        quantity.addEventListener('input', () => {
             calculateSubtotal(newRow);
             calculateTotal();
         });
@@ -301,23 +299,24 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="service-container">
                 <div class="service-row mb-3" data-service-index="0">
                     <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Servicio</label>
+                            <div class="input-group">
+                                <select class="form-control service-select" name="units[${unitIndex}][services][0][service_id]">
+                                    <option value="">Seleccione un servicio</option>
+                                    ${servicesData.map(s => `<option value="${s.services_id}" data-price="${s.precio}">${s.descripcion} (${s.precio})</option>`).join('')}
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control quantity" name="units[${unitIndex}][services][0][quantity]" value="1">
                         <div class="col-md-4">
-                            <label for="units_${unitIndex}_services_0" class="form-label">Servicio</label>
-                            <select class="form-control service-select" name="units[${unitIndex}][services][0][service_id]" id="units_${unitIndex}_services_0">
-                                <option value="">Seleccione un servicio</option>
-                                ${servicesData.map(s => `<option value="${s.services_id}" data-price="${s.precio}">${s.descripcion} (${s.precio})</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="units_${unitIndex}_quantities_0" class="form-label">Cantidad</label>
-                            <input type="number" class="form-control quantity" name="units[${unitIndex}][services][0][quantity]" id="units_${unitIndex}_quantities_0" min="1" value="1">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label">Subtotal</label>
                             <input type="text" class="form-control subtotal" readonly value="0">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">Eliminar</button>
                         </div>
                     </div>
                 </div>
@@ -327,23 +326,24 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="package-container">
                 <div class="package-row mb-3" data-package-index="0">
                     <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Paquete</label>
+                            <div class="input-group">
+                                <select class="form-control package-select" name="units[${unitIndex}][packages][0][package_id]">
+                                    <option value="">Seleccione un paquete</option>
+                                    ${servicePackages.map(p => `<option value="${p.service_package_id}" data-price="${p.price}">${p.name} (${p.price})</option>`).join('')}
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control quantity" name="units[${unitIndex}][packages][0][quantity]" value="1">
                         <div class="col-md-4">
-                            <label for="units_${unitIndex}_packages_0" class="form-label">Paquete</label>
-                            <select class="form-control package-select" name="units[${unitIndex}][packages][0][package_id]" id="units_${unitIndex}_packages_0">
-                                <option value="">Seleccione un paquete</option>
-                                ${servicePackages.map(p => `<option value="${p.service_package_id}" data-price="${p.price}">${p.name} (${p.price})</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="units_${unitIndex}_package_quantities_0" class="form-label">Cantidad</label>
-                            <input type="number" class="form-control quantity" name="units[${unitIndex}][packages][0][quantity]" id="units_${unitIndex}_package_quantities_0" min="1" value="1">
-                        </div>
-                        <div class="col-md-3">
                             <label class="form-label">Subtotal</label>
                             <input type="text" class="form-control subtotal" readonly value="0">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">Eliminar</button>
                         </div>
                     </div>
                 </div>
