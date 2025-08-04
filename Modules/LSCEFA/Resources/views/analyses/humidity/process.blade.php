@@ -160,47 +160,47 @@
                                     <h6 class="mb-2">Muestra Fortificada</h6>
                                     <div class="row g-1">
                                         <div class="col-3">
-                                            <label class="small">Masa suelo (g)</label>
+                                            <label class="small">Masa de suelo (g)</label>
                                             <input type="number" step="any" id="masa_suelo"
                                                 name="controles_analiticos[masa_suelo]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.masa_suelo') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">Masa agua (g)</label>
+                                            <label class="small">Masa de agua adicionada (g)</label>
                                             <input type="number" step="any" id="masa_agua"
                                                 name="controles_analiticos[masa_agua]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.masa_agua') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">Masa suelo seco (g)</label>
+                                            <label class="small">Masa de suelo seco (g)</label>
                                             <input type="text" id="masa_suelo_seco"
                                                 name="controles_analiticos[masa_suelo_seco]"
                                                 class="form-control form-control-sm" readonly>
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Humedad teórica</label>
+                                            <label class="small">% Humedad fortificada teórica</label>
                                             <input type="text" id="humedad_fortificada_teorica"
                                                 name="controles_analiticos[humedad_fortificada_teorica]"
                                                 class="form-control form-control-sm" readonly>
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">ID Muestra</label>
+                                            <label class="small">Identificacion de la Muestra</label>
                                             <input type="text" id="identificacion_mf"
                                                 name="controles_analiticos[identificacion_mf]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.identificacion_mf') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Humedad obtenida</label>
+                                            <label class="small">% Humedad obtenida en la muestra</label>
                                             <input type="number" step="any" id="humedad_obtenida"
                                                 name="controles_analiticos[humedad_obtenida]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.humedad_obtenida') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Humedad fortificada</label>
+                                            <label class="small">% Humedad obtenido en la muestra fortificada</label>
                                             <input type="number" step="any" id="humedad_fortificada"
                                                 name="controles_analiticos[humedad_fortificada]"
                                                 class="form-control form-control-sm"
@@ -225,21 +225,21 @@
                                     <h6 class="mb-2">Muestra Referencia</h6>
                                     <div class="row g-1">
                                         <div class="col-3">
-                                            <label class="small">ID Muestra</label>
+                                            <label class="small">Identificacion de Muestra</label>
                                             <input type="text" id="identificacion_mr"
                                                 name="controles_analiticos[identificacion_mr]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.identificacion_mr') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">Valor Referencia</label>
+                                            <label class="small">Valor Referencia % Humedad</label>
                                             <input type="number" step="any" id="valor_referencia"
                                                 name="controles_analiticos[valor_referencia]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.valor_referencia') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">Valor Obtenido</label>
+                                            <label class="small">Valor Obtenido % Humedad</label>
                                             <input type="number" step="any" id="valor_obtenido"
                                                 name="controles_analiticos[valor_obtenido]"
                                                 class="form-control form-control-sm"
@@ -264,21 +264,21 @@
                                     <h6 class="mb-2">Duplicado Muestra</h6>
                                     <div class="row g-1">
                                         <div class="col-3">
-                                            <label class="small">ID Muestra</label>
+                                            <label class="small">Identificacion de Muestra</label>
                                             <input type="text" id="identificacion_dm"
                                                 name="controles_analiticos[identificacion_dm]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.identificacion_dm') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Réplica 1</label>
+                                            <label class="small">% Humedad Réplica 1</label>
                                             <input type="number" step="any" id="humedad_replica_1"
                                                 name="controles_analiticos[humedad_replica_1]"
                                                 class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.humedad_replica_1') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Réplica 2</label>
+                                            <label class="small">% Humedad Réplica 2</label>
                                             <input type="number" step="any" id="humedad_replica_2"
                                                 name="controles_analiticos[humedad_replica_2]"
                                                 class="form-control form-control-sm"
@@ -317,7 +317,7 @@
                                                 oninput="evaluarAceptabilidadBlanco()">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">LCM</label>
+                                            <label class="small">Límite de Cuantificación del Método (LCM)</label>
                                             <input type="number" step="any" id="lcm"
                                                 name="controles_analiticos[lcm]" class="form-control form-control-sm"
                                                 value="{{ old('controles_analiticos.lcm') }}"
@@ -358,9 +358,9 @@
                                         <th>Código interno</th>
                                         <th>Peso Cápsula, Pc (g)</th>
                                         <th>Peso Muestra (g)</th>
-                                        <th>Pmh (Pc + Muestra)</th>
-                                        <th>Pms (g)</th>
-                                        <th>% Humedad</th>
+                                        <th>Peso Capsula + Muestra Pmh (g)</th>
+                                        <th>Peso Capsula + Muestra Pms (g)</th>
+                                        <th>% Humedad, pW (g/100g)</th>
                                         <th>Observaciones</th>
                                     </tr>
                                 </thead>
@@ -544,4 +544,3 @@
             }
         });
     </script>
-@endsection

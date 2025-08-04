@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
+<<<<<<< HEAD
+use Modules\LSCEFA\Models\Service;
+use Modules\LSCEFA\Entities\CarbonoAnalysis;
+
+=======
+use Modules\LSCEFA\Entities\CationicAnalysis;
+use Modules\LSCEFA\Entities\PhosphorusAnalysis;
+>>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
 
 class Process extends Model
 {
@@ -47,14 +55,42 @@ class Process extends Model
     return $this->hasMany(HumidityAnalysis::class, 'process_id', 'process_id');
 }
 
+<<<<<<< HEAD
+    // Relación con CarbonoAnalysis
+    public function carbonoAnalyses()
+    {
+        return $this->hasMany(CarbonoAnalysis::class, 'process_id', 'process_id');
+    }
+=======
+    // Relación con CationicAnalysis
+ public function cationicAnalyses()
+{
+    return $this->hasMany(CationicAnalysis::class, 'process_id', 'process_id');
+}
+
+    // Relación con PhosphorusAnalysis
+ public function phosphorusAnalyses()
+{
+    return $this->hasMany(PhosphorusAnalysis::class, 'process_id', 'process_id');
+}
+
+>>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
     // Relación con el cliente a través de la cotización
     public function customer()
     {
-        return $this->quote ? $this->quote->customer : null;
+        return $this->hasOneThrough(
+            \Modules\LSCEFA\Models\Customer::class,
+            Quote::class,
+            'quote_id', // Clave foránea en quotes
+            'customer_id', // Clave foránea en customers
+            'quote_id', // Clave local en processes
+            'customer_id' // Clave local en quotes
+        );
     }
 
     public function service()
 {
     return $this->belongsTo(Service::class, 'service_id');
 }
+
 } 
