@@ -21,7 +21,12 @@ use Modules\LSCEFA\Http\Controllers\QuoteController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
+<<<<<<< HEAD
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
+=======
+use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
+use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
+>>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -132,10 +137,47 @@ Route::middleware(['lang'])->group(function(){
             ->name('lscefa.quality.quotes.upload.form')
             ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
 
-         // Rutas para Analisis de humedad
-        Route::get('/technical/analyses/humidity', [HumidityAnalysisController::class, 'index'])->name('lscefa.technical.analyses.humidity.index');
-       Route::get('/technical/analyses/humidity/process/{processId}/{serviceId}', [HumidityAnalysisController::class, 'humidityAnalysis'])->name('lscefa.technical.analyses.humidity.process');
-        Route::post('/technical/analyses/humidity/store', [HumidityAnalysisController::class, 'storeHumidityAnalysis'])->name('lscefa.technical.analyses.humidity.store');
+         });
+
+        Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
+            // Rutas para Analisis de humedad
+            Route::get('/technical/analyses/humidity', [HumidityAnalysisController::class, 'index'])->name('lscefa.technical.analyses.humidity.index');
+            Route::get('/technical/analyses/humidity/process/{processId}/{serviceId}', [HumidityAnalysisController::class, 'humidityAnalysis'])->name('lscefa.technical.analyses.humidity.process');
+            Route::post('/technical/analyses/humidity/store', [HumidityAnalysisController::class, 'storeHumidityAnalysis'])->name('lscefa.technical.analyses.humidity.store');
+
+            // Rutas para Análisis de Intercambio Catiónico
+            Route::get('/technical/analyses/cationic', [CationicAnalysisController::class, 'index'])->name('lscefa.technical.analyses.cationic.index');
+            Route::get('/technical/analyses/cationic/process/{processId}/{serviceId}', [CationicAnalysisController::class, 'cationicAnalysis'])->name('lscefa.technical.analyses.cationic.process');
+            Route::post('/technical/analyses/cationic/store', [CationicAnalysisController::class, 'storeCationicAnalysis'])->name('lscefa.technical.analyses.cationic.store');
+            Route::get('/technical/analyses/cationic/batch', [CationicAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.cationic.batch');
+            Route::post('/technical/analyses/cationic/batch', [CationicAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.cationic.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.cationic.batch.post');
+            Route::post('/technical/analyses/cationic/batch-store', [CationicAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.cationic.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.cationic.batch_store');
+            Route::get('/technical/analyses/cationic/{id}', [CationicAnalysisController::class, 'show'])->name('lscefa.technical.analyses.cationic.show');
+            Route::get('/technical/analyses/cationic/{id}/edit', [CationicAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.cationic.edit');
+            Route::put('/technical/analyses/cationic/{id}', [CationicAnalysisController::class, 'update'])->name('lscefa.technical.analyses.cationic.update');
+            Route::delete('/technical/analyses/cationic/{id}', [CationicAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.cationic.destroy');
+            Route::get('/technical/analyses/cationic/{id}/report', [CationicAnalysisController::class, 'report'])->name('lscefa.technical.analyses.cationic.report');
+
+            // Rutas para Análisis de Fósforo
+            Route::get('/technical/analyses/phosphorus', [PhosphorusAnalysisController::class, 'index'])->name('lscefa.technical.analyses.phosphorus.index');
+            Route::get('/technical/analyses/phosphorus/process/{processId}/{serviceId}', [PhosphorusAnalysisController::class, 'process'])->name('lscefa.technical.analyses.phosphorus.process');
+            Route::post('/technical/analyses/phosphorus/store', [PhosphorusAnalysisController::class, 'storePhosphorusAnalysis'])->name('lscefa.technical.analyses.phosphorus.store');
+            Route::get('/technical/analyses/phosphorus/batch', [PhosphorusAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.phosphorus.batch');
+            Route::post('/technical/analyses/phosphorus/batch', [PhosphorusAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.phosphorus.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.phosphorus.batch.post');
+            Route::post('/technical/analyses/phosphorus/batch-store', [PhosphorusAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.phosphorus.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.phosphorus.batch_store');
+            Route::get('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'show'])->name('lscefa.technical.analyses.phosphorus.show');
+            Route::get('/technical/analyses/phosphorus/{id}/edit', [PhosphorusAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.phosphorus.edit');
+            Route::put('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'update'])->name('lscefa.technical.analyses.phosphorus.update');
+            Route::delete('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.phosphorus.destroy');
+            Route::get('/technical/analyses/phosphorus/{id}/report', [PhosphorusAnalysisController::class, 'report'])->name('lscefa.technical.analyses.phosphorus.report');
 
         // Rutas para Análisis de Carbono Orgánico
         Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');

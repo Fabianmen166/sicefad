@@ -89,7 +89,8 @@
 
 
                         <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                            <a href="{{ route('lscefa.technical.analyses.cationic.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Intercambio Catiónico</p>
                             </a>
@@ -98,7 +99,8 @@
 
 
                         <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Fósforo</p>
                             </a>
