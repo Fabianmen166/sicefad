@@ -28,12 +28,15 @@ class CreateAnalyticalControlsTable extends Migration
             $table->decimal('recuperacion', 10, 4)->nullable();
             $table->string('valor_referencia')->nullable();
             $table->string('valor_obtenido')->nullable();
+            $table->string('valor_leido')->nullable(); // Añadido para consistencia
             $table->string('blanco_metodo')->nullable();
             $table->string('resultado')->nullable();
             $table->string('limite_cuantificacion_metodo')->nullable();
             $table->string('rango_metodo')->nullable();
             $table->decimal('humedad_replica_1', 10, 4)->nullable();
             $table->decimal('humedad_replica_2', 10, 4)->nullable();
+            $table->decimal('replica_1', 10, 4)->nullable(); // Añadido para replica 1
+            $table->decimal('replica_2', 10, 4)->nullable();
             $table->decimal('dpr', 10, 4)->nullable();
             $table->string('identificacion_mf')->nullable(); // ID para muestra fortificada
             $table->string('identificacion_mr')->nullable(); // ID para muestra de referencia

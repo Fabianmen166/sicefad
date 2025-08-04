@@ -24,6 +24,7 @@ class AnalyticalControl extends Model
         'recuperacion',
         'valor_referencia',
         'valor_obtenido',
+        'valor_leido',
         'blanco_metodo',
         'resultado',
         'limite_cuantificacion_metodo',
@@ -35,6 +36,8 @@ class AnalyticalControl extends Model
         'identificacion_mr',
         'identificacion_dm',
         'identificacion_bm',
+        'replica_1',
+        'replica_2',
         'estado',
         'observaciones'
     ];
@@ -50,4 +53,10 @@ class AnalyticalControl extends Model
     {
         return $this->belongsTo(HumidityAnalysis::class, 'humidity_analysis_id');
     }
+    public function carbonoAnalysis()
+    {
+        return $this->belongsTo(CarbonoAnalysis::class, 'carbono_analysis_id');
+    }
+    
+    
 }

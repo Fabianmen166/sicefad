@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
+use Modules\LSCEFA\Models\Service;
+use Modules\LSCEFA\Entities\CarbonoAnalysis;
+
 
 class Process extends Model
 {
@@ -47,6 +50,11 @@ class Process extends Model
     return $this->hasMany(HumidityAnalysis::class, 'process_id', 'process_id');
 }
 
+    // Relación con CarbonoAnalysis
+    public function carbonoAnalyses()
+    {
+        return $this->hasMany(CarbonoAnalysis::class, 'process_id', 'process_id');
+    }
     // Relación con el cliente a través de la cotización
     public function customer()
     {
@@ -57,4 +65,5 @@ class Process extends Model
 {
     return $this->belongsTo(Service::class, 'service_id');
 }
+
 } 

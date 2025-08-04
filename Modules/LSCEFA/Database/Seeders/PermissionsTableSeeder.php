@@ -128,6 +128,28 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
+        // Permisos para Análisis de Carbono Orgánico
+       $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.index'], [
+            'name' => 'Ver listado de Análisis de Carbono Orgánico (Technical)',
+            'description' => 'Puede ver el listado de análisis de carbono orgánico (technical)',
+            'description_english' => 'Can view carbon organic analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.process'], [
+            'name' => 'Procesar Análisis de Carbono Orgánico (Technical)',
+            'description' => 'Puede procesar los análisis de carbono orgánico (technical)',
+            'description_english' => 'Can process carbon organic analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
         // Permisos Rol (Gestión de Calidad)
         $permissions_quality = [];
         
@@ -756,7 +778,9 @@ $permisos_admin_quotes[] = $perm->id;
             'description_english' => 'Can view pH analysis management',
             'app_id' => $app->id
         ]);
+        
         $permisos_technical_ph[] = $perm->id;
+        
 
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.process_all'], [
             'name' => 'Procesar todos los análisis de pH',
