@@ -224,10 +224,10 @@
                         </div>
                     </div>
 
-                    <!-- Sección: Precisión Analítica -->
+                    <!-- Sección: Veracidad -->
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Precisión Analítica</h3>
+                            <h3 class="card-title">Veracidad</h3>
                         </div>
                         <div class="card-body">
                             <!-- Tabla de Muestra de Referencia -->
@@ -285,7 +285,7 @@
                             </table>
 
                             <!-- Tabla de Duplicados -->
-                            <h5>Análisis por Duplicado</h5>
+                            <h5>Precisión</h5>
                             <table class="table table-bordered">
                                 <tr>
                                     <td colspan="9">

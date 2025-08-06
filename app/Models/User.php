@@ -13,7 +13,6 @@ use Modules\SICA\Entities\Person;
 use OwenIt\Auditing\Contracts\Auditable;
 use App\Models\Traits\UserTrait;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements Auditable
 {
@@ -22,8 +21,7 @@ class User extends Authenticatable implements Auditable
         HasApiTokens, // Trait que permite la autenticación del usuario a través de tokens API.
         Notifiable, // Trait que permite el envío de notificaciones a través de diferentes canales, como correo electrónico, SMS y notificaciones push.
         UserTrait, // Trait para validar permisos defenidos o full_access del usuario
-        \OwenIt\Auditing\Auditable, // Seguimientos de cambios realizados en BD
-        HasRoles; // Trait para manejo de roles y permisos con Spatie
+        \OwenIt\Auditing\Auditable; // Seguimientos de cambios realizados en BD
 
     protected $fillable = [ // Atributos modificables (asignación masiva)
         'nickname',

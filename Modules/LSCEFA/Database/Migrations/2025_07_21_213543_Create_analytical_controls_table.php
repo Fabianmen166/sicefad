@@ -18,34 +18,6 @@ class CreateAnalyticalControlsTable extends Migration
              $table->string('process_id');
              $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
             
-<<<<<<< HEAD
-            // Campos de controle analíticos
-            $table->decimal('masa_suelo', 10, 4)->nullable();
-            $table->decimal('masa_agua', 10, 4)->nullable();
-            $table->decimal('masa_suelo_seco', 10, 4)->nullable();
-            $table->decimal('humedad_fortificada_teorica', 10, 4)->nullable();
-            $table->decimal('humedad_obtenida', 10, 4)->nullable();
-            $table->decimal('humedad_fortificada', 10, 4)->nullable();
-            $table->decimal('recuperacion', 10, 4)->nullable();
-            $table->string('valor_referencia')->nullable();
-            $table->string('valor_obtenido')->nullable();
-            $table->string('valor_leido')->nullable(); // Añadido para consistencia
-            $table->string('blanco_metodo')->nullable();
-            $table->string('resultado')->nullable();
-            $table->string('limite_cuantificacion_metodo')->nullable();
-            $table->string('rango_metodo')->nullable();
-            $table->decimal('humedad_replica_1', 10, 4)->nullable();
-            $table->decimal('humedad_replica_2', 10, 4)->nullable();
-            $table->decimal('replica_1', 10, 4)->nullable(); // Añadido para replica 1
-            $table->decimal('replica_2', 10, 4)->nullable();
-            $table->decimal('dpr', 10, 4)->nullable();
-            $table->string('identificacion_mf')->nullable(); // ID para muestra fortificada
-            $table->string('identificacion_mr')->nullable(); // ID para muestra de referencia
-            $table->string('identificacion_dm')->nullable(); // ID para muestra duplicada
-            $table->string('identificacion_bm')->nullable(); // ID para muestra de blanco
-            $table->enum('estado', ['Aceptable', 'No Aceptable'])->nullable();
-            $table->text('observaciones')->nullable();
-=======
             // Campos de controle analíticos para CIC
             // 1. Blanco método
             $table->string('blanco_identificacion')->nullable();
@@ -87,7 +59,6 @@ class CreateAnalyticalControlsTable extends Migration
             $table->decimal('dpr_duplicado_b', 8, 4)->nullable();
             $table->decimal('dpr_resultado', 8, 4)->nullable();
             $table->string('dpr_aceptabilidad')->nullable();
->>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
             
             $table->timestamps();
         });
