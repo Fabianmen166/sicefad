@@ -99,6 +99,9 @@ class PhosphorusAnalysisController extends Controller
                 'request_data' => $request->all()
             ]);
 
+            // Inicializar la variable analyticalControl
+            $analyticalControl = null;
+
             // Verificar si ya existe un control analítico para este proceso
             $existingControl = AnalyticalControl::where('process_id', $processId)->first();
             if ($existingControl) {
@@ -115,6 +118,7 @@ class PhosphorusAnalysisController extends Controller
                     'dpr_aceptabilidad' => $request->input('dpr_aceptabilidad'),
                 ]);
                 Log::info('Control analítico actualizado con ID: ' . $existingControl->id);
+                $analyticalControl = $existingControl;
             } else {
                 // Guardar controles analíticos
                 $controlData = [
@@ -146,21 +150,21 @@ class PhosphorusAnalysisController extends Controller
                 $analysisData = [
                     'process_id' => (string)$processId,
                     'service_id' => $serviceId,
-                    'consecutivo_no' => $request->consecutivo_no,
-                    'fecha_analisis' => $request->fecha_analisis,
-                    'equipo_utilizado' => $request->equipo_utilizado,
-                    'intervalo_metodo' => $request->intervalo_metodo,
-                    'nombre_analista' => $request->analista,
-                    'observaciones' => $request->observaciones ?? '',
-                    'codigo_interno' => $item['codigo_interno'] ?? '',
-                    'peso_muestra' => $item['peso_muestra'] ?? 0,
+                    'consecutive_no' => $request->consecutivo_no,
+                    'analysis_date' => $request->fecha_analisis,
+                    'equipment_used' => $request->equipo_utilizado,
+                    'method_interval' => $request->intervalo_metodo,
+                    'analyst_name' => $request->analista,
+                    'observations' => $request->observaciones ?? '',
+                    'internal_code' => $item['codigo_interno'] ?? '',
+                    'sample_weight' => $item['peso_muestra'] ?? 0,
                     'pw' => $item['pw'] ?? 0,
-                    'v_extractante' => $item['v_extractante'] ?? 0,
-                    'lectura_blanco' => $item['lectura_blanco'] ?? 0,
-                    'factor_dilucion' => $item['factor_dilucion'] ?? 0,
-                    'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                    'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                    'observaciones_item' => $item['observaciones_item'] ?? '',
+                    'extractant_volume' => $item['v_extractante'] ?? 0,
+                    'blank_reading' => $item['lectura_blanco'] ?? 0,
+                    'dilution_factor' => $item['factor_dilucion'] ?? 0,
+                    'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
+                    'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                    'item_observations' => $item['observaciones_item'] ?? '',
                 ];
 
                 Log::info("Creando análisis {$index}", $analysisData);
@@ -239,7 +243,7 @@ class PhosphorusAnalysisController extends Controller
                 'user_id' => Auth::id(),
                 'process_id' => $processId,
                 'analyses_count' => count($phosphorusAnalyses),
-                'analytical_control_id' => $analyticalControl->id
+                'analytical_control_id' => $analyticalControl ? $analyticalControl->id : null
             ]);
 
             return redirect()->route('lscefa.technical.analyses.phosphorus.index')
@@ -342,6 +346,9 @@ class PhosphorusAnalysisController extends Controller
 
                     $serviceId = $phosphorusService->services_id;
 
+                    // Inicializar la variable analyticalControl
+                    $analyticalControl = null;
+
                     // Verificar si ya existe un control analítico para este proceso
                     $existingControl = AnalyticalControl::where('process_id', $processId)->first();
                     if ($existingControl) {
@@ -398,21 +405,21 @@ class PhosphorusAnalysisController extends Controller
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'service_id' => $serviceId,
-                            'consecutivo_no' => $consecutivoNo,
-                            'fecha_analisis' => $fechaAnalisis,
-                            'equipo_utilizado' => $request->equipo_utilizado ?? '',
-                            'intervalo_metodo' => $request->intervalo_metodo ?? '',
-                            'nombre_analista' => $request->nombre_analista ?? '',
-                            'observaciones' => $request->observaciones ?? '',
-                            'codigo_interno' => $item['codigo_interno'] ?? '',
-                            'peso_muestra' => $item['peso_muestra'] ?? 0,
+                            'consecutive_no' => $consecutivoNo,
+                            'analysis_date' => $fechaAnalisis,
+                            'equipment_used' => $request->equipo_utilizado ?? '',
+                            'method_interval' => $request->intervalo_metodo ?? '',
+                            'analyst_name' => $request->nombre_analista ?? '',
+                            'observations' => $request->observaciones ?? '',
+                            'internal_code' => $item['codigo_interno'] ?? '',
+                            'sample_weight' => $item['peso_muestra'] ?? 0,
                             'pw' => $item['pw'] ?? 0,
-                            'v_extractante' => $item['v_extractante'] ?? 0,
-                            'lectura_blanco' => $item['lectura_blanco'] ?? 0,
-                            'factor_dilucion' => $item['factor_dilucion'] ?? 0,
-                            'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                            'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                            'observaciones_item' => $item['observaciones_item'] ?? '',
+                            'extractant_volume' => $item['v_extractante'] ?? 0,
+                            'blank_reading' => $item['lectura_blanco'] ?? 0,
+                            'dilution_factor' => $item['factor_dilucion'] ?? 0,
+                            'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
+                            'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                            'item_observations' => $item['observaciones_item'] ?? '',
                         ];
 
                         Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);
@@ -472,7 +479,7 @@ class PhosphorusAnalysisController extends Controller
                     Log::info('Análisis de fósforo guardado exitosamente en lote', [
                         'process_id' => $processId,
                         'analyses_count' => count($phosphorusAnalyses),
-                        'analytical_control_id' => $analyticalControl->id
+                        'analytical_control_id' => $analyticalControl ? $analyticalControl->id : null
                     ]);
 
                 } catch (\Exception $e) {

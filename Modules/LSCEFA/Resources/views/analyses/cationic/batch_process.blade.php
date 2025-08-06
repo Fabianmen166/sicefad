@@ -111,62 +111,85 @@
                                 </div>
                             </div>
 
-                            <!-- Información de Resultados -->
-                            <h4 class="mt-4">Información de Resultados</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="tabla-resultados">
-                                    <thead>
-                                        <tr>
-                                            <th>N° Proceso</th>
-                                            <th>Código interno:</th>
-                                            <th>Peso (g)</th>
-                                            <th>Vol NaOH gastados en la muestra</th>
-                                            <th>Vol NaOH gastados en el blanco (ml)</th>
-                                            <th>Normalidad NaOH</th>
-                                            <th>Humedad (%)</th>
-                                            <th>CIC cmol (+)/kg</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="fila-resultado">
-                                            <td>
-                                                <input type="text" class="form-control proceso-numero" name="proceso_numero[]" value="{{ $pendingProcesses->first()->process_id ?? '' }}" readonly>
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control codigo-interno" name="codigo_interno[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.0001" class="form-control peso-muestra" name="peso_muestra[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control vol-naoh-muestra" name="vol_naoh_muestra[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control vol-naoh-blanco" name="vol_naoh_blanco[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control normalidad-naoh" name="normalidad_naoh[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control humedad-porcentaje" name="humedad_porcentaje[]" required>
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control cic-resultado" name="cic_resultado[]" readonly>
-                                                <small class="form-text text-muted">Resultado calculado automáticamente</small>
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-danger btn-sm eliminar-fila">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div class="mt-2">
-                                    <button type="button" class="btn btn-success btn-sm" id="agregar-fila-resultado">
-                                        <i class="fas fa-plus"></i> Agregar Fila
-                                    </button>
+                            <!-- Procesos Seleccionados -->
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
+                                </div>
+                                <div class="card-body">
+                                    @foreach($pendingProcesses as $process)
+                                    <div class="process-item mb-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Proceso: {{ $process->process_id }}</h5>
+                                                <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <p><strong>Cliente:</strong> {{ $process->customer->nombre ?? 'N/A' }}</p>
+                                                        <p><strong>Servicio:</strong> 
+                                                            @foreach($process->serviceProcessDetails as $detail)
+                                                                @if(str_contains(strtolower($detail->service->descripcion), 'intercambio cationico') || 
+                                                                    str_contains(strtolower($detail->service->descripcion), 'cationic exchange'))
+                                                                    {{ $detail->service->descripcion }}
+                                                                @endif
+                                                            @endforeach
+                                                        </p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <p><strong>Estado:</strong> {{ $process->status }}</p>
+                                                        <p><strong>Fecha:</strong> {{ $process->created_at->format('d/m/Y') }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Items para este proceso -->
+                                                <div class="items-container">
+                                                    <h6>Items de Ensayo</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-hover">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th class="text-center">#</th>
+                                                                    <th class="text-center">Código interno</th>
+                                                                    <th class="text-center">Peso muestra (g)</th>
+                                                                    <th class="text-center">Vol NaOH muestra (mL)</th>
+                                                                    <th class="text-center">Vol NaOH blanco (mL)</th>
+                                                                    <th class="text-center">Normalidad NaOH</th>
+                                                                    <th class="text-center">Humedad (%)</th>
+                                                                    <th class="text-center">CIC cmol (+)/kg</th>
+                                                                    <th class="text-center">Observaciones</th>
+                                                                    <th class="text-center">Acciones</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr class="fila-resultado">
+                                                                    <td class="numero-fila text-center">1</td>
+                                                                    <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]"></td>
+                                                                    <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_muestra]"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_blanco]"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[{{ $process->process_id }}][0][normalidad_naoh]"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[{{ $process->process_id }}][0][humedad_porcentaje]"></td>
+                                                                    <td><input type="text" class="form-control cic-resultado" name="items_ensayo[{{ $process->process_id }}][0][cic_resultado]" readonly></td>
+                                                                    <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][observaciones]"></td>
+                                                                    <td class="text-center">
+                                                                        <button type="button" class="btn btn-success btn-sm" onclick="addItemToProcess('{{ $process->process_id }}')">
+                                                                            <i class="fas fa-plus"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-danger btn-sm remove-row">
+                                                                            <i class="fas fa-minus"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
 
@@ -356,6 +379,49 @@
 
 @push('scripts')
 <script>
+let itemIndices = {};
+
+// Inicializar índices de items para cada proceso
+@foreach($pendingProcesses as $process)
+    itemIndices['{{ $process->process_id }}'] = 1;
+@endforeach
+
+function addItemToProcess(processId) {
+    const tbody = document.querySelector(`input[name="items_ensayo[${processId}][0][codigo_interno]"]`).closest('tbody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'fila-resultado';
+    newRow.innerHTML = `
+        <td class="numero-fila text-center">${itemIndices[processId] + 1}</td>
+        <td><input type="text" class="form-control" name="items_ensayo[${processId}][${itemIndices[processId]}][codigo_interno]"></td>
+        <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[${processId}][${itemIndices[processId]}][peso_muestra]"></td>
+        <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[${processId}][${itemIndices[processId]}][vol_naoh_muestra]"></td>
+        <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[${processId}][${itemIndices[processId]}][vol_naoh_blanco]"></td>
+        <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[${processId}][${itemIndices[processId]}][normalidad_naoh]"></td>
+        <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[${processId}][${itemIndices[processId]}][humedad_porcentaje]"></td>
+        <td><input type="text" class="form-control cic-resultado" name="items_ensayo[${processId}][${itemIndices[processId]}][cic_resultado]" readonly></td>
+        <td><input type="text" class="form-control" name="items_ensayo[${processId}][${itemIndices[processId]}][observaciones]"></td>
+        <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm remove-row">
+                <i class="fas fa-minus"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(newRow);
+    itemIndices[processId]++;
+}
+
+function removeItem(button) {
+    button.closest('tr').remove();
+}
+
+// Event listener para remover filas
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-row') || e.target.closest('.remove-row')) {
+        const button = e.target.classList.contains('remove-row') ? e.target : e.target.closest('.remove-row');
+        button.closest('tr').remove();
+    }
+});
+
 $(document).ready(function() {
     // Función para calcular el CIC de una fila específica
     function calcularCIC(fila) {
@@ -386,96 +452,16 @@ $(document).ready(function() {
         }
     }
 
-    // Función para agregar nueva fila
-    function agregarFilaResultado() {
-        var procesos = [
-            @foreach ($pendingProcesses as $index => $process)
-                { value: '{{ $process->process_id }}', text: 'Proceso {{ $index + 1 }} (ID: {{ $process->process_id }})' },
-            @endforeach
-        ];
-        
-        // Obtener el siguiente proceso disponible
-        var procesosUsados = [];
-        $('.proceso-numero').each(function() {
-            var valor = $(this).val();
-            if (valor) {
-                procesosUsados.push(valor);
-            }
-        });
-        
-        var siguienteProceso = null;
-        for (var i = 0; i < procesos.length; i++) {
-            if (procesosUsados.indexOf(procesos[i].value) === -1) {
-                siguienteProceso = procesos[i];
-                break;
-            }
-        }
-        
-        if (!siguienteProceso) {
-            alert('No hay más procesos disponibles para agregar.');
-            return;
-        }
-        
-        var nuevaFila = `
-            <tr class="fila-resultado">
-                <td>
-                    <input type="text" class="form-control proceso-numero" name="proceso_numero[]" value="${siguienteProceso.value}" readonly>
-                </td>
-                <td>
-                    <input type="text" class="form-control codigo-interno" name="codigo_interno[]" required>
-                </td>
-                <td>
-                    <input type="number" step="0.0001" class="form-control peso-muestra" name="peso_muestra[]" required>
-                </td>
-                <td>
-                    <input type="number" step="0.01" class="form-control vol-naoh-muestra" name="vol_naoh_muestra[]" required>
-                </td>
-                <td>
-                    <input type="number" step="0.01" class="form-control vol-naoh-blanco" name="vol_naoh_blanco[]" required>
-                </td>
-                <td>
-                    <input type="number" step="0.01" class="form-control normalidad-naoh" name="normalidad_naoh[]" required>
-                </td>
-                <td>
-                    <input type="number" step="0.01" class="form-control humedad-porcentaje" name="humedad_porcentaje[]" required>
-                </td>
-                <td>
-                    <input type="text" class="form-control cic-resultado" name="cic_resultado[]" readonly>
-                    <small class="form-text text-muted">Resultado calculado automáticamente</small>
-                </td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm eliminar-fila">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        $('#tabla-resultados tbody').append(nuevaFila);
-    }
-
     // Event listeners para recalcular cuando cambien los valores (usando delegación de eventos)
     $(document).on('input', '.peso-muestra, .vol-naoh-muestra, .vol-naoh-blanco, .normalidad-naoh, .humedad-porcentaje', function() {
         var fila = $(this).closest('.fila-resultado');
         calcularCIC(fila);
     });
 
-    // Event listener para agregar fila
-    $('#agregar-fila-resultado').on('click', function() {
-        agregarFilaResultado();
+    // Calcular inicialmente todas las filas
+    $('.fila-resultado').each(function() {
+        calcularCIC($(this));
     });
-
-    // Event listener para eliminar fila
-    $(document).on('click', '.eliminar-fila', function() {
-        var filas = $('.fila-resultado').length;
-        if (filas > 1) {
-            $(this).closest('.fila-resultado').remove();
-        } else {
-            alert('Debe mantener al menos una fila de resultados.');
-        }
-    });
-
-    // Calcular inicialmente la primera fila
-    calcularCIC($('.fila-resultado').first());
 
     // Validación para evitar comas como separador decimal
     $('input[type="number"]').on('input', function(e) {
@@ -499,20 +485,6 @@ $(document).ready(function() {
         });
         if (hayComa) {
             alert('No se permite el uso de comas como separador decimal. Por favor, usa punto (.)');
-            e.preventDefault();
-            return;
-        }
-
-        // Validar que cada fila tenga un proceso asignado
-        let filasSinProceso = 0;
-        $('.proceso-numero').each(function() {
-            if (!$(this).val()) {
-                filasSinProceso++;
-            }
-        });
-
-        if (filasSinProceso > 0) {
-            alert('Hay ' + filasSinProceso + ' fila(s) sin proceso asignado. Por favor, verifique que todos los procesos estén correctamente asignados.');
             e.preventDefault();
             return;
         }

@@ -26,6 +26,7 @@ use Modules\LSCEFA\Http\Controllers\UserManagementController;
 
 use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
+use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
 
 
 Route::middleware(['lang'])->group(function(){
@@ -213,9 +214,23 @@ Route::middleware(['lang'])->group(function(){
             Route::delete('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.phosphorus.destroy');
             Route::get('/technical/analyses/phosphorus/{id}/report', [PhosphorusAnalysisController::class, 'report'])->name('lscefa.technical.analyses.phosphorus.report');
 
-        // Rutas para Análisis de Carbono Orgánico
-        Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');
-        Route::get('/technical/analyses/carbon/process/{processId}/{serviceId}', [CarbonoAnalysisController::class, 'carbonAnalysis'])->name('lscefa.technical.analyses.carbon.process');
+            // Rutas para Análisis de Bases Cambiables
+            Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');
+            Route::get('/technical/analyses/exchangeable_bases/process/{processId}/{serviceId}', [ExchangeableBasesAnalysisController::class, 'process'])->name('lscefa.technical.analyses.exchangeable_bases.process');
+            Route::post('/technical/analyses/exchangeable_bases/store', [ExchangeableBasesAnalysisController::class, 'storeExchangeableBasesAnalysis'])->name('lscefa.technical.analyses.exchangeable_bases.store');
+            Route::get('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.exchangeable_bases.batch');
+            Route::post('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.exchangeable_bases.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch.post');
+            Route::post('/technical/analyses/exchangeable_bases/batch-store', [ExchangeableBasesAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.exchangeable_bases.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch_store');
+            Route::get('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'show'])->name('lscefa.technical.analyses.exchangeable_bases.show');
+            Route::get('/technical/analyses/exchangeable_bases/{id}/edit', [ExchangeableBasesAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.exchangeable_bases.edit');
+            Route::put('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'update'])->name('lscefa.technical.analyses.exchangeable_bases.update');
+            Route::delete('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.exchangeable_bases.destroy');
+            Route::get('/technical/analyses/exchangeable_bases/{id}/report', [ExchangeableBasesAnalysisController::class, 'report'])->name('lscefa.technical.analyses.exchangeable_bases.report');
+
     //});
      // Route::post('/admin/units/productive_units/environment_pus/store', [UnitController::class, 'environment_pus_store'])->name('sica.admin.units.productive_units.environment_pus.store'); /* Registrar asociación de ambiente y unidad productiva (Administrador) */
       

@@ -15,11 +15,11 @@
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
         <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light" style="min-height: 40px; padding: 0.25rem 1rem;">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item dropdown">
                     <a id="navbarDropdown" class="nav-link dropdown-toggle text-dark fw-bold" href="#"
-                        role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 0.9rem;">
                         {{ Auth::user() ? Auth::user()->name : 'Usuario' }}
                     </a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
@@ -119,7 +119,8 @@
 
 
                         <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Bases Cambiables</p>
                             </a>
@@ -131,24 +132,20 @@
         </aside>
         <!-- Content Wrapper -->
         <!-- Content Wrapper. Contains page content -->
-        <div class="content-wrapper">
-            <!-- Content Header (Page header) -->
-            <div class="content-header">
-                <div class="container-fluid">
-                    <div class="row mb-2">
-                        <div class="col-sm-12">
-                            <h1 class="m-0">@yield('title')</h1>
-                        </div>
-                    </div>
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header" style="padding: 0.5rem 0;">
+        <div class="container-fluid">
+            <div class="row mb-1">
+                <div class="col-sm-12">
+                    <h1 class="m-0" style="font-size: 1.5rem;">@yield('title')</h1>
                 </div>
             </div>
 
-            <!-- Main content -->
-            <section class="content pt-4">
-                <div class="container-fluid">
-                    @yield('content')
-                </div>
-            </section>
+    <!-- Main content -->
+    <section class="content pt-2">
+        <div class="container-fluid">
+            @yield('content')
         </div>
 
         <footer class="main-footer">
@@ -199,12 +196,13 @@
         transition: margin var(--transition-speed) ease-in-out;
     }
 
-    .main-header {
-        background: white !important;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        height: var(--header-height);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
+        .main-header {
+            background: white !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            height: 40px !important;
+            min-height: 40px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
 
     .navbar-nav .nav-link {
         color: var(--sena-dark-green) !important;
