@@ -16,27 +16,28 @@ class HumidityAnalysis extends Model
     protected $table = 'humidity_analyses';
 
     protected $fillable = [
-        'process_id', // Añadido para relación directa con Process
-        'service_id', // Añadido para relación directa con Service
-        'consecutivo_no',
-        'fecha_analisis',
+        'process_id',
+        'service_id',
+        'consecutive_no',
+        'analysis_date',
         'user_id',
-        'hora_ingreso_horno',
-        'hora_salida_horno',
-        'temperatura_horno',
-        'nombre_metodo',
-        'intervalo_metodo',
-        'equipo_utilizado',
-        'unidades_reporte_equipo',
-        'resolucion_instrumental',
-        'fecha_fin_analisis',
-        'codigo_interno',
-        'peso_capsula',
-        'peso_muestra',
-        'peso_capsula_muestra_humedad',
-        'peso_capsula_muestra_seca',
-        'porcentaje_humedad',
-        'observaciones',
+        'oven_entry_time',
+        'oven_exit_time',
+        'oven_temperature',
+        'method_name',
+        'method_interval',
+        'equipment_used',
+        'equipment_report_units',
+        'instrumental_resolution',
+        'analysis_end_date',
+        'internal_code',
+        'capsule_weight',
+        'wet_weight',
+        'capsule_sample_wet_weight',
+        'capsule_sample_dry_weight',
+        'dry_weight',
+        'moisture',
+        'observations',
         'review_status',
         'reviewed_by',
         'reviewer_role',
@@ -45,48 +46,35 @@ class HumidityAnalysis extends Model
     ];
 
     protected $casts = [
-        'fecha_analisis' => 'date',
-        'hora_ingreso_horno' => 'datetime:H:i',
-        'hora_salida_horno' => 'datetime:H:i',
+        'analysis_date' => 'date',
+        'oven_entry_time' => 'datetime:H:i',
+        'oven_exit_time' => 'datetime:H:i',
         'review_date' => 'datetime',
-        'peso_capsula' => 'decimal:3',
-        'peso_muestra' => 'decimal:3',
-        'porcentaje_humedad' => 'decimal:2',
+        'capsule_weight' => 'decimal:3',
+        'wet_weight' => 'decimal:3',
+        'dry_weight' => 'decimal:3',
+        'moisture' => 'decimal:2',
     ];
 
-    /**
-     * Relación con el proceso padre
-     */
     public function process(): BelongsTo
     {
         return $this->belongsTo(Process::class, 'process_id', 'process_id');
     }
 
-    /**
-     * Relación con el usuario que realizó el análisis
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relación con el control analítico
-     */
     public function analyticalControl(): HasOne
     {
         return $this->hasOne(AnalyticalControl::class, 'humidity_analysis_id');
     }
 
-    /**
-     * Relación con el revisor
-     */
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
-
-    // Scopes...
 
     public function scopePendingReview($query)
     {

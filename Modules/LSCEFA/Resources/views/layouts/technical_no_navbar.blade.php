@@ -14,26 +14,6 @@
 
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
-        <!-- Navbar -->
-        <nav class="main-header navbar navbar-expand navbar-white navbar-light" style="min-height: 40px; padding: 0.25rem 1rem;">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item dropdown">
-                    <a id="navbarDropdown" class="nav-link dropdown-toggle text-dark fw-bold" href="#"
-                        role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 0.9rem;">
-                        {{ Auth::user() ? Auth::user()->name : 'Usuario' }}
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                        <a class="dropdown-item" href="{{ route('logout') }}"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            {{ __('Cerrar Sesión') }}
-                        </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-                    </div>
-                </li>
-            </ul>
-        </nav>
         <!-- Sidebar -->
         <aside class="main-sidebar elevation-4">
             <a href="#" class="brand-link">
@@ -181,14 +161,7 @@
             background-color: #f8f9fa;
             min-height: 100vh;
             transition: margin var(--transition-speed) ease-in-out;
-        }
-
-        .main-header {
-            background: white !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            height: 40px !important;
-            min-height: 40px !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            padding-bottom: 80px; /* Espacio para el footer */
         }
 
         .navbar-nav .nav-link {
@@ -273,5 +246,10 @@
             color: #6c757d !important;
             padding: 1rem;
             text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            z-index: 1000;
         }
-    </style>
+    </style> 

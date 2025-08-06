@@ -11,6 +11,7 @@
         "barryvdh/laravel-dompdf": "*",
         "barryvdh/laravel-snappy": "^1.0",
         "composer/composer": "*",
+        "doctrine/dbal": "^4.2",
         "elibyy/tcpdf-laravel": "^10.0",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.8",
