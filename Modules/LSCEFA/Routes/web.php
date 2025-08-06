@@ -21,12 +21,7 @@ use Modules\LSCEFA\Http\Controllers\QuoteController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
-<<<<<<< HEAD
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
-=======
-use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
-use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
->>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -182,6 +177,7 @@ Route::middleware(['lang'])->group(function(){
         // Rutas para Análisis de Carbono Orgánico
         Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');
         Route::get('/technical/analyses/carbon/process/{processId}/{serviceId}', [CarbonoAnalysisController::class, 'carbonAnalysis'])->name('lscefa.technical.analyses.carbon.process');
+        Route::post('/technical/analyses/carbon/store', [CarbonoAnalysisController::class, 'storeCarbonoAnalysis'])->name('lscefa.technical.analyses.carbon.store');
     //});
      // Route::post('/admin/units/productive_units/environment_pus/store', [UnitController::class, 'environment_pus_store'])->name('sica.admin.units.productive_units.environment_pus.store'); /* Registrar asociación de ambiente y unidad productiva (Administrador) */
       

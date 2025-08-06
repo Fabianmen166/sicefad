@@ -128,19 +128,11 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
-<<<<<<< HEAD
-        // Permisos para Análisis de Carbono Orgánico
-       $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.index'], [
-            'name' => 'Ver listado de Análisis de Carbono Orgánico (Technical)',
-            'description' => 'Puede ver el listado de análisis de carbono orgánico (technical)',
-            'description_english' => 'Can view carbon organic analysis list (technical)',
-=======
-        // Permisos para Análisis de Intercambio Catiónico
-        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.index'], [
-            'name' => 'Ver listado de Análisis de Intercambio Catiónico (Technical)',
-            'description' => 'Puede ver el listado de análisis de intercambio catiónico (technical)',
-            'description_english' => 'Can view cationic exchange analysis list (technical)',
->>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
+        // Permisos para Analisis de Carbono
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.index'], [
+            'name' => 'Ver listado de Análisis de Carbono (Technical)',
+            'description' => 'Puede ver el listado de análisis de carbono (technical)',
+            'description_english' => 'Can view carbon analysis list (technical)',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
@@ -148,15 +140,38 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
-<<<<<<< HEAD
         $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.process'], [
-            'name' => 'Procesar Análisis de Carbono Orgánico (Technical)',
-            'description' => 'Puede procesar los análisis de carbono orgánico (technical)',
-            'description_english' => 'Can process carbon organic analyses (technical)',
+            'name' => 'Procesar Análisis de Carbono (Technical)',
+            'description' => 'Puede procesar análisis de carbono (technical)',
+            'description_english' => 'Can process carbon analysis (technical)',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
-=======
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.store'], [
+            'name' => 'Guardar Análisis de Carbono (Technical)',
+            'description' => 'Puede guardar análisis de carbono (technical)',
+            'description_english' => 'Can store carbon analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        // Permisos para Análisis de Intercambio Catiónico
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.index'], [
+            'name' => 'Ver listado de Análisis de Intercambio Catiónico (Technical)',
+            'description' => 'Puede ver el listado de análisis de intercambio catiónico (technical)',
+            'description_english' => 'Can view cationic exchange analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
         $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.process'], [
             'name' => 'Procesar Análisis de Intercambio Catiónico (Technical)',
             'description' => 'Puede procesar análisis de intercambio catiónico (technical)',
@@ -349,7 +364,6 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_technical[] = $permision->id;
         
->>>>>>> 4b34f81e530592aa143f57b09abb563d7eb230b0
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
