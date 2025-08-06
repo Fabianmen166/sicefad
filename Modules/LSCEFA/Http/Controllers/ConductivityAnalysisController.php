@@ -14,20 +14,52 @@ use Illuminate\Routing\Controller;
 
 class ConductivityAnalysisController extends Controller
 {
+    /**
+     * Display a listing of pending conductivity analyses
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
-        // Procesos con detalles de servicio pendientes de conductividad
-        $processes = Process::where('status', 'pending')
-            ->with(['serviceProcessDetails' => function ($query) {
-                $query->where('status', 'pending')
-                      ->where('service_id', 2)
-                      ->with('service');
-            }])
-            ->get()
-            ->filter(function ($process) {
-                return $process->serviceProcessDetails->isNotEmpty();
-            });
-        return view('lscefa::conductivity_analyses.index', compact('processes'));
+        try {
+            Log::info('User accessing ConductivityAnalysisController@index:', [
+                'user_id' => Auth::id(),
+                'user_role' => Auth::user()->role ?? 'N/A',
+            ]);
+
+            // Obtener procesos con análisis de conductividad pendientes
+            $processes = \Modules\LSCEFA\Models\Process::where('status', 'pending')
+                ->whereHas('serviceProcessDetails', function($query) {
+                    $query->where('status', 'pending')
+                          ->whereHas('service', function($q) {
+                              $q->whereRaw('LOWER(descripcion) LIKE ?', ['%conductividad%']);
+                          });
+                })
+                ->with(['serviceProcessDetails' => function($query) {
+                    $query->where('status', 'pending')
+                          ->whereHas('service', function($q) {
+                              $q->whereRaw('LOWER(descripcion) LIKE ?', ['%conductividad%']);
+                          })
+                          ->with('service');
+                }])
+                ->get();
+
+            Log::info('Procesos con análisis de conductividad pendientes:', [
+                'count' => $processes->count()
+            ]);
+
+            return view('lscefa::conductivity_analyses.index', [
+                'processes' => $processes
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in ConductivityAnalysisController@index: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return redirect()->route('lscefa.technical.analyses.index')
+                           ->with('error', 'Error al cargar los análisis de conductividad: ' . $e->getMessage());
+        }
     }
 
     public function batchConductivityAnalysis(Request $request)
@@ -149,7 +181,7 @@ class ConductivityAnalysisController extends Controller
 
     public function storeConductivityAnalysis(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'consecutivo_no' => 'required|string|max:255',
             'fecha_analisis' => 'required|date',
             'items_ensayo' => 'required|array|min:1',
@@ -246,8 +278,13 @@ class ConductivityAnalysisController extends Controller
             DB::rollBack();
             Log::error('Error in ConductivityAnalysisController@storeConductivityAnalysis: ' . $e->getMessage(), [
                 'stack_trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
             ]);
-            return back()->with('error', 'Error al guardar los análisis de conductividad: ' . $e->getMessage())->withInput();
+            
+            // En caso de error, redirigir de vuelta con los datos de entrada
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ocurrió un error al guardar el análisis: ' . $e->getMessage());
         }
     }
 } 

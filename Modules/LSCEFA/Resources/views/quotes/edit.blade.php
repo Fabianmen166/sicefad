@@ -65,27 +65,28 @@
                                     @foreach($unit['services'] as $serviceIndex => $service)
                                     <div class="service-row mb-3" data-service-index="{{ $serviceIndex }}">
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label for="units_{{ $unitIndex }}_services_{{ $serviceIndex }}" class="form-label">Servicio</label>
-                                                <select class="form-control service-select" name="units[{{ $unitIndex }}][services][{{ $serviceIndex }}][service_id]" id="units_{{ $unitIndex }}_services_{{ $serviceIndex }}">
-                                                    <option value="">Seleccione un servicio</option>
-                                                    @foreach ($services as $serviceOption)
-                                                        <option value="{{ $serviceOption->services_id }}" data-price="{{ $serviceOption->precio }}" {{ $service['service_id'] == $serviceOption->services_id ? 'selected' : '' }}>
-                                                            {{ $serviceOption->descripcion }} ({{ $serviceOption->precio }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="input-group">
+                                                    <select class="form-control service-select" name="units[{{ $unitIndex }}][services][{{ $serviceIndex }}][service_id]" id="units_{{ $unitIndex }}_services_{{ $serviceIndex }}">
+                                                        <option value="">Seleccione un servicio</option>
+                                                        @foreach ($services as $serviceOption)
+                                                            <option value="{{ $serviceOption->services_id }}" data-price="{{ $serviceOption->precio }}" {{ $service['service_id'] == $serviceOption->services_id ? 'selected' : '' }}>
+                                                                {{ $serviceOption->descripcion }} ({{ $serviceOption->precio }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-danger delete-service-btn" {{ $serviceIndex == 0 ? 'style="display: none;"' : '' }}>
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="units_{{ $unitIndex }}_quantities_{{ $serviceIndex }}" class="form-label">Cantidad</label>
-                                                <input type="number" class="form-control quantity" name="units[{{ $unitIndex }}][services][{{ $serviceIndex }}][quantity]" id="units_{{ $unitIndex }}_quantities_{{ $serviceIndex }}" min="1" value="{{ $service['quantity'] }}">
-                                            </div>
-                                            <div class="col-md-3">
+                                            <input type="hidden" class="form-control quantity" name="units[{{ $unitIndex }}][services][{{ $serviceIndex }}][quantity]" value="1">
+                                            <div class="col-md-4">
                                                 <label class="form-label">Subtotal</label>
-                                                <input type="text" class="form-control subtotal" readonly value="{{ number_format(($service['service']->precio ?? 0) * $service['quantity'], 2) }}">
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end">
-                                                <button type="button" class="btn btn-danger delete-service-btn" {{ $serviceIndex == 0 ? 'style="display: none;"' : '' }}>Eliminar</button>
+                                                <input type="text" class="form-control subtotal" readonly value="{{ number_format(($service['service']->precio ?? 0), 2) }}">
                                             </div>
                                         </div>
                                     </div>
@@ -98,27 +99,28 @@
                                     @foreach($unit['packages'] as $packageIndex => $package)
                                     <div class="package-row mb-3" data-package-index="{{ $packageIndex }}">
                                         <div class="row">
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label for="units_{{ $unitIndex }}_packages_{{ $packageIndex }}" class="form-label">Paquete</label>
-                                                <select class="form-control package-select" name="units[{{ $unitIndex }}][packages][{{ $packageIndex }}][package_id]" id="units_{{ $unitIndex }}_packages_{{ $packageIndex }}">
-                                                    <option value="">Seleccione un paquete</option>
-                                                    @foreach ($servicePackages as $packageOption)
-                                                        <option value="{{ $packageOption->service_package_id }}" data-price="{{ $packageOption->price }}" {{ $package['package_id'] == $packageOption->service_package_id ? 'selected' : '' }}>
-                                                            {{ $packageOption->name }} ({{ $packageOption->price }})
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                <div class="input-group">
+                                                    <select class="form-control package-select" name="units[{{ $unitIndex }}][packages][{{ $packageIndex }}][package_id]" id="units_{{ $unitIndex }}_packages_{{ $packageIndex }}">
+                                                        <option value="">Seleccione un paquete</option>
+                                                        @foreach ($servicePackages as $packageOption)
+                                                            <option value="{{ $packageOption->service_package_id }}" data-price="{{ $packageOption->price }}" {{ $package['package_id'] == $packageOption->service_package_id ? 'selected' : '' }}>
+                                                                {{ $packageOption->name }} ({{ $packageOption->price }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <div class="input-group-append">
+                                                        <button type="button" class="btn btn-danger delete-package-btn" {{ $packageIndex == 0 ? 'style="display: none;"' : '' }}>
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="col-md-3">
-                                                <label for="units_{{ $unitIndex }}_package_quantities_{{ $packageIndex }}" class="form-label">Cantidad</label>
-                                                <input type="number" class="form-control quantity" name="units[{{ $unitIndex }}][packages][{{ $packageIndex }}][quantity]" id="units_{{ $unitIndex }}_package_quantities_{{ $packageIndex }}" min="1" value="{{ $package['quantity'] }}">
-                                            </div>
-                                            <div class="col-md-3">
+                                            <input type="hidden" class="form-control quantity" name="units[{{ $unitIndex }}][packages][{{ $packageIndex }}][quantity]" value="1">
+                                            <div class="col-md-4">
                                                 <label class="form-label">Subtotal</label>
-                                                <input type="text" class="form-control subtotal" readonly value="{{ number_format(($package['package']->price ?? 0) * $package['quantity'], 2) }}">
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end">
-                                                <button type="button" class="btn btn-danger delete-package-btn" {{ $packageIndex == 0 ? 'style="display: none;"' : '' }}>Eliminar</button>
+                                                <input type="text" class="form-control subtotal" readonly value="{{ number_format(($package['package']->price ?? 0), 2) }}">
                                             </div>
                                         </div>
                                     </div>
@@ -173,14 +175,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Funciones de cálculo
     function calculateSubtotal(row) {
         const select = row.querySelector('.service-select, .package-select');
-        const quantity = row.querySelector('.quantity');
         const subtotal = row.querySelector('.subtotal');
         
-        if (!select || !quantity || !subtotal) return 0;
+        if (!select || !subtotal) return 0;
         
         const price = parseFloat(select.selectedOptions[0]?.dataset.price) || 0;
-        const qty = parseInt(quantity.value) || 1;
-        const subtotalValue = price * qty;
+        // Quantity is now always 1 as it's a hidden field
+        const subtotalValue = price * 1; // Fixed quantity of 1
         
         subtotal.value = subtotalValue.toFixed(2);
         return subtotalValue;
@@ -217,23 +218,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         newRow.innerHTML = `
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="units_${unitIndex}_services_${serviceIndex}" class="form-label">Servicio</label>
-                    <select class="form-control service-select" name="units[${unitIndex}][services][${serviceIndex}][service_id]" id="units_${unitIndex}_services_${serviceIndex}">
-                        <option value="">Seleccione un servicio</option>
-                        ${options}
-                    </select>
+                    <div class="input-group">
+                        <select class="form-control service-select" name="units[${unitIndex}][services][${serviceIndex}][service_id]" id="units_${unitIndex}_services_${serviceIndex}">
+                            <option value="">Seleccione un servicio</option>
+                            ${options}
+                        </select>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-danger delete-service-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="units_${unitIndex}_quantities_${serviceIndex}" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control quantity" name="units[${unitIndex}][services][${serviceIndex}][quantity]" id="units_${unitIndex}_quantities_${serviceIndex}" min="1" value="1">
-                </div>
-                <div class="col-md-3">
+                <input type="hidden" class="form-control quantity" name="units[${unitIndex}][services][${serviceIndex}][quantity]" value="1">
+                <div class="col-md-4">
                     <label class="form-label">Subtotal</label>
                     <input type="text" class="form-control subtotal" readonly value="0">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger delete-service-btn">Eliminar</button>
                 </div>
             </div>
         `;
@@ -241,15 +243,15 @@ document.addEventListener('DOMContentLoaded', function() {
         serviceContainer.appendChild(newRow);
         
         const select = newRow.querySelector('.service-select');
-        const quantity = newRow.querySelector('.quantity');
         const deleteBtn = newRow.querySelector('.delete-service-btn');
         
-        select.addEventListener('change', function() {
-            calculateSubtotal(newRow);
-            calculateTotal();
-        });
+        // Show delete button for all rows except the first one
+        const serviceRows = unitRow.querySelectorAll('.service-row');
+        if (serviceRows.length > 1) {
+            deleteBtn.style.display = 'block';
+        }
         
-        quantity.addEventListener('input', function() {
+        select.addEventListener('change', function() {
             calculateSubtotal(newRow);
             calculateTotal();
         });
@@ -257,6 +259,18 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.addEventListener('click', function() {
             newRow.remove();
             calculateTotal();
+            
+            // Update service indexes after deletion
+            const remainingServiceRows = unitRow.querySelectorAll('.service-row');
+            remainingServiceRows.forEach((row, idx) => {
+                row.dataset.serviceIndex = idx;
+                const newDeleteBtn = row.querySelector('.delete-service-btn');
+                if (idx === 0 && newDeleteBtn) {
+                    newDeleteBtn.style.display = 'none';
+                } else if (newDeleteBtn) {
+                    newDeleteBtn.style.display = 'block';
+                }
+            });
         });
         
         calculateSubtotal(newRow);
@@ -277,23 +291,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         newRow.innerHTML = `
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="units_${unitIndex}_packages_${packageIndex}" class="form-label">Paquete</label>
-                    <select class="form-control package-select" name="units[${unitIndex}][packages][${packageIndex}][package_id]" id="units_${unitIndex}_packages_${packageIndex}">
-                        <option value="">Seleccione un paquete</option>
-                        ${options}
-                    </select>
+                    <div class="input-group">
+                        <select class="form-control package-select" name="units[${unitIndex}][packages][${packageIndex}][package_id]" id="units_${unitIndex}_packages_${packageIndex}">
+                            <option value="">Seleccione un paquete</option>
+                            ${options}
+                        </select>
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-danger delete-package-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="units_${unitIndex}_package_quantities_${packageIndex}" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control quantity" name="units[${unitIndex}][packages][${packageIndex}][quantity]" id="units_${unitIndex}_package_quantities_${packageIndex}" min="1" value="1">
-                </div>
-                <div class="col-md-3">
+                <input type="hidden" class="form-control quantity" name="units[${unitIndex}][packages][${packageIndex}][quantity]" value="1">
+                <div class="col-md-4">
                     <label class="form-label">Subtotal</label>
                     <input type="text" class="form-control subtotal" readonly value="0">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger delete-package-btn">Eliminar</button>
                 </div>
             </div>
         `;
@@ -301,15 +316,15 @@ document.addEventListener('DOMContentLoaded', function() {
         packageContainer.appendChild(newRow);
         
         const select = newRow.querySelector('.package-select');
-        const quantity = newRow.querySelector('.quantity');
         const deleteBtn = newRow.querySelector('.delete-package-btn');
         
-        select.addEventListener('change', function() {
-            calculateSubtotal(newRow);
-            calculateTotal();
-        });
+        // Show delete button for all rows except the first one
+        const packageRows = unitRow.querySelectorAll('.package-row');
+        if (packageRows.length > 1) {
+            deleteBtn.style.display = 'block';
+        }
         
-        quantity.addEventListener('input', function() {
+        select.addEventListener('change', function() {
             calculateSubtotal(newRow);
             calculateTotal();
         });
@@ -317,6 +332,18 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.addEventListener('click', function() {
             newRow.remove();
             calculateTotal();
+            
+            // Update package indexes after deletion
+            const remainingPackageRows = unitRow.querySelectorAll('.package-row');
+            remainingPackageRows.forEach((row, idx) => {
+                row.dataset.packageIndex = idx;
+                const newDeleteBtn = row.querySelector('.delete-package-btn');
+                if (idx === 0 && newDeleteBtn) {
+                    newDeleteBtn.style.display = 'none';
+                } else if (newDeleteBtn) {
+                    newDeleteBtn.style.display = 'block';
+                }
+            });
         });
         
         calculateSubtotal(newRow);
@@ -325,9 +352,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Agregar nueva unidad
     addUnitBtn.addEventListener('click', function() {
-        const newUnitRow = document.createElement('div');
-        newUnitRow.className = 'unit-row mb-4 border p-3';
-        newUnitRow.dataset.index = unitIndex;
+        // Obtener el índice correcto para la nueva unidad
+        const unitRows = unitContainer.querySelectorAll('.unit-row');
+        const newUnitIndex = unitRows.length;
         
         let serviceOptions = '';
         servicesData.forEach(function(service) {
@@ -339,111 +366,151 @@ document.addEventListener('DOMContentLoaded', function() {
             packageOptions += `<option value="${pkg.service_package_id}" data-price="${pkg.price}">${pkg.name} (${pkg.price})</option>`;
         });
         
-        newUnitRow.innerHTML = `
-            <h6>Unidad ${unitIndex + 1}</h6>
-            <h6>Servicios</h6>
-            <div class="service-container">
-                <div class="service-row mb-3" data-service-index="0">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label for="units_${unitIndex}_services_0" class="form-label">Servicio</label>
-                            <select class="form-control service-select" name="units[${unitIndex}][services][0][service_id]" id="units_${unitIndex}_services_0">
-                                <option value="">Seleccione un servicio</option>
-                                ${serviceOptions}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="units_${unitIndex}_quantities_0" class="form-label">Cantidad</label>
-                            <input type="number" class="form-control quantity" name="units[${unitIndex}][services][0][quantity]" id="units_${unitIndex}_quantities_0" min="1" value="1">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Subtotal</label>
-                            <input type="text" class="form-control subtotal" readonly value="0">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">Eliminar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <button type="button" class="btn btn-secondary mb-3 add-service-btn">Agregar Servicio</button>
-            <h6>Paquetes de Servicios</h6>
-            <div class="package-container">
-                <div class="package-row mb-3" data-package-index="0">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label for="units_${unitIndex}_packages_0" class="form-label">Paquete</label>
-                            <select class="form-control package-select" name="units[${unitIndex}][packages][0][package_id]" id="units_${unitIndex}_packages_0">
-                                <option value="">Seleccione un paquete</option>
-                                ${packageOptions}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="units_${unitIndex}_package_quantities_0" class="form-label">Cantidad</label>
-                            <input type="number" class="form-control quantity" name="units[${unitIndex}][packages][0][quantity]" id="units_${unitIndex}_package_quantities_0" min="1" value="1">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Subtotal</label>
-                            <input type="text" class="form-control subtotal" readonly value="0">
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">Eliminar</button>
+        const unitTemplate = `
+            <div class="unit-row mb-4 border p-3" data-index="${newUnitIndex}">
+                <h6>Unidad ${newUnitIndex + 1}</h6>
+                <!-- Servicios de la Unidad -->
+                <h6>Servicios</h6>
+                <div class="service-container">
+                    <div class="service-row mb-3" data-service-index="0">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Servicio</label>
+                                <div class="input-group">
+                                    <select class="form-control service-select" name="units[${newUnitIndex}][services][0][service_id]">
+                                        <option value="">Seleccione un servicio</option>
+                                        ${serviceOptions}
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" class="form-control quantity" name="units[${newUnitIndex}][services][0][quantity]" value="1">
+                            <div class="col-md-3">
+                                <label class="form-label">Subtotal</label>
+                                <input type="text" class="form-control subtotal" readonly value="0">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger delete-service-btn" style="display: none;">Eliminar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <button type="button" class="btn btn-secondary mb-3 add-service-btn">Agregar Servicio</button>
+                
+                <!-- Paquetes de la Unidad -->
+                <h6>Paquetes de Servicios</h6>
+                <div class="package-container">
+                    <div class="package-row mb-3" data-package-index="0">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Paquete</label>
+                                <div class="input-group">
+                                    <select class="form-control package-select" name="units[${newUnitIndex}][packages][0][package_id]">
+                                        <option value="">Seleccione un paquete</option>
+                                        ${packageOptions}
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" class="form-control quantity" name="units[${newUnitIndex}][packages][0][quantity]" value="1">
+                            <div class="col-md-3">
+                                <label class="form-label">Subtotal</label>
+                                <input type="text" class="form-control subtotal" readonly value="0">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger delete-package-btn" style="display: none;">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mb-3 add-package-btn">Agregar Paquete</button>
             </div>
-            <button type="button" class="btn btn-secondary mb-3 add-package-btn">Agregar Paquete</button>
         `;
         
-        unitContainer.appendChild(newUnitRow);
+        unitContainer.insertAdjacentHTML('beforeend', unitTemplate);
+        const newUnitRow = unitContainer.lastElementChild;
         
-        // Configurar botones para la nueva unidad
+        // Configurar botones de la nueva unidad
         const addServiceBtn = newUnitRow.querySelector('.add-service-btn');
         const addPackageBtn = newUnitRow.querySelector('.add-package-btn');
-        let serviceIndex = 1;
-        let packageIndex = 1;
         
+        let serviceIndex = 1; // Start from 1 since we already have one service row
+        let packageIndex = 1; // Start from 1 since we already have one package row
+        
+        // Configurar eventos para la primera fila de servicio
+        const firstServiceRow = newUnitRow.querySelector('.service-row');
+        const firstServiceSelect = firstServiceRow.querySelector('.service-select');
+        const firstServiceDeleteBtn = firstServiceRow.querySelector('.delete-service-btn');
+        
+        firstServiceSelect.addEventListener('change', function() {
+            calculateSubtotal(firstServiceRow);
+            calculateTotal();
+        });
+        
+        // Configurar eventos para la primera fila de paquete
+        const firstPackageRow = newUnitRow.querySelector('.package-row');
+        const firstPackageSelect = firstPackageRow.querySelector('.package-select');
+        const firstPackageDeleteBtn = firstPackageRow.querySelector('.delete-package-btn');
+        
+        firstPackageSelect.addEventListener('change', function() {
+            calculateSubtotal(firstPackageRow);
+            calculateTotal();
+        });
+        
+        // Configurar botón de agregar servicio
         addServiceBtn.addEventListener('click', function() {
-            addServiceRow(newUnitRow, unitIndex, serviceIndex);
+            const newServiceRow = addServiceRow(newUnitRow, newUnitIndex, serviceIndex);
             serviceIndex++;
+            
+            // Configurar eventos para la nueva fila de servicio
+            const serviceSelect = newServiceRow.querySelector('.service-select');
+            const deleteBtn = newServiceRow.querySelector('.delete-service-btn');
+            
+            serviceSelect.addEventListener('change', function() {
+                calculateSubtotal(newServiceRow);
+                calculateTotal();
+            });
+            
+            deleteBtn.addEventListener('click', function() {
+                newServiceRow.remove();
+                calculateTotal();
+            });
+            
+            // Mostrar botón de eliminar
+            deleteBtn.style.display = 'block';
         });
         
+        // Configurar botón de agregar paquete
         addPackageBtn.addEventListener('click', function() {
-            addPackageRow(newUnitRow, unitIndex, packageIndex);
+            const newPackageRow = addPackageRow(newUnitRow, newUnitIndex, packageIndex);
             packageIndex++;
+            
+            // Configurar eventos para la nueva fila de paquete
+            const packageSelect = newPackageRow.querySelector('.package-select');
+            const deleteBtn = newPackageRow.querySelector('.delete-package-btn');
+            
+            packageSelect.addEventListener('change', function() {
+                calculateSubtotal(newPackageRow);
+                calculateTotal();
+            });
+            
+            deleteBtn.addEventListener('click', function() {
+                newPackageRow.remove();
+                calculateTotal();
+            });
+            
+            // Mostrar botón de eliminar
+            deleteBtn.style.display = 'block';
         });
         
-        // Configurar la primera fila de servicio
-        const serviceRow = newUnitRow.querySelector('.service-row');
-        const serviceSelect = serviceRow.querySelector('.service-select');
-        const serviceQuantity = serviceRow.querySelector('.quantity');
-        
-        serviceSelect.addEventListener('change', function() {
-            calculateSubtotal(serviceRow);
-            calculateTotal();
-        });
-        
-        serviceQuantity.addEventListener('input', function() {
-            calculateSubtotal(serviceRow);
-            calculateTotal();
-        });
-        
-        // Configurar la primera fila de paquete
-        const packageRow = newUnitRow.querySelector('.package-row');
-        const packageSelect = packageRow.querySelector('.package-select');
-        const packageQuantity = packageRow.querySelector('.quantity');
-        
-        packageSelect.addEventListener('change', function() {
-            calculateSubtotal(packageRow);
-            calculateTotal();
-        });
-        
-        packageQuantity.addEventListener('input', function() {
-            calculateSubtotal(packageRow);
-            calculateTotal();
-        });
-        
-        unitIndex++;
         calculateTotal();
     });
 
@@ -467,20 +534,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Configurar filas de servicio existentes
         const serviceRows = unitRow.querySelectorAll('.service-row');
-        serviceRows.forEach(function(serviceRow) {
+        serviceRows.forEach(function(serviceRow, rowIndex) {
             const select = serviceRow.querySelector('.service-select');
-            const quantity = serviceRow.querySelector('.quantity');
             const deleteBtn = serviceRow.querySelector('.delete-service-btn');
+            
+            // Show delete button for all rows except the first one
+            if (rowIndex > 0 && deleteBtn) {
+                deleteBtn.style.display = 'block';
+            }
             
             if (select) {
                 select.addEventListener('change', function() {
-                    calculateSubtotal(serviceRow);
-                    calculateTotal();
-                });
-            }
-            
-            if (quantity) {
-                quantity.addEventListener('input', function() {
                     calculateSubtotal(serviceRow);
                     calculateTotal();
                 });
@@ -490,26 +554,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteBtn.addEventListener('click', function() {
                     serviceRow.remove();
                     calculateTotal();
+                    // Update service indexes after deletion
+                    const remainingServiceRows = unitRow.querySelectorAll('.service-row');
+                    remainingServiceRows.forEach((row, idx) => {
+                        row.dataset.serviceIndex = idx;
+                        const newDeleteBtn = row.querySelector('.delete-service-btn');
+                        if (idx === 0 && newDeleteBtn) {
+                            newDeleteBtn.style.display = 'none';
+                        } else if (newDeleteBtn) {
+                            newDeleteBtn.style.display = 'block';
+                        }
+                    });
+                    serviceIndex = remainingServiceRows.length;
                 });
             }
         });
         
         // Configurar filas de paquete existentes
         const packageRows = unitRow.querySelectorAll('.package-row');
-        packageRows.forEach(function(packageRow) {
+        packageRows.forEach(function(packageRow, rowIndex) {
             const select = packageRow.querySelector('.package-select');
-            const quantity = packageRow.querySelector('.quantity');
             const deleteBtn = packageRow.querySelector('.delete-package-btn');
+            
+            // Show delete button for all rows except the first one
+            if (rowIndex > 0 && deleteBtn) {
+                deleteBtn.style.display = 'block';
+            }
             
             if (select) {
                 select.addEventListener('change', function() {
-                    calculateSubtotal(packageRow);
-                    calculateTotal();
-                });
-            }
-            
-            if (quantity) {
-                quantity.addEventListener('input', function() {
                     calculateSubtotal(packageRow);
                     calculateTotal();
                 });
@@ -519,6 +592,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteBtn.addEventListener('click', function() {
                     packageRow.remove();
                     calculateTotal();
+                    // Update package indexes after deletion
+                    const remainingPackageRows = unitRow.querySelectorAll('.package-row');
+                    remainingPackageRows.forEach((row, idx) => {
+                        row.dataset.packageIndex = idx;
+                        const newDeleteBtn = row.querySelector('.delete-package-btn');
+                        if (idx === 0 && newDeleteBtn) {
+                            newDeleteBtn.style.display = 'none';
+                        } else if (newDeleteBtn) {
+                            newDeleteBtn.style.display = 'block';
+                        }
+                    });
+                    packageIndex = remainingPackageRows.length;
                 });
             }
         });

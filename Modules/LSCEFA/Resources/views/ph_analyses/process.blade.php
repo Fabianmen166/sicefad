@@ -190,9 +190,9 @@
                                 </thead>
                                 <tbody>
                                     @php
-                                        // Siempre mostrar los 4 controles: Buffer pH 4, 7, 10 y MRC
-                                        $identificaciones = ['Buffer de pH 4', 'Buffer de pH 7', 'Buffer de pH 10', 'Muestra de referencia o MRC'];
-                                        $controlCount = 4;
+                                        // Mostrar solo los 3 controles de buffer: pH 4, 7, 10
+                                        $identificaciones = ['Buffer de pH 4', 'Buffer de pH 7', 'Buffer de pH 10'];
+                                        $controlCount = 3;
                                     @endphp
                                     @for ($index = 0; $index < $controlCount; $index++)
                                         @php
@@ -230,30 +230,195 @@
                             <h3 class="card-title">Precisión Analítica</h3>
                         </div>
                         <div class="card-body">
-                            <table class="table table-bordered">
+                            <!-- Tabla de Muestra de Referencia -->
+                            <h5>Muestra de Referencia</h5>
+                            <table class="table table-bordered mb-4">
                                 <thead>
                                     <tr>
                                         <th>Identificación</th>
+                                        <th>Lote</th>
+                                        <th>Peso (g)</th>
+                                        <th>Volumen H₂O (mL)</th>
+                                        <th>Temperatura (°C)</th>
                                         <th>Valor Leído (pH)</th>
-                                        <th>Promedio</th>
-                                        <th>Diferencia</th>
+                                        <th>Valor Esperado (pH)</th>
+                                        <th>% Error</th>
                                         <th>Aceptabilidad</th>
                                         <th>Observaciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        // Obtener los datos de la muestra de referencia si existen
+                                        $indiceMuestraReferencia = 3; // Índice de la muestra de referencia en controles_analiticos
+                                        $muestraRef = $firstAnalysis->phAnalysis->controles_analiticos[$indiceMuestraReferencia] ?? [];
+                                    @endphp
+                                    <tr class="control-row">
+                                        <td>
+                                            <input type="text" class="form-control" name="muestra_referencia[identificacion]" value="Muestra de referencia o MRC" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control" name="muestra_referencia[lote]" value="{{ old('muestra_referencia.lote', $muestraRef['lote'] ?? '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control" name="muestra_referencia[peso]" value="{{ old('muestra_referencia.peso', $muestraRef['peso'] ?? '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control" name="muestra_referencia[volumen_agua]" value="{{ old('muestra_referencia.volumen_agua', $muestraRef['volumen_agua'] ?? '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.1" class="form-control" name="muestra_referencia[temperatura]" value="{{ old('muestra_referencia.temperatura', $muestraRef['temperatura'] ?? '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control control-valor-leido" name="muestra_referencia[valor_leido]" value="{{ old('muestra_referencia.valor_leido', $muestraRef['valor_leido'] ?? '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control control-valor-esperado" name="muestra_referencia[valor_esperado]" value="{{ old('muestra_referencia.valor_esperado', $muestraRef['valor_esperado'] ?? '') }}">
+                                        </td>
+                                        <td class="control-error"></td>
+                                        <td class="control-aceptabilidad"></td>
+                                        <td>
+                                            <input type="text" class="form-control" name="muestra_referencia[observaciones]" value="{{ old('muestra_referencia.observaciones', $muestraRef['observaciones'] ?? '') }}">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Tabla de Duplicados -->
+                            <h5>Análisis por Duplicado</h5>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td colspan="9">
+                                        <div class="form-group mb-0">
+                                            <label for="identificacion_duplicados" class="mb-0">Identificación de la Muestra (Aplicable a ambas réplicas)</label>
+                                            <input type="text" 
+                                                   class="form-control @error('precision_analitica.identificacion') is-invalid @enderror" 
+                                                   id="identificacion_duplicados" 
+                                                   name="precision_analitica[identificacion]" 
+                                                   value="{{ old('precision_analitica.identificacion', $firstAnalysis->phAnalysis->precision_analitica['identificacion'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.identificacion')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Réplica</th>
+                                    <th>Peso (g)</th>
+                                    <th>Volumen H₂O (mL)</th>
+                                    <th>Temperatura (°C)</th>
+                                    <th>Valor Leído (pH)</th>
+                                    <th>Promedio</th>
+                                    <th>Diferencia</th>
+                                    <th>Aceptabilidad</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                                <tbody>
                                     <tr>
-                                        <td><input type="text" class="form-control @error('precision_analitica.duplicado_a.identificacion') is-invalid @enderror" name="precision_analitica[duplicado_a][identificacion]" value="{{ old('precision_analitica.duplicado_a.identificacion', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['identificacion'] ?? '') }}" placeholder="Identificación Duplicado A" required></td>
-                                        <td><input type="number" step="0.00001" pattern="^\d+(\.\d{1,5})?$" class="form-control duplicado-a @error('precision_analitica.duplicado_a.valor_leido') is-invalid @enderror" name="precision_analitica[duplicado_a][valor_leido]" value="{{ old('precision_analitica.duplicado_a.valor_leido', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['valor_leido'] ?? '') }}" required></td>
+                                        <td><strong>A</strong></td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_a.peso') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_a][peso]" 
+                                                   value="{{ old('precision_analitica.duplicado_a.peso', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['peso'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_a.peso')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_a.volumen_agua') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_a][volumen_agua]" 
+                                                   value="{{ old('precision_analitica.duplicado_a.volumen_agua', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['volumen_agua'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_a.volumen_agua')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_a.temperatura') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_a][temperatura]" 
+                                                   value="{{ old('precision_analitica.duplicado_a.temperatura', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['temperatura'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_a.temperatura')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.00001" pattern="^\d+(\.\d{1,5})?$" 
+                                                   class="form-control duplicado-a @error('precision_analitica.duplicado_a.valor_leido') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_a][valor_leido]" 
+                                                   value="{{ old('precision_analitica.duplicado_a.valor_leido', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['valor_leido'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_a.valor_leido')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
                                         <td rowspan="2"><span class="form-control-plaintext" id="promedio"></span></td>
                                         <td rowspan="2"><span class="form-control-plaintext" id="diferencia"></span></td>
                                         <td rowspan="2"><span class="form-control-plaintext" id="aceptabilidad_precision"></span></td>
-                                        <td><input type="text" class="form-control @error('precision_analitica.duplicado_a.observaciones') is-invalid @enderror" name="precision_analitica[duplicado_a][observaciones]" value="{{ old('precision_analitica.duplicado_a.observaciones', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['observaciones'] ?? '') }}"></td>
+                                        <td>
+                                            <input type="text" class="form-control @error('precision_analitica.duplicado_a.observaciones') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_a][observaciones]" 
+                                                   value="{{ old('precision_analitica.duplicado_a.observaciones', $firstAnalysis->phAnalysis->precision_analitica['duplicado_a']['observaciones'] ?? '') }}">
+                                            @error('precision_analitica.duplicado_a.observaciones')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td><input type="text" class="form-control @error('precision_analitica.duplicado_b.identificacion') is-invalid @enderror" name="precision_analitica[duplicado_b][identificacion]" value="{{ old('precision_analitica.duplicado_b.identificacion', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['identificacion'] ?? '') }}" placeholder="Identificación Duplicado B" required></td>
-                                        <td><input type="number" step="0.00001" pattern="^\d+(\.\d{1,5})?$" class="form-control duplicado-b @error('precision_analitica.duplicado_b.valor_leido') is-invalid @enderror" name="precision_analitica[duplicado_b][valor_leido]" value="{{ old('precision_analitica.duplicado_b.valor_leido', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['valor_leido'] ?? '') }}" required></td>
-                                        <td><input type="text" class="form-control @error('precision_analitica.duplicado_b.observaciones') is-invalid @enderror" name="precision_analitica[duplicado_b][observaciones]" value="{{ old('precision_analitica.duplicado_b.observaciones', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['observaciones'] ?? '') }}"></td>
+                                        <td><strong>B</strong></td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_b.peso') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_b][peso]" 
+                                                   value="{{ old('precision_analitica.duplicado_b.peso', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['peso'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_b.peso')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_b.volumen_agua') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_b][volumen_agua]" 
+                                                   value="{{ old('precision_analitica.duplicado_b.volumen_agua', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['volumen_agua'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_b.volumen_agua')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                   class="form-control @error('precision_analitica.duplicado_b.temperatura') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_b][temperatura]" 
+                                                   value="{{ old('precision_analitica.duplicado_b.temperatura', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['temperatura'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_b.temperatura')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.00001" pattern="^\d+(\.\d{1,5})?$" 
+                                                   class="form-control duplicado-b @error('precision_analitica.duplicado_b.valor_leido') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_b][valor_leido]" 
+                                                   value="{{ old('precision_analitica.duplicado_b.valor_leido', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['valor_leido'] ?? '') }}" 
+                                                   required>
+                                            @error('precision_analitica.duplicado_b.valor_leido')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control @error('precision_analitica.duplicado_b.observaciones') is-invalid @enderror" 
+                                                   name="precision_analitica[duplicado_b][observaciones]" 
+                                                   value="{{ old('precision_analitica.duplicado_b.observaciones', $firstAnalysis->phAnalysis->precision_analitica['duplicado_b']['observaciones'] ?? '') }}">
+                                            @error('precision_analitica.duplicado_b.observaciones')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -273,7 +438,6 @@
                                     <thead>
                                         <tr>
                                             <th>Código de Ítem</th>
-                                            <th>Identificación</th>
                                             <th>Peso (g)</th>
                                             <th>Volumen H₂O (mL)</th>
                                             <th>Temperatura (°C)</th>
@@ -283,6 +447,7 @@
                                     </thead>
                                     <tbody>
                                         @php
+                                            $itemIndex = 0;
                                             $selectedAnalysisIds = $pendingAnalyses->pluck('id')->toArray();
                                         @endphp
                                         @foreach ($pendingItems as $index => $item)
@@ -291,22 +456,72 @@
                                                     $analysis = $pendingAnalyses->firstWhere('id', $item['analysis_id']);
                                                 @endphp
                                                 @if ($analysis)
-                                                    <tr>
-                                                        <td>{{ $analysis->process->item_code }}</td>
-                                                        <td><input type="text" class="form-control @error('items_ensayo.' . $index . '.identificacion') is-invalid @enderror" name="items_ensayo[{{$index}}][identificacion]" value="{{ old('items_ensayo.' . $index . '.identificacion', $item['identificacion'] ?? '') }}" required></td>
-                                                        <td><input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control @error('items_ensayo.' . $index . '.peso') is-invalid @enderror" name="items_ensayo[{{$index}}][peso]" value="{{ old('items_ensayo.' . $index . '.peso', $item['peso'] ?? '') }}" required></td>
-                                                        <td><input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control @error('items_ensayo.' . $index . '.volumen_agua') is-invalid @enderror" name="items_ensayo[{{$index}}][volumen_agua]" value="{{ old('items_ensayo.' . $index . '.volumen_agua', $item['volumen_agua'] ?? '') }}" required></td>
-                                                        <td><input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control @error('items_ensayo.' . $index . '.temperatura') is-invalid @enderror" name="items_ensayo[{{$index}}][temperatura]" value="{{ old('items_ensayo.' . $index . '.temperatura', $item['temperatura'] ?? '') }}" required></td>
-                                                        <td><input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" class="form-control @error('items_ensayo.' . $index . '.valor_leido') is-invalid @enderror" name="items_ensayo[{{$index}}][valor_leido]" value="{{ old('items_ensayo.' . $index . '.valor_leido', $item['valor_leido'] ?? '') }}" required></td>
-                                                        <td><input type="text" class="form-control @error('items_ensayo.' . $index . '.observaciones') is-invalid @enderror" name="items_ensayo[{{$index}}][observaciones]" value="{{ old('items_ensayo.' . $index . '.observaciones', $item['observaciones'] ?? '') }}"></td>
-                                                        <input type="hidden" name="items_ensayo[{{$index}}][analysis_id]" value="{{$item['analysis_id']}}">
+                                                    <tr class="item-row">
+                                                        <td>
+                                                            {{ $analysis->process->item_code }}
+                                                            <input type="hidden" name="items_ensayo[{{$index}}][item_id]" value="{{ $item['id'] ?? '' }}">
+                                                            <input type="hidden" name="items_ensayo[{{$index}}][identificacion]" value="{{ $analysis->process->item_code }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                                   class="form-control @error('items_ensayo.' . $index . '.peso') is-invalid @enderror" 
+                                                                   name="items_ensayo[{{$index}}][peso]" 
+                                                                   value="{{ old('items_ensayo.' . $index . '.peso', $item['peso'] ?? '') }}" 
+                                                                   required>
+                                                            @error('items_ensayo.' . $index . '.peso')
+                                                                <span class="invalid-feedback">{{ $message }}</span>
+                                                            @enderror
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.0001" pattern="^\d+(\.\d{1,4})?$" 
+                                                                   class="form-control @error('items_ensayo.' . $index . '.volumen_agua') is-invalid @enderror" 
+                                                                   name="items_ensayo[{{$index}}][volumen_agua]" 
+                                                                   value="{{ old('items_ensayo.' . $index . '.volumen_agua', $item['volumen_agua'] ?? '') }}" 
+                                                                   required>
+                                                            @error('items_ensayo.' . $index . '.volumen_agua')
+                                                                <span class="invalid-feedback">{{ $message }}</span>
+                                                            @enderror
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.1" 
+                                                                   class="form-control @error('items_ensayo.' . $index . '.temperatura') is-invalid @enderror" 
+                                                                   name="items_ensayo[{{$index}}][temperatura]" 
+                                                                   value="{{ old('items_ensayo.' . $index . '.temperatura', $item['temperatura'] ?? '') }}" 
+                                                                   required>
+                                                            @error('items_ensayo.' . $index . '.temperatura')
+                                                                <span class="invalid-feedback">{{ $message }}</span>
+                                                            @enderror
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.00001" pattern="^\d+(\.\d{1,5})?$" 
+                                                                   class="form-control @error('items_ensayo.' . $index . '.valor_leido') is-invalid @enderror" 
+                                                                   name="items_ensayo[{{$index}}][valor_leido]" 
+                                                                   value="{{ old('items_ensayo.' . $index . '.valor_leido', $item['valor_ph'] ?? '') }}" 
+                                                                   required>
+                                                            @error('items_ensayo.' . $index . '.valor_leido')
+                                                                <span class="invalid-feedback">{{ $message }}</span>
+                                                            @enderror
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" 
+                                                                   class="form-control @error('items_ensayo.' . $index . '.observaciones') is-invalid @enderror" 
+                                                                   name="items_ensayo[{{$index}}][observaciones]" 
+                                                                   value="{{ old('items_ensayo.' . $index . '.observaciones', $item['observaciones'] ?? '') }}">
+                                                            @error('items_ensayo.' . $index . '.observaciones')
+                                                                <span class="invalid-feedback">{{ $message }}</span>
+                                                            @enderror
+                                                        </td>
+                                                        <input type="hidden" name="items_ensayo[{{$index}}][analysis_id]" value="{{ $item['analysis_id'] }}">
                                                     </tr>
+                                                    @php
+                                                        $itemIndex++;
+                                                    @endphp
                                                 @endif
                                             @endif
                                         @endforeach
                                     </tbody>
                                 </table>
-                                <button type="button" class="btn btn-primary" id="add-item">Agregar Ítem</button>
+                                <button type="button" class="btn btn-primary" id="add-item" style="display: none;">Agregar Ítem</button>
                             @endif
                         </div>
                     </div>
@@ -449,4 +664,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 })();
 </script>
-@endpush 
+@endpush
