@@ -45,6 +45,15 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_admin[] = $permission->id;
 
+        // Permiso para la gestión de usuarios
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.index'], [
+            'name' => 'Gestión de Usuarios',
+            'description' => 'Puede ver el listado de usuarios',
+            'description_english' => 'Can view the user list',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
         $rol_admin = Role::where('slug', 'lscefa.admin')->first();
         $rol_admin->permissions()->syncWithoutDetaching($permissions_admin);
 
@@ -1233,7 +1242,9 @@ $permisos_admin_quotes[] = $perm->id;
             'description_english' => 'Can view pH analysis management',
             'app_id' => $app->id
         ]);
+        
         $permisos_technical_ph[] = $perm->id;
+        
 
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.process_all'], [
             'name' => 'Procesar todos los análisis de pH',
@@ -1352,8 +1363,44 @@ $permisos_admin_quotes[] = $perm->id;
         // Asignar permisos de conductividad al rol técnico
         $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_conductivity);
 
-        // Asignar todos los permisos al rol de administrador al final del método run()
+        // Permisos para la gestión de usuarios
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.index'], [
+            'name' => 'Listar usuarios',
+            'description' => 'Permite ver la lista de usuarios del sistema',
+            'description_english' => 'Can view the list of system users',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.create'], [
+            'name' => 'Crear usuarios',
+            'description' => 'Permite crear nuevos usuarios en el sistema',
+            'description_english' => 'Can create new users in the system',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.edit'], [
+            'name' => 'Editar usuarios',
+            'description' => 'Permite editar usuarios existentes en el sistema',
+            'description_english' => 'Can edit existing users in the system',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.destroy'], [
+            'name' => 'Eliminar usuarios',
+            'description' => 'Permite eliminar usuarios del sistema',
+            'description_english' => 'Can delete users from the system',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $perm->id;
+
+        // Asignar permisos específicos al rol de administrador
         $adminRole = Role::where('slug', 'lscefa.admin')->first();
+        $adminRole->permissions()->syncWithoutDetaching($permissions_admin);
+
+        // Como medida de precaución, también asignamos todos los permisos al rol admin
         $allPermissions = Permission::where('app_id', $app->id)->pluck('id')->toArray();
         $adminRole->permissions()->syncWithoutDetaching($allPermissions);
     }

@@ -31,51 +31,57 @@ class PhAnalysisController extends Controller
                 'user_role' => Auth::user()->role ?? 'N/A',
             ]);
 
-            // Fetch analyses that are explicitly rejected (approved = 0)
-            $phAnalyses = ServiceProcessDetail::with(['process', 'service'])
-                                ->where('status', 'rejected')
-                                ->get()
-                                ->filter(function ($analysis) {
-                                    $hasProcess = $analysis->process !== null;
-                                    $hasService = $analysis->service !== null;
-                                    if (!$hasProcess || !$hasService) {
-                                        Log::warning('Analysis with missing relation:', [
-                                            'analysis_id' => $analysis->id,
-                                            'process' => $analysis->process ? 'exists' : 'null',
-                                            'service' => $analysis->service ? 'exists' : 'null',
-                                        ]);
-                                    }
-                                    return $hasProcess && $hasService;
-                                });
-
-            Log::info('PhAnalysisController@index loaded data:', [
-                'phAnalyses_count' => $phAnalyses->count(),
-                'analysis_ids' => $phAnalyses->pluck('id')->toArray(),
+            // 1. Obtener servicios que contienen 'ph' en la descripción
+            $phServices = \Modules\LSCEFA\Models\Service::whereRaw('LOWER(descripcion) LIKE ?', ['%ph%'])
+                ->get(['services_id', 'descripcion']);
+                
+            Log::info('Servicios con "ph" en la descripción:', [
+                'count' => $phServices->count(),
+                'services' => $phServices->toArray()
             ]);
 
-            // Fetch processes with pending pH analyses
-            $processes = Process::where('status', 'pending')
-                ->with([
-                    'serviceProcessDetails' => function ($query) {
-                        $query->where('status', 'pending')
-                              ->where('service_id', 1)
-                              ->with('service');
-                    },
-                ])
-                ->get()
-                ->filter(function ($process) {
-                    return $process->serviceProcessDetails->isNotEmpty();
-                });
+            // 2. Obtener análisis rechazados
+            $rejectedAnalyses = \Modules\LSCEFA\Models\ServiceProcessDetail::with(['process', 'service'])
+                ->where('status', 'rejected')
+                ->whereHas('service', function($q) {
+                    $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                })
+                ->get();
 
-            Log::info('Pending processes loaded for index:', [
-                'processes_count' => $processes->count(),
+            Log::info('Análisis de pH rechazados:', [
+                'count' => $rejectedAnalyses->count()
             ]);
 
-            return view('lscefa::ph_analyses.index', compact('phAnalyses', 'processes'));
+            // 3. Obtener procesos con análisis de pH pendientes
+            $processes = \Modules\LSCEFA\Models\Process::where('status', 'pending')
+                ->whereHas('serviceProcessDetails', function($query) {
+                    $query->where('status', 'pending')
+                          ->whereHas('service', function($q) {
+                              $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                          });
+                })
+                ->with(['serviceProcessDetails' => function($query) {
+                    $query->where('status', 'pending')
+                          ->whereHas('service', function($q) {
+                              $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                          })
+                          ->with('service');
+                }])
+                ->get();
+
+            Log::info('Procesos con análisis de pH pendientes:', [
+                'count' => $processes->count()
+            ]);
+
+            return view('lscefa::ph_analyses.index', [
+                'processes' => $processes,
+                'phAnalyses' => $rejectedAnalyses
+            ]);
+            
         } catch (\Exception $e) {
             Log::error('Error in PhAnalysisController@index: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
-                'stack_trace' => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString()
             ]);
             return redirect()->route('lscefa.technical.analyses.index')
                            ->with('error', 'Error al cargar la gestión de análisis de pH: ' . $e->getMessage());
@@ -119,12 +125,14 @@ class PhAnalysisController extends Controller
                     return $process;
                 })->filter();
             } else {
-                // Lógica original: todos los procesos con análisis de pH pendientes
+                // Lógica para todos los procesos con análisis de pH pendientes (case-insensitive match)
                 $processes = Process::where('status', 'pending')
                     ->with([
                         'serviceProcessDetails' => function ($query) {
                             $query->where('status', 'pending')
-                                ->where('service_id', 1)
+                                ->whereHas('service', function($q) {
+                                    $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                                })
                                 ->with(['service', 'process', 'phAnalysis']);
                         },
                     ])
@@ -196,12 +204,15 @@ class PhAnalysisController extends Controller
     public function phAnalysis($processId, $serviceId)
     {
         try {
-            $process = Process::where('process_id', $processId)->firstOrFail();
-            $service = Service::findOrFail($serviceId);
-            $analysis = ServiceProcessDetail::where('process_id', $processId)
-                              ->where('service_id', $serviceId)
-                              ->firstOrFail();
-            $phAnalysis = PhAnalysis::where('analysis_id', $analysis->id)->first();
+            // Obtener el detalle del proceso de servicio que tenga un servicio con 'ph' en la descripción
+            $serviceProcessDetail = ServiceProcessDetail::with(['process', 'service'])
+                ->where('process_id', $processId)
+                ->whereHas('service', function($q) use ($serviceId) {
+                    $q->where('service_id', $serviceId)
+                      ->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                })
+                ->firstOrFail();
+            $phAnalysis = PhAnalysis::where('analysis_id', $serviceProcessDetail->id)->first();
 
             // Filtrar ítems pendientes (asumimos que los ítems están en items_ensayo y un ítem está pendiente si no tiene valor_leido)
             $pendingItems = [];

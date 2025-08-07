@@ -62,4 +62,11 @@ class ServiceController extends Controller
         return redirect()->route('lscefa.quality.services.index')
             ->with('success', 'Servicio actualizado exitosamente.');
     }
+    
+    public function destroy(Service $service)
+    {
+        $service->delete();
+        return redirect()->route('lscefa.quality.services.index')
+            ->with('success', 'Servicio eliminado exitosamente.');
+    }
 }

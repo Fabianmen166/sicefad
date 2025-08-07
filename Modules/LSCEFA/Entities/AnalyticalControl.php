@@ -76,4 +76,10 @@ class AnalyticalControl extends Model
     {
         return \Modules\LSCEFA\Database\factories\AnalyticalControlFactory::new();
     }
+    public function carbonoAnalysis()
+    {
+        return $this->belongsTo(CarbonoAnalysis::class, 'carbono_analysis_id');
+    }
+    
+    
 }

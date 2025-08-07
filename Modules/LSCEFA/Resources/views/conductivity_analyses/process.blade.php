@@ -124,7 +124,6 @@
                             <thead>
                                 <tr>
                                     <th>Blanco del proceso</th>
-                                    <th>Identificación</th>
                                     <th>Valor leído (dS/m)</th>
                                     <th>Aceptable/No aceptable</th>
                                     <th>Observaciones</th>
@@ -133,7 +132,6 @@
                             <tbody>
                                 <tr>
                                     <td><input type="text" class="form-control" value="Blanco del proceso" readonly></td>
-                                    <td><input type="text" name="blanco_identificacion" class="form-control"></td>
                                     <td><input type="number" step="0.01" name="blanco_valor_leido" id="blanco_valor_leido" class="form-control"></td>
                                     <td><span id="blanco_aceptable"></span></td>
                                     <td><textarea name="blanco_observaciones" class="form-control"></textarea></td>
@@ -150,34 +148,81 @@
                     </div>
                     <div class="card-body">
                         <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Identificación</th>
-                                    <th>Valor leído (µS/cm)</th>
-                                    <th>Valor leído (mS/m)</th>
-                                    <th>Promedio (mS/m)</th>
-                                    <th>Diferencia (mS/m)</th>
-                                    <th>Aceptable/No aceptable</th>
-                                    <th>Observaciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><input type="text" name="duplicado_identificacion_a" class="form-control"></td>
-                                    <td><input type="number" step="0.01" name="duplicado_a_valor_leido" id="duplicado_a_valor_leido" class="form-control"></td>
-                                    <td><input type="number" step="0.01" id="duplicado_a_valor_leido_msm" class="form-control" readonly></td>
-                                    <td rowspan="2"><span class="form-control-plaintext" id="precision_promedio"></span></td>
-                                    <td rowspan="2"><span class="form-control-plaintext" id="precision_diferencia"></span></td>
-                                    <td rowspan="2"><span class="form-control-plaintext" id="precision_aceptable"></span></td>
-                                    <td><textarea name="duplicado_observaciones" class="form-control"></textarea></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" name="duplicado_identificacion_b" class="form-control"></td>
-                                    <td><input type="number" step="0.01" name="duplicado_b_valor_leido" id="duplicado_b_valor_leido" class="form-control"></td>
-                                    <td><input type="number" step="0.01" id="duplicado_b_valor_leido_msm" class="form-control" readonly></td>
-                                    <td><input type="text" class="form-control" readonly></td>
-                                </tr>
-                            </tbody>
+                            <tr>
+                                <td colspan="9">
+                                    <div class="form-group mb-0">
+                                        <label for="duplicado_identificacion" class="mb-0">Identificación de la Muestra (Aplicable a ambas réplicas)</label>
+                                        <input type="text" class="form-control" id="duplicado_identificacion" name="duplicado_identificacion" value="">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Réplica</th>
+                                <th>Peso (g)</th>
+                                <th>Volumen H₂O (mL)</th>
+                                <th>Temperatura (°C)</th>
+                                <th>Valor leído (µS/cm)</th>
+                                <th>Valor leído (mS/m)</th>
+                                <th>Promedio (mS/m)</th>
+                                <th>Diferencia (mS/m)</th>
+                                <th>Aceptable/No aceptable</th>
+                                <th>Observaciones</th>
+                            </tr>
+                            <tr>
+                                <td><strong>A</strong></td>
+                                <td>
+                                    <input type="number" step="0.0001" name="duplicado_peso" 
+                                           class="form-control" value="">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="duplicado_volumen_agua" 
+                                           class="form-control" value="">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.1" name="duplicado_temperatura" 
+                                           class="form-control" value="">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="duplicado_a_valor_leido" 
+                                           id="duplicado_a_valor_leido" class="form-control">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" id="duplicado_a_valor_leido_msm" 
+                                           class="form-control" readonly>
+                                </td>
+                                <td rowspan="2">
+                                    <span class="form-control-plaintext" id="precision_promedio">-</span>
+                                </td>
+                                <td rowspan="2">
+                                    <span class="form-control-plaintext" id="precision_diferencia">-</span>
+                                </td>
+                                <td rowspan="2">
+                                    <span class="form-control-plaintext" id="precision_aceptable">-</span>
+                                </td>
+                                <td rowspan="2">
+                                    <textarea name="duplicado_observaciones" class="form-control" rows="3"></textarea>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>B</strong></td>
+                                <td>
+                                    <input type="number" step="0.0001" name="duplicado_b_peso" class="form-control">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="duplicado_b_volumen_agua" class="form-control">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.1" name="duplicado_b_temperatura" class="form-control">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" name="duplicado_b_valor_leido" 
+                                           id="duplicado_b_valor_leido" class="form-control">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" id="duplicado_b_valor_leido_msm" 
+                                           class="form-control" readonly>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>
@@ -188,7 +233,9 @@
                         <h3 class="card-title">Controles de calidad (Veracidad)</h3>
                     </div>
                     <div class="card-body">
-                        <table class="table table-bordered">
+                        <!-- Tabla de Estándar de Control -->
+                        <h5>Estándar de Control</h5>
+                        <table class="table table-bordered mb-4">
                             <thead>
                                 <tr>
                                     <th>Identificación</th>
@@ -200,24 +247,49 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ([
-                                    'Material de Referencia Certificado',
-                                    'Estándar de Control',
-                                    'Muestra de Referencia'
-                                ] as $index => $tipo)
                                 <tr>
-                                    <td><input type="text" name="veracidad[{{ $index }}][identificacion]" class="form-control" value="{{ $tipo }}" readonly></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[{{ $index }}][valor_esperado]" id="veracidad_esperado_{{ $index }}" class="form-control"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[{{ $index }}][valor_leido]" id="veracidad_leido_{{ $index }}" class="form-control"></td>
-                                    <td><span id="veracidad_recuperacion_{{ $index }}"></span></td>
-                                    <td><span id="veracidad_aceptable_{{ $index }}"></span></td>
-                                    <td><textarea name="veracidad[{{ $index }}][observaciones]" class="form-control"></textarea></td>
+                                    <td><input type="text" name="veracidad[0][identificacion]" class="form-control" placeholder="Ingrese identificación"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_esperado]" id="veracidad_0_valor_esperado" class="form-control"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_leido]" id="veracidad_0_valor_leido" class="form-control"></td>
+                                    <td><span id="veracidad_0_recuperacion"></span></td>
+                                    <td><span id="veracidad_0_aceptable"></span></td>
+                                    <td><textarea name="veracidad[0][observaciones]" class="form-control"></textarea></td>
                                 </tr>
-                                @endforeach
                             </tbody>
                         </table>
 
-                        <h6>Criterios de aceptación</h6>
+                        <!-- Tabla de Muestra de Referencia -->
+                        <h5>Muestra de Referencia</h5>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Identificación</th>
+                                    <th>Peso (g)</th>
+                                    <th>Volumen H₂O (mL)</th>
+                                    <th>Temperatura (°C)</th>
+                                    <th>Valor esperado (dS/m)</th>
+                                    <th>Valor leído (dS/m)</th>
+                                    <th>% Recuperación</th>
+                                    <th>Aceptable/No aceptable</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="veracidad[1][identificacion]" class="form-control" placeholder="Ingrese identificación"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][peso]" class="form-control"></td>
+                                    <td><input type="number" step="0.01" name="veracidad[1][volumen_agua]" class="form-control"></td>
+                                    <td><input type="number" step="0.1" name="veracidad[1][temperatura]" class="form-control"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_esperado]" id="veracidad_1_valor_esperado" class="form-control"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_leido]" id="veracidad_1_valor_leido" class="form-control"></td>
+                                    <td><span id="veracidad_1_recuperacion"></span></td>
+                                    <td><span id="veracidad_1_aceptable"></span></td>
+                                    <td><textarea name="veracidad[1][observaciones]" class="form-control"></textarea></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h6 class="mt-4">Criterios de aceptación</h6>
                         <ul>
                             <li>Blanco de proceso: ≤ 0,1 dS/m</li>
                             <li>Precisión: Conductividad eléctrica a 25 ºC de 0 mS/m a 50 mS/m Variación aceptada 5 mS/m; >50 mS/m hasta 200 mS/m Variación aceptada 20 mS/m; >200 mS/m Variación aceptada 10%</li>
@@ -237,12 +309,11 @@
                             <thead>
                                 <tr>
                                     <th>Código Ítem</th>
-                                    <th>Identificación</th>
                                     <th>Peso (g)</th>
                                     <th>Volumen H₂O (mL)</th>
                                     <th>Temperatura (°C)</th>
-                                    <th>Lectura (µS/cm)</th>
-                                    <th>Lectura (dS/cm)</th>
+                                    <th>Valor leído (µS/cm)</th>
+                                    <th>Valor leído (dS/m)</th>
                                     <th>Observaciones</th>
                                 </tr>
                             </thead>
@@ -257,25 +328,40 @@
                                         @endphp
                                         @if ($analysis)
                                             <tr>
-                                                <td><input type="text" name="items_ensayo[{{$index}}][codigo_item]" class="form-control" value="{{ $item['codigo_item'] ?? '' }}" readonly></td>
-                                                <td><input type="text" name="items_ensayo[{{$index}}][identificacion]" class="form-control" value="{{ $item['identificacion'] ?? '' }}" required></td>
-                                                <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][peso]" class="form-control" value="{{ $item['peso'] ?? '' }}" required></td>
-                                                <td><input type="number" step="0.1" name="items_ensayo[{{$index}}][volumen_agua]" class="form-control" value="{{ $item['volumen_agua'] ?? '' }}" required></td>
-                                                <td><input type="number" step="0.1" name="items_ensayo[{{$index}}][temperatura]" class="form-control" value="{{ $item['temperatura'] ?? '' }}" required></td>
-                                                <td><input type="number" step="0.01" name="items_ensayo[{{$index}}][valor_leido]" class="form-control valor-leido" value="{{ $item['valor_leido'] ?? '' }}" required></td>
-                                                <td>
-                                                    <input type="number" step="0.0001" class="form-control valor-leido-dsm" value="{{ (isset($item['valor_leido']) && is_numeric($item['valor_leido'])) ? number_format($item['valor_leido'] * 0.001, 4, '.', '') : '' }}" readonly>
-                                                    <input type="hidden" name="items_ensayo[{{$index}}][valor_leido_dsm]" value="{{ (isset($item['valor_leido']) && is_numeric($item['valor_leido'])) ? number_format($item['valor_leido'] * 0.001, 4, '.', '') : '' }}">
+                                                <td><input type="text" name="items_ensayo[{{$index}}][codigo_item]" class="form-control" value="{{ old('items_ensayo.' . $index . '.codigo_item', $item['codigo_item'] ?? '') }}" readonly></td>
+                                                <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][peso]" class="form-control @error('items_ensayo.' . $index . '.peso') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.peso', $item['peso'] ?? '') }}" required>
+                                                    @error('items_ensayo.' . $index . '.peso')
+                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                    @enderror
                                                 </td>
-                                                <td><textarea name="items_ensayo[{{$index}}][observaciones]" class="form-control">{{ $item['observaciones'] ?? '' }}</textarea></td>
-                                                <input type="hidden" name="analyses[{{$index}}][analysis_id]" value="{{ $item['analysis_id'] }}">
+                                                <td><input type="number" step="0.01" name="items_ensayo[{{$index}}][volumen_agua]" class="form-control @error('items_ensayo.' . $index . '.volumen_agua') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.volumen_agua', $item['volumen_agua'] ?? '') }}" required>
+                                                    @error('items_ensayo.' . $index . '.volumen_agua')
+                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                    @enderror
+                                                </td>
+                                                <td><input type="number" step="0.1" name="items_ensayo[{{$index}}][temperatura]" class="form-control @error('items_ensayo.' . $index . '.temperatura') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.temperatura', $item['temperatura'] ?? '') }}" required>
+                                                    @error('items_ensayo.' . $index . '.temperatura')
+                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                    @enderror
+                                                </td>
+                                                <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][valor_leido]" class="form-control valor-leido @error('items_ensayo.' . $index . '.valor_leido') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.valor_leido', $item['valor_leido'] ?? '') }}" oninput="updateDSCM(this)" required>
+                                                    @error('items_ensayo.' . $index . '.valor_leido')
+                                                        <span classinvalid-feedback>{{ $message }}</span>
+                                                    @enderror
+                                                </td>
+                                                <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][valor_leido_dsm]" class="form-control valor-leido-dsm" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}" readonly>
+                                                    <input type="hidden" name="items_ensayo[{{$index}}][valor_leido_dsm]" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}">
+                                                    @error('items_ensayo.' . $index . '.valor_leido_dsm')
+                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                    @enderror
+                                                </td>
+                                                <td><textarea name="items_ensayo[{{$index}}][observaciones]" class="form-control">{{ old('items_ensayo.' . $index . '.observaciones', $item['observaciones'] ?? '') }}</textarea></td>
                                             </tr>
                                         @endif
                                     @endif
                                 @endforeach
                             </tbody>
                         </table>
-                        <button type="button" class="btn btn-secondary mt-2" onclick="addItemEnsayo()">Agregar Muestra</button>
                     </div>
                 </div>
 
@@ -313,12 +399,6 @@
             </div>
             <div class="col-md-2">
                 <div class="form-group">
-                    <label>Código Interno</label>
-                    <input type="text" name="items_ensayo[${itemEnsayoCount}][codigo_interno]" class="form-control" required>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="form-group">
                     <label>Peso (g)</label>
                     <input type="number" step="0.0001" name="items_ensayo[${itemEnsayoCount}][peso_muestra]" class="form-control" required>
                 </div>
@@ -338,13 +418,14 @@
             <div class="col-md-2">
                 <div class="form-group">
                     <label>Lectura (µS/cm)</label>
-                    <input type="number" step="0.01" name="items_ensayo[${itemEnsayoCount}][lectura_uscm]" class="form-control" required oninput="this.parentElement.parentElement.nextElementSibling.querySelector('input').value = (this.value ? (parseFloat(this.value) * 0.001).toFixed(4) : '')">
+                    <input type="number" step="0.01" name="items_ensayo[${itemEnsayoCount}][lectura_uscm]" class="form-control valor-leido" required oninput="updateDSCM(this)">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label>Lectura (dS/cm)</label>
-                    <input type="number" step="0.0001" class="form-control" readonly>
+                    <input type="number" step="0.0001" class="form-control valor-leido-dsm" readonly>
+                    <input type="hidden" name="items_ensayo[${itemEnsayoCount}][valor_leido_dsm]" value="">
                 </div>
             </div>
             <div class="col-md-2">
@@ -417,51 +498,90 @@ document.getElementById('duplicado_a_valor_leido').addEventListener('input', act
 document.getElementById('duplicado_b_valor_leido').addEventListener('input', actualizarPrecision);
 
 // Veracidad (Controles de calidad)
-@foreach ([0,1,2] as $index)
-    document.getElementById('veracidad_esperado_{{ $index }}').addEventListener('input', function() { actualizarVeracidad({{ $index }}); });
-    document.getElementById('veracidad_leido_{{ $index }}').addEventListener('input', function() { actualizarVeracidad({{ $index }}); });
-@endforeach
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar event listeners para los controles de veracidad
+    document.getElementById('veracidad_0_valor_esperado')?.addEventListener('input', function() { actualizarVeracidad(0); });
+    document.getElementById('veracidad_0_valor_leido')?.addEventListener('input', function() { actualizarVeracidad(0); });
+    document.getElementById('veracidad_1_valor_esperado')?.addEventListener('input', function() { actualizarVeracidad(1); });
+    document.getElementById('veracidad_1_valor_leido')?.addEventListener('input', function() { actualizarVeracidad(1); });
+});
+
 function actualizarVeracidad(index) {
-    const esperado = parseFloat(document.getElementById('veracidad_esperado_' + index).value);
-    const leido = parseFloat(document.getElementById('veracidad_leido_' + index).value);
-    const recuperacionSpan = document.getElementById('veracidad_recuperacion_' + index);
-    const aceptableSpan = document.getElementById('veracidad_aceptable_' + index);
-    if (!isNaN(esperado) && !isNaN(leido) && esperado !== 0) {
-        const recuperacion = (leido / esperado) * 100;
-        recuperacionSpan.textContent = recuperacion.toFixed(2) + '%';
-        if (recuperacion >= 70 && recuperacion <= 130) {
-            aceptableSpan.textContent = 'Aceptable';
-            aceptableSpan.className = 'text-success';
+    const esperado = parseFloat(document.getElementById(`veracidad_${index}_valor_esperado`)?.value);
+    const leido = parseFloat(document.getElementById(`veracidad_${index}_valor_leido`)?.value);
+    const recuperacionSpan = document.getElementById(`veracidad_${index}_recuperacion`);
+    const aceptableSpan = document.getElementById(`veracidad_${index}_aceptable`);
+    
+    if (recuperacionSpan && aceptableSpan) {
+        if (!isNaN(esperado) && !isNaN(leido) && esperado !== 0) {
+            const recuperacion = (leido / esperado) * 100;
+            recuperacionSpan.textContent = recuperacion.toFixed(2) + '%';
+            
+            if (recuperacion >= 70 && recuperacion <= 130) {
+                aceptableSpan.textContent = 'Aceptable';
+                aceptableSpan.className = 'text-success';
+            } else {
+                aceptableSpan.textContent = 'No aceptable';
+                aceptableSpan.className = 'text-danger';
+            }
         } else {
-            aceptableSpan.textContent = 'No aceptable';
-            aceptableSpan.className = 'text-danger';
+            recuperacionSpan.textContent = '';
+            aceptableSpan.textContent = '';
+            aceptableSpan.className = '';
         }
-    } else {
-        recuperacionSpan.textContent = '';
-        aceptableSpan.textContent = '';
-        aceptableSpan.className = '';
     }
 }
 </script>
 
 <script>
-// Actualiza Lectura (dS/cm) automáticamente al escribir en Lectura (µS/cm) para todos los ítems
+// Función para actualizar el valor en dS/m basado en el valor en µS/cm
 function updateDSCM(input) {
     var row = input.closest('tr');
     if (row) {
         var dsInput = row.querySelector('input.valor-leido-dsm');
-        var dsHidden = row.querySelector('input[type="hidden"][name*="valor_leido_dsm"]');
+        var dsHidden = row.querySelector('input[type="hidden"][name$="[valor_leido_dsm]"]');
         if (dsInput && dsHidden) {
-            var val = input.value ? (parseFloat(input.value) * 0.001).toFixed(4) : '';
-            dsInput.value = val;
-            dsHidden.value = val;
+            if (input.value && !isNaN(input.value)) {
+                var valorUsCm = parseFloat(input.value);
+                var valorDsM = (valorUsCm * 0.001).toFixed(4);
+                dsInput.value = valorDsM;
+                dsHidden.value = valorDsM;
+            } else {
+                dsInput.value = '';
+                dsHidden.value = '';
+            }
         }
     }
 }
-document.querySelectorAll('input.valor-leido').forEach(function(input) {
-    input.addEventListener('input', function() { updateDSCM(input); });
-    updateDSCM(input);
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Actualizar todos los campos al cargar
+    document.querySelectorAll('input.valor-leido').forEach(function(input) {
+        updateDSCM(input);
+    });
+
+    // Manejar cambios en los campos
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.matches('input.valor-leido')) {
+            updateDSCM(e.target);
+        }
+    });
 });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Asegurarse de que los campos numéricos tengan el formato correcto
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === '') return;
+                const value = parseFloat(this.value);
+                if (!isNaN(value)) {
+                    this.value = value;
+                }
+            });
+        });
+    });
 </script>
 
 <script>

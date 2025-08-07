@@ -22,6 +22,7 @@ class LSCEFADatabaseSeeder extends Seeder
             // Luego ejecutamos el seeder de personas
             $this->call(PeopleTableSeeder::class);
             
+
             // Después ejecutamos el seeder de usuarios
             $this->call(UsersTableSeeder::class);
             
@@ -36,4 +37,3 @@ class LSCEFADatabaseSeeder extends Seeder
         }
     }
 }
-
