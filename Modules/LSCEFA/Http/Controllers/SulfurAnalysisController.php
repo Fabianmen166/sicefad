@@ -9,25 +9,27 @@ use Illuminate\Support\Facades\Log;
 use Modules\LSCEFA\Models\Process;
 use Modules\LSCEFA\Models\Service;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
-use Modules\LSCEFA\Entities\PhosphorusAnalysis;
+use Modules\LSCEFA\Entities\SulfurAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Illuminate\Support\Facades\Auth;
 
-class PhosphorusAnalysisController extends Controller
+class SulfurAnalysisController extends Controller
 {
     public function index()
     {
         $processes = Process::with(['serviceProcessDetails.service'])
             ->whereHas('serviceProcessDetails', function ($query) {
                 $query->whereHas('service', function ($serviceQuery) {
-                    $serviceQuery->where('descripcion', 'like', '%fósforo%')
-                                ->orWhere('descripcion', 'like', '%fosforo%')
-                                ->orWhere('descripcion', 'like', '%phosphorus%');
+                    $serviceQuery->where(function($q) {
+                        $q->whereRaw('LOWER(descripcion) LIKE ?', ['%azufre%'])
+                          ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfur%'])
+                          ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfuro%']);
+                    });
                 })->where('status', 'pending');
             })
             ->get();
 
-        return view('lscefa::analyses.phosphorus.index', compact('processes'));
+        return view('lscefa::analyses.sulfur.index', compact('processes'));
     }
 
     public function process($processId, $serviceId)
@@ -54,10 +56,10 @@ class PhosphorusAnalysisController extends Controller
             ];
         }
 
-        return view('lscefa::analyses.phosphorus.process', compact('process', 'service', 'pendingItems'));
+        return view('lscefa::analyses.sulfur.process', compact('process', 'service', 'pendingItems'));
     }
 
-    public function storePhosphorusAnalysis(Request $request)
+    public function storeSulfurAnalysis(Request $request)
     {
         $processId = $request->input('process_id');
         $serviceId = $request->input('service_id');
@@ -88,12 +90,12 @@ class PhosphorusAnalysisController extends Controller
                 'items.*.v_extractante' => 'nullable|numeric|min:0',
                 'items.*.lectura_blanco' => 'nullable|numeric|min:0',
                 'items.*.factor_dilucion' => 'nullable|numeric|min:0',
-                'items.*.fosforo_disponible_mg_l' => 'nullable|numeric|min:0',
-                'items.*.fosforo_disponible_mg_kg' => 'nullable|numeric',
+                'items.*.azufre_disponible_mg_l' => 'nullable|numeric|min:0',
+                'items.*.azufre_disponible_mg_kg' => 'nullable|numeric',
                 'items.*.observaciones_item' => 'nullable|string',
             ]);
 
-            Log::info('Iniciando guardado de análisis de fósforo', [
+            Log::info('Iniciando guardado de análisis de azufre', [
                 'process_id' => $processId,
                 'user_id' => Auth::id(),
                 'request_data' => $request->all()
@@ -137,11 +139,11 @@ class PhosphorusAnalysisController extends Controller
                 Log::info('Control analítico creado con ID: ' . $analyticalControl->id);
             }
 
-            // Guardar múltiples análisis de fósforo (uno por cada fila de resultados)
-            $phosphorusAnalyses = [];
+            // Guardar múltiples análisis de azufre (uno por cada fila de resultados)
+            $sulfurAnalyses = [];
             $items = $request->input('items', []);
 
-            Log::info('Guardando análisis de fósforo', [
+            Log::info('Guardando análisis de azufre', [
                 'total_rows' => count($items),
                 'items' => $items
             ]);
@@ -162,51 +164,51 @@ class PhosphorusAnalysisController extends Controller
                     'extractant_volume' => $item['v_extractante'] ?? 0,
                     'blank_reading' => $item['lectura_blanco'] ?? 0,
                     'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                    'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                    'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                    'available_sulfur_mg_l' => $item['azufre_disponible_mg_l'] ?? 0,
+                    'available_sulfur_mg_kg' => $item['azufre_disponible_mg_kg'] ?? 0,
                     'item_observations' => $item['observaciones_item'] ?? '',
                 ];
 
                 Log::info("Creando análisis {$index}", $analysisData);
 
-                $phosphorusAnalysis = PhosphorusAnalysis::create($analysisData);
+                $sulfurAnalysis = SulfurAnalysis::create($analysisData);
                 
-                $phosphorusAnalyses[] = $phosphorusAnalysis;
+                $sulfurAnalyses[] = $sulfurAnalysis;
                 
-                Log::info("Análisis {$index} creado con ID: {$phosphorusAnalysis->id}");
+                Log::info("Análisis {$index} creado con ID: {$sulfurAnalysis->id}");
             }
 
             // Actualizar el estado del servicio a 'completed'
-            $phosphorusService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%fósforo%'])
-                                    ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%fosforo%'])
-                                    ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%phosphorus%'])
-                                    ->first();
+            $sulfurService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%azufre%'])
+                                ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfur%'])
+                                ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfuro%'])
+                                ->first();
 
-            Log::info('Buscando servicio de fósforo', [
+            Log::info('Buscando servicio de azufre', [
                 'process_id' => $processId,
-                'phosphorus_service_found' => $phosphorusService ? true : false,
-                'service_id' => $phosphorusService ? $phosphorusService->services_id : null,
-                'service_descripcion' => $phosphorusService ? $phosphorusService->descripcion : null
+                'sulfur_service_found' => $sulfurService ? true : false,
+                'service_id' => $sulfurService ? $sulfurService->services_id : null,
+                'service_descripcion' => $sulfurService ? $sulfurService->descripcion : null
             ]);
 
-            if ($phosphorusService) {
+            if ($sulfurService) {
                 // Verificar que el ServiceProcessDetail existe antes de actualizar
                 $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
-                    ->where('service_id', $phosphorusService->services_id)
+                    ->where('service_id', $sulfurService->services_id)
                     ->first();
 
                 if ($serviceProcessDetail) {
                     $updatedRows = ServiceProcessDetail::where('process_id', $processId)
-                        ->where('service_id', $phosphorusService->services_id)
+                        ->where('service_id', $sulfurService->services_id)
                         ->update([
                             'status' => 'completed',
-                            'result' => 'Análisis de fósforo completado',
-                            'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
+                            'result' => 'Análisis de azufre completado',
+                            'observations' => 'Análisis guardado exitosamente con ' . count($sulfurAnalyses) . ' muestras'
                         ]);
 
                     Log::info('Actualización del estado del servicio', [
                         'process_id' => $processId,
-                        'service_id' => $phosphorusService->services_id,
+                        'service_id' => $sulfurService->services_id,
                         'rows_updated' => $updatedRows,
                         'service_process_detail_id' => $serviceProcessDetail->id
                     ]);
@@ -230,34 +232,34 @@ class PhosphorusAnalysisController extends Controller
                 } else {
                     Log::warning('ServiceProcessDetail no encontrado para actualizar', [
                         'process_id' => $processId,
-                        'service_id' => $phosphorusService->services_id
+                        'service_id' => $sulfurService->services_id
                     ]);
                 }
             } else {
-                Log::warning('No se encontró el servicio de fósforo para actualizar estado');
+                Log::warning('No se encontró el servicio de azufre para actualizar estado');
             }
 
             DB::commit();
 
-            Log::info('Análisis de fósforo guardado exitosamente', [
+            Log::info('Análisis de azufre guardado exitosamente', [
                 'user_id' => Auth::id(),
                 'process_id' => $processId,
-                'analyses_count' => count($phosphorusAnalyses),
+                'analyses_count' => count($sulfurAnalyses),
                 'analytical_control_id' => $analyticalControl ? $analyticalControl->id : null
             ]);
 
-            return redirect()->route('lscefa.technical.analyses.phosphorus.index')
-                ->with('success', 'Análisis de fósforo guardado exitosamente.');
+            return redirect()->route('lscefa.technical.analyses.sulfur.index')
+                ->with('success', 'Análisis de azufre guardado exitosamente.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al guardar análisis de fósforo', [
+            Log::error('Error al guardar análisis de azufre', [
                 'user_id' => Auth::id(),
                 'process_id' => $processId,
                 'error' => $e->getMessage()
             ]);
 
-            return back()->withInput()->with('error', 'Error al guardar el análisis de fósforo: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al guardar el análisis de azufre: ' . $e->getMessage());
         }
     }
 
@@ -271,7 +273,7 @@ class PhosphorusAnalysisController extends Controller
 
         // Si no hay procesos seleccionados, redirigir al index
         if (empty($selectedProcessIds)) {
-            return redirect()->route('lscefa.technical.analyses.phosphorus.index')
+            return redirect()->route('lscefa.technical.analyses.sulfur.index')
                 ->with('error', 'No se seleccionaron procesos para procesar.');
         }
 
@@ -280,7 +282,11 @@ class PhosphorusAnalysisController extends Controller
             ->whereIn('process_id', $selectedProcessIds)
             ->whereHas('serviceProcessDetails', function ($query) {
                 $query->whereHas('service', function ($serviceQuery) {
-                    $serviceQuery->where('descripcion', 'like', '%fósforo%');
+                    $serviceQuery->where(function($q) {
+                        $q->whereRaw('LOWER(descripcion) LIKE ?', ['%azufre%'])
+                          ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfur%'])
+                          ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfuro%']);
+                    });
                 })->where('status', 'pending');
             })
             ->get();
@@ -291,12 +297,12 @@ class PhosphorusAnalysisController extends Controller
             $missingIds = array_diff($selectedProcessIds, $foundIds);
             
             if (!empty($missingIds)) {
-                return redirect()->route('lscefa.technical.analyses.phosphorus.index')
+                return redirect()->route('lscefa.technical.analyses.sulfur.index')
                     ->with('error', 'Algunos procesos seleccionados no están disponibles: ' . implode(', ', $missingIds));
             }
         }
 
-        return view('lscefa::analyses.phosphorus.batch_process', compact('pendingProcesses'));
+        return view('lscefa::analyses.sulfur.batch_process', compact('pendingProcesses'));
     }
 
     public function batchStore(Request $request)
@@ -335,12 +341,12 @@ class PhosphorusAnalysisController extends Controller
                 'items_ensayo.*.v_extractante' => 'nullable|numeric|min:0',
                 'items_ensayo.*.lectura_blanco' => 'nullable|numeric|min:0',
                 'items_ensayo.*.factor_dilucion' => 'nullable|numeric|min:0',
-                'items_ensayo.*.fosforo_disponible_mg_l' => 'nullable|numeric|min:0',
-                'items_ensayo.*.fosforo_disponible_mg_kg' => 'nullable|numeric',
+                'items_ensayo.*.azufre_disponible_mg_l' => 'nullable|numeric|min:0',
+                'items_ensayo.*.azufre_disponible_mg_kg' => 'nullable|numeric',
                 'items_ensayo.*.observaciones_item' => 'nullable|string',
             ]);
 
-            Log::info('Iniciando guardado de análisis de fósforo por lotes', [
+            Log::info('Iniciando guardado de análisis de azufre por lotes', [
                 'user_id' => Auth::id(),
                 'total_processes' => count($request->process_ids),
                 'request_data' => $request->all()
@@ -357,19 +363,19 @@ class PhosphorusAnalysisController extends Controller
                 try {
                     Log::info("Procesando proceso {$index}: {$processId}");
 
-                    // Buscar el servicio de fósforo para este proceso
-                    $phosphorusService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%fósforo%'])
-                                            ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%fosforo%'])
-                                            ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%phosphorus%'])
-                                            ->first();
+                    // Buscar el servicio de azufre para este proceso
+                    $sulfurService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%azufre%'])
+                                        ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfur%'])
+                                        ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%sulfuro%'])
+                                        ->first();
 
-                    if (!$phosphorusService) {
-                        Log::warning('No se encontró el servicio de fósforo', ['process_id' => $processId]);
-                        $errors[] = "Proceso {$processId}: No se encontró el servicio de fósforo";
+                    if (!$sulfurService) {
+                        Log::warning('No se encontró el servicio de azufre', ['process_id' => $processId]);
+                        $errors[] = "Proceso {$processId}: No se encontró el servicio de azufre";
                         continue;
                     }
 
-                    $serviceId = $phosphorusService->services_id;
+                    $serviceId = $sulfurService->services_id;
 
                     // Inicializar la variable analyticalControl
                     $analyticalControl = null;
@@ -416,11 +422,11 @@ class PhosphorusAnalysisController extends Controller
                         Log::info('Control analítico creado con ID: ' . $analyticalControl->id);
                     }
 
-                    // Guardar múltiples análisis de fósforo (uno por cada fila de resultados)
-                    $phosphorusAnalyses = [];
+                    // Guardar múltiples análisis de azufre (uno por cada fila de resultados)
+                    $sulfurAnalyses = [];
                     $items = $request->input("items_ensayo.{$index}", []);
 
-                    Log::info('Guardando análisis de fósforo para proceso', [
+                    Log::info('Guardando análisis de azufre para proceso', [
                         'process_id' => $processId,
                         'total_rows' => count($items),
                         'items' => $items
@@ -442,36 +448,36 @@ class PhosphorusAnalysisController extends Controller
                             'extractant_volume' => $item['v_extractante'] ?? 0,
                             'blank_reading' => $item['lectura_blanco'] ?? 0,
                             'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                            'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                            'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                            'available_sulfur_mg_l' => $item['azufre_disponible_mg_l'] ?? 0,
+                            'available_sulfur_mg_kg' => $item['azufre_disponible_mg_kg'] ?? 0,
                             'item_observations' => $item['observaciones_item'] ?? '',
                         ];
 
                         Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);
 
-                        $phosphorusAnalysis = PhosphorusAnalysis::create($analysisData);
-                        $phosphorusAnalyses[] = $phosphorusAnalysis;
+                        $sulfurAnalysis = SulfurAnalysis::create($analysisData);
+                        $sulfurAnalyses[] = $sulfurAnalysis;
                         
-                        Log::info("Análisis {$itemIndex} creado con ID: {$phosphorusAnalysis->id}");
+                        Log::info("Análisis {$itemIndex} creado con ID: {$sulfurAnalysis->id}");
                     }
 
                     // Actualizar el estado del servicio a 'completed'
                     $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
-                        ->where('service_id', $phosphorusService->services_id)
+                        ->where('service_id', $sulfurService->services_id)
                         ->first();
 
                     if ($serviceProcessDetail) {
                         $updatedRows = ServiceProcessDetail::where('process_id', $processId)
-                            ->where('service_id', $phosphorusService->services_id)
+                            ->where('service_id', $sulfurService->services_id)
                             ->update([
                                 'status' => 'completed',
-                                'result' => 'Análisis de fósforo completado',
-                                'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
+                                'result' => 'Análisis de azufre completado',
+                                'observations' => 'Análisis guardado exitosamente con ' . count($sulfurAnalyses) . ' muestras'
                             ]);
 
                         Log::info('Actualización del estado del servicio', [
                             'process_id' => $processId,
-                            'service_id' => $phosphorusService->services_id,
+                            'service_id' => $sulfurService->services_id,
                             'rows_updated' => $updatedRows,
                             'service_process_detail_id' => $serviceProcessDetail->id
                         ]);
@@ -495,20 +501,20 @@ class PhosphorusAnalysisController extends Controller
                     } else {
                         Log::warning('ServiceProcessDetail no encontrado para actualizar', [
                             'process_id' => $processId,
-                            'service_id' => $phosphorusService->services_id
+                            'service_id' => $sulfurService->services_id
                         ]);
                     }
 
                     $savedCount++;
 
-                    Log::info('Análisis de fósforo guardado exitosamente en lote', [
+                    Log::info('Análisis de azufre guardado exitosamente en lote', [
                         'process_id' => $processId,
-                        'analyses_count' => count($phosphorusAnalyses),
+                        'analyses_count' => count($sulfurAnalyses),
                         'analytical_control_id' => $analyticalControl ? $analyticalControl->id : null
                     ]);
 
                 } catch (\Exception $e) {
-                    Log::error('Error al guardar análisis de fósforo en lote', [
+                    Log::error('Error al guardar análisis de azufre en lote', [
                         'process_id' => $processId,
                         'error' => $e->getMessage()
                     ]);
@@ -524,22 +530,77 @@ class PhosphorusAnalysisController extends Controller
                 'total_errors' => count($errors)
             ]);
 
-            $message = "Se guardaron exitosamente {$savedCount} análisis de fósforo.";
+            $message = "Se guardaron exitosamente {$savedCount} análisis de azufre.";
             if (!empty($errors)) {
                 $message .= " Errores: " . implode(', ', $errors);
             }
 
-            return redirect()->route('lscefa.technical.analyses.phosphorus.index')
+            return redirect()->route('lscefa.technical.analyses.sulfur.index')
                 ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al guardar análisis de fósforo por lotes', [
+            Log::error('Error al guardar análisis de azufre por lotes', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
 
-            return back()->withInput()->with('error', 'Error al guardar análisis de fósforo por lotes: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al guardar análisis de azufre por lotes: ' . $e->getMessage());
         }
     }
-} 
+
+    public function show($id)
+    {
+        $sulfurAnalysis = SulfurAnalysis::findOrFail($id);
+        return view('lscefa::analyses.sulfur.show', compact('sulfurAnalysis'));
+    }
+
+    public function edit($id)
+    {
+        $sulfurAnalysis = SulfurAnalysis::findOrFail($id);
+        return view('lscefa::analyses.sulfur.edit', compact('sulfurAnalysis'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $sulfurAnalysis = SulfurAnalysis::findOrFail($id);
+        
+        $request->validate([
+            'consecutive_no' => 'required|string',
+            'analysis_date' => 'required|date',
+            'equipment_used' => 'nullable|string',
+            'method_interval' => 'nullable|string',
+            'analyst_name' => 'nullable|string',
+            'observations' => 'nullable|string',
+            'internal_code' => 'nullable|string',
+            'sample_weight' => 'nullable|numeric|min:0',
+            'pw' => 'nullable|numeric|min:0',
+            'extractant_volume' => 'nullable|numeric|min:0',
+            'blank_reading' => 'nullable|numeric|min:0',
+            'dilution_factor' => 'nullable|numeric|min:0',
+            'available_sulfur_mg_l' => 'nullable|numeric|min:0',
+            'available_sulfur_mg_kg' => 'nullable|numeric',
+            'item_observations' => 'nullable|string',
+        ]);
+
+        $sulfurAnalysis->update($request->all());
+
+        return redirect()->route('lscefa.technical.analyses.sulfur.index')
+            ->with('success', 'Análisis de azufre actualizado exitosamente.');
+    }
+
+    public function destroy($id)
+    {
+        $sulfurAnalysis = SulfurAnalysis::findOrFail($id);
+        $sulfurAnalysis->delete();
+
+        return redirect()->route('lscefa.technical.analyses.sulfur.index')
+            ->with('success', 'Análisis de azufre eliminado exitosamente.');
+    }
+
+    public function report($id)
+    {
+        $sulfurAnalysis = SulfurAnalysis::findOrFail($id);
+        return view('lscefa::analyses.sulfur.report', compact('sulfurAnalysis'));
+    }
+}

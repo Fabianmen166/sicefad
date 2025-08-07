@@ -1,6 +1,6 @@
 @extends('lscefa::layouts.technical')
 
-@section('title', 'Gestión de Análisis de Fósforo')
+@section('title', 'Gestión de Análisis de Azufre')
 
 @section('content')
 <div class="content-wrapper">
@@ -9,12 +9,12 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Gestión de Análisis de Fósforo</h1>
+                    <h1>Gestión de Análisis de Azufre</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ route('lscefa.technical.analyses.index') }}">Inicio</a></li>
-                        <li class="breadcrumb-item active">Análisis de Fósforo</li>
+                        <li class="breadcrumb-item active">Análisis de Azufre</li>
                     </ol>
                 </div>
             </div>
@@ -63,20 +63,19 @@
                             <tbody>
                                 @forelse($processes as $process)
                                     @php
-                                        $phosphorusService = $process->serviceProcessDetails->filter(function($detail) {
-                                            return str_contains(strtolower($detail->service->descripcion), 'fósforo') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'fosforo') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'phosphorus');
+                                        $sulfurService = $process->serviceProcessDetails->filter(function($detail) {
+                                            return str_contains(strtolower($detail->service->descripcion), 'azufre') ||
+                                                   str_contains(strtolower($detail->service->descripcion), 'sulfur');
                                         })->first();
                                     @endphp
-                                    @if($phosphorusService && $phosphorusService->status === 'pending')
-                                        <tr data-process-id="{{ $process->process_id }}" data-service-type="phosphorus">
+                                    @if($sulfurService && $sulfurService->status === 'pending')
+                                        <tr data-process-id="{{ $process->process_id }}" data-service-type="sulfur">
                                             <td><input type="checkbox" class="process-checkbox" value="{{ $process->process_id }}"></td>
                                             <td>{{ $process->process_id }}</td>
-                                            <td>{{ $phosphorusService->service->descripcion ?? 'Análisis de Fósforo' }}</td>
+                                            <td>{{ $sulfurService->service->descripcion ?? 'Análisis de Azufre' }}</td>
                                             <td><span class="badge badge-warning">Pendiente</span></td>
                                             <td>
-                                                <a href="{{ route('lscefa.technical.analyses.phosphorus.process', ['processId' => $process->process_id, 'serviceId' => $phosphorusService->service_id]) }}"
+                                                <a href="{{ route('lscefa.technical.analyses.sulfur.process', ['processId' => $process->process_id, 'serviceId' => $sulfurService->service_id]) }}"
                                                    class="btn btn-primary btn-sm">
                                                     Procesar Análisis
                                                 </a>
@@ -139,11 +138,11 @@
             }
 
             // Redirect to batch process with selected processes
-            var batchUrl = "{{ route('lscefa.technical.analyses.phosphorus.batch') }}?processes=" + selectedProcesses.join(',');
+            var batchUrl = "{{ route('lscefa.technical.analyses.sulfur.batch') }}?processes=" + selectedProcesses.join(',');
             window.location.href = batchUrl;
         });
 
         updateProcessButtonState(); // Initial state on page load
     });
 </script>
-@endpush 
+@endpush

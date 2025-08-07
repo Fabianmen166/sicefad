@@ -332,6 +332,186 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_technical[] = $permision->id;
 
+        // Permisos para Análisis de Azufre
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.index'], [
+            'name' => 'Ver listado de Análisis de Azufre (Technical)',
+            'description' => 'Puede ver el listado de análisis de azufre (technical)',
+            'description_english' => 'Can view sulfur analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.process'], [
+            'name' => 'Procesar Análisis de Azufre (Technical)',
+            'description' => 'Puede procesar análisis de azufre (technical)',
+            'description_english' => 'Can process sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.store'], [
+            'name' => 'Guardar Análisis de Azufre (Technical)',
+            'description' => 'Puede guardar análisis de azufre (technical)',
+            'description_english' => 'Can save sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.edit'], [
+            'name' => 'Editar Análisis de Azufre (Technical)',
+            'description' => 'Puede editar análisis de azufre (technical)',
+            'description_english' => 'Can edit sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.update'], [
+            'name' => 'Actualizar Análisis de Azufre (Technical)',
+            'description' => 'Puede actualizar análisis de azufre (technical)',
+            'description_english' => 'Can update sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.destroy'], [
+            'name' => 'Eliminar Análisis de Azufre (Technical)',
+            'description' => 'Puede eliminar análisis de azufre (technical)',
+            'description_english' => 'Can delete sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.show'], [
+            'name' => 'Ver detalle de Análisis de Azufre (Technical)',
+            'description' => 'Puede ver el detalle de análisis de azufre (technical)',
+            'description_english' => 'Can view sulfur analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.report'], [
+            'name' => 'Generar reporte de Análisis de Azufre (Technical)',
+            'description' => 'Puede generar reportes de análisis de azufre (technical)',
+            'description_english' => 'Can generate sulfur analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para procesamiento por lotes de análisis de azufre
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede procesar múltiples análisis de azufre por lotes (technical)',
+            'description_english' => 'Can process multiple sulfur analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de azufre (technical)',
+            'description_english' => 'Can access the batch processing form for sulfur analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de azufre (technical)',
+            'description_english' => 'Can save batch processing of sulfur analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para Análisis de Boro
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.index'], [
+            'name' => 'Ver listado de Análisis de Boro (Technical)',
+            'description' => 'Puede ver el listado de análisis de boro (technical)',
+            'description_english' => 'Can view boron analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.process'], [
+            'name' => 'Procesar Análisis de Boro (Technical)',
+            'description' => 'Puede procesar análisis de boro (technical)',
+            'description_english' => 'Can process boron analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.store'], [
+            'name' => 'Guardar Análisis de Boro (Technical)',
+            'description' => 'Puede guardar análisis de boro (technical)',
+            'description_english' => 'Can save boron analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.edit'], [
+            'name' => 'Editar Análisis de Boro (Technical)',
+            'description' => 'Puede editar análisis de boro (technical)',
+            'description_english' => 'Can edit boron analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.update'], [
+            'name' => 'Actualizar Análisis de Boro (Technical)',
+            'description' => 'Puede actualizar análisis de boro (technical)',
+            'description_english' => 'Can update boron analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.destroy'], [
+            'name' => 'Eliminar Análisis de Boro (Technical)',
+            'description' => 'Puede eliminar análisis de boro (technical)',
+            'description_english' => 'Can delete boron analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.show'], [
+            'name' => 'Ver detalle de Análisis de Boro (Technical)',
+            'description' => 'Puede ver el detalle de análisis de boro (technical)',
+            'description_english' => 'Can view boron analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.report'], [
+            'name' => 'Generar reporte de Análisis de Boro (Technical)',
+            'description' => 'Puede generar reportes de análisis de boro (technical)',
+            'description_english' => 'Can generate boron analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para procesamiento por lotes de análisis de boro
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Boro (Technical)',
+            'description' => 'Puede procesar múltiples análisis de boro por lotes (technical)',
+            'description_english' => 'Can process multiple boron analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Boro (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de boro (technical)',
+            'description_english' => 'Can access the batch processing form for boron analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Boro (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de boro (technical)',
+            'description_english' => 'Can save batch processing of boron analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
         // Permisos para Análisis de Bases Cambiables
         $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.exchangeable_bases.index'], [
             'name' => 'Ver listado de Análisis de Bases Cambiables (Technical)',

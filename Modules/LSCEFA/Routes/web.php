@@ -23,7 +23,9 @@ use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
+use Modules\LSCEFA\Http\Controllers\SulfurAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
+use Modules\LSCEFA\Http\Controllers\BoronAnalysisController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -80,6 +82,8 @@ Route::middleware(['lang'])->group(function(){
 
             // Rutas para servicios
             Route::get('/services', [ServiceController::class, 'index'])->name('lscefa.quality.services.index');
+            Route::get('/services/create', [ServiceController::class, 'create'])->name('lscefa.quality.services.create');
+            Route::post('/services', [ServiceController::class, 'store'])->name('lscefa.quality.services.store');
             Route::get('/services/{service}/edit', [ServiceController::class, 'edit'])->name('lscefa.quality.services.edit');
             Route::put('/services/{service}', [ServiceController::class, 'update'])->name('lscefa.quality.services.update');
 
@@ -175,6 +179,40 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'update'])->name('lscefa.technical.analyses.phosphorus.update');
             Route::delete('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.phosphorus.destroy');
             Route::get('/technical/analyses/phosphorus/{id}/report', [PhosphorusAnalysisController::class, 'report'])->name('lscefa.technical.analyses.phosphorus.report');
+
+            // Rutas para Análisis de Azufre
+            Route::get('/technical/analyses/sulfur', [SulfurAnalysisController::class, 'index'])->name('lscefa.technical.analyses.sulfur.index');
+            Route::get('/technical/analyses/sulfur/process/{processId}/{serviceId}', [SulfurAnalysisController::class, 'process'])->name('lscefa.technical.analyses.sulfur.process');
+            Route::post('/technical/analyses/sulfur/store', [SulfurAnalysisController::class, 'storeSulfurAnalysis'])->name('lscefa.technical.analyses.sulfur.store');
+            Route::get('/technical/analyses/sulfur/batch', [SulfurAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.sulfur.batch');
+            Route::post('/technical/analyses/sulfur/batch', [SulfurAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.sulfur.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.sulfur.batch.post');
+            Route::post('/technical/analyses/sulfur/batch-store', [SulfurAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.sulfur.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.sulfur.batch_store');
+            Route::get('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'show'])->name('lscefa.technical.analyses.sulfur.show');
+            Route::get('/technical/analyses/sulfur/{id}/edit', [SulfurAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.sulfur.edit');
+            Route::put('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'update'])->name('lscefa.technical.analyses.sulfur.update');
+            Route::delete('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.sulfur.destroy');
+            Route::get('/technical/analyses/sulfur/{id}/report', [SulfurAnalysisController::class, 'report'])->name('lscefa.technical.analyses.sulfur.report');
+
+            // Rutas para Análisis de Boro
+            Route::get('/technical/analyses/boron', [BoronAnalysisController::class, 'index'])->name('lscefa.technical.analyses.boron.index');
+            Route::get('/technical/analyses/boron/process/{processId}/{serviceId}', [BoronAnalysisController::class, 'process'])->name('lscefa.technical.analyses.boron.process');
+            Route::post('/technical/analyses/boron/store', [BoronAnalysisController::class, 'storeBoronAnalysis'])->name('lscefa.technical.analyses.boron.store');
+            Route::get('/technical/analyses/boron/batch', [BoronAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.boron.batch');
+            Route::post('/technical/analyses/boron/batch', [BoronAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.boron.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.batch.post');
+            Route::post('/technical/analyses/boron/batch-store', [BoronAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.boron.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.batch_store');
+            Route::get('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'show'])->name('lscefa.technical.analyses.boron.show');
+            Route::get('/technical/analyses/boron/{id}/edit', [BoronAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.boron.edit');
+            Route::put('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'update'])->name('lscefa.technical.analyses.boron.update');
+            Route::delete('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.boron.destroy');
+            Route::get('/technical/analyses/boron/{id}/report', [BoronAnalysisController::class, 'report'])->name('lscefa.technical.analyses.boron.report');
 
             // Rutas para Análisis de Bases Cambiables
             Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');

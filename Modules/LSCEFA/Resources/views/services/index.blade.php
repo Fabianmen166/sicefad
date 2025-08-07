@@ -27,6 +27,12 @@
             <a href="{{ route('lscefa.quality.services.index') }}" class="btn btn-secondary ml-2">Limpiar</a>
         @endif
     </form>
+    
+    <div class="mb-3">
+        <a href="{{ route('lscefa.quality.services.create') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Crear Servicio
+        </a>
+    </div>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>

@@ -23,6 +23,26 @@ class ServiceController extends Controller
         return view('lscefa::services.index', compact('services'));
     }
 
+    public function create()
+    {
+        return view('lscefa::services.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'descripcion' => 'required|string|max:255',
+            'precio' => 'required|numeric|min:0',
+        ]);
+
+        // Manejar el campo acreditado
+        $validated['acreditado'] = $request->input('acreditado') ? true : false;
+
+        Service::create($validated);
+        return redirect()->route('lscefa.quality.services.index')
+            ->with('success', 'Servicio creado exitosamente.');
+    }
+
     public function edit(Service $service)
     {
         return view('lscefa::services.edit', compact('service'));

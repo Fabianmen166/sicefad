@@ -1,6 +1,6 @@
 @extends('lscefa::layouts.technical')
 
-@section('title', 'Gestión de Análisis de Fósforo')
+@section('title', 'Gestión de Análisis de Boro')
 
 @section('content')
 <div class="content-wrapper">
@@ -9,12 +9,12 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Gestión de Análisis de Fósforo</h1>
+                    <h1>Gestión de Análisis de Boro</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ route('lscefa.technical.analyses.index') }}">Inicio</a></li>
-                        <li class="breadcrumb-item active">Análisis de Fósforo</li>
+                        <li class="breadcrumb-item active">Análisis de Boro</li>
                     </ol>
                 </div>
             </div>
@@ -63,20 +63,19 @@
                             <tbody>
                                 @forelse($processes as $process)
                                     @php
-                                        $phosphorusService = $process->serviceProcessDetails->filter(function($detail) {
-                                            return str_contains(strtolower($detail->service->descripcion), 'fósforo') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'fosforo') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'phosphorus');
+                                        $boronService = $process->serviceProcessDetails->filter(function($detail) {
+                                            return str_contains(strtolower($detail->service->descripcion), 'boro') ||
+                                                   str_contains(strtolower($detail->service->descripcion), 'boron');
                                         })->first();
                                     @endphp
-                                    @if($phosphorusService && $phosphorusService->status === 'pending')
-                                        <tr data-process-id="{{ $process->process_id }}" data-service-type="phosphorus">
+                                    @if($boronService && $boronService->status === 'pending')
+                                        <tr data-process-id="{{ $process->process_id }}" data-service-type="boron">
                                             <td><input type="checkbox" class="process-checkbox" value="{{ $process->process_id }}"></td>
                                             <td>{{ $process->process_id }}</td>
-                                            <td>{{ $phosphorusService->service->descripcion ?? 'Análisis de Fósforo' }}</td>
+                                            <td>{{ $boronService->service->descripcion ?? 'Análisis de Boro' }}</td>
                                             <td><span class="badge badge-warning">Pendiente</span></td>
                                             <td>
-                                                <a href="{{ route('lscefa.technical.analyses.phosphorus.process', ['processId' => $process->process_id, 'serviceId' => $phosphorusService->service_id]) }}"
+                                                <a href="{{ route('lscefa.technical.analyses.boron.process', ['processId' => $process->process_id, 'serviceId' => $boronService->service_id]) }}"
                                                    class="btn btn-primary btn-sm">
                                                     Procesar Análisis
                                                 </a>
@@ -99,7 +98,19 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        function updateProcessButtonState() {
+        // Select all functionality
+        $('#selectAll').change(function() {
+            $('.process-checkbox').prop('checked', $(this).is(':checked'));
+            updateProcessSelectedButton();
+        });
+
+        // Individual checkbox change
+        $('.process-checkbox').change(function() {
+            updateProcessSelectedButton();
+            updateSelectAllState();
+        });
+
+        function updateProcessSelectedButton() {
             var checkedCount = $('.process-checkbox:checked').length;
             if (checkedCount > 0) {
                 $('#processSelectedBtn').show();
@@ -110,40 +121,38 @@
             }
         }
 
-        $('#selectAll').on('change', function() {
-            $('.process-checkbox').prop('checked', $(this).prop('checked'));
-            updateProcessButtonState();
-        });
+        function updateSelectAllState() {
+            var totalCheckboxes = $('.process-checkbox').length;
+            var checkedCheckboxes = $('.process-checkbox:checked').length;
+            
+            if (checkedCheckboxes === 0) {
+                $('#selectAll').prop('indeterminate', false).prop('checked', false);
+            } else if (checkedCheckboxes === totalCheckboxes) {
+                $('#selectAll').prop('indeterminate', false).prop('checked', true);
+            } else {
+                $('#selectAll').prop('indeterminate', true);
+            }
+        }
 
-        $('.process-checkbox').on('change', function() {
-            var allChecked = $('.process-checkbox:checked').length === $('.process-checkbox').length;
-            $('#selectAll').prop('checked', allChecked);
-            updateProcessButtonState();
-        });
-
-        $('#clearSelectionBtn').on('click', function() {
+        // Clear selection button
+        $('#clearSelectionBtn').click(function() {
             $('.process-checkbox').prop('checked', false);
             $('#selectAll').prop('checked', false);
-            updateProcessButtonState();
+            updateProcessSelectedButton();
         });
 
-        $('#processSelectedBtn').on('click', function() {
-            var selectedProcesses = [];
-            $('.process-checkbox:checked').each(function() {
-                selectedProcesses.push($(this).val());
-            });
+        // Process selected button
+        $('#processSelectedBtn').click(function() {
+            var selectedProcesses = $('.process-checkbox:checked').map(function() {
+                return $(this).val();
+            }).get();
 
-            if (selectedProcesses.length === 0) {
-                alert('Por favor, selecciona al menos un proceso para procesar.');
-                return;
+            if (selectedProcesses.length > 0) {
+                // Redirect to batch process with selected processes
+                var batchUrl = "{{ route('lscefa.technical.analyses.boron.batch') }}?processes=" + selectedProcesses.join(',');
+                window.location.href = batchUrl;
             }
-
-            // Redirect to batch process with selected processes
-            var batchUrl = "{{ route('lscefa.technical.analyses.phosphorus.batch') }}?processes=" + selectedProcesses.join(',');
-            window.location.href = batchUrl;
         });
-
-        updateProcessButtonState(); // Initial state on page load
     });
 </script>
-@endpush 
+@endpush
