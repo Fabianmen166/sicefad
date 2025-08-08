@@ -30,6 +30,7 @@ use Modules\LSCEFA\Http\Controllers\SulfurAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
 use Modules\LSCEFA\Http\Controllers\BoronAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
+use Modules\LSCEFA\Http\Controllers\MicronutrientsAnalysisController;
 
 
 Route::middleware(['lang'])->group(function(){
@@ -267,6 +268,23 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/carbon/{id}', [CarbonoAnalysisController::class, 'update'])->name('lscefa.technical.analyses.carbon.update');
             Route::delete('/technical/analyses/carbon/{id}', [CarbonoAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.carbon.destroy');
             Route::get('/technical/analyses/carbon/{id}/report', [CarbonoAnalysisController::class, 'report'])->name('lscefa.technical.analyses.carbon.report');
+
+            // Rutas para Análisis de Micronutrientes
+            Route::get('/technical/analyses/micronutrients', [MicronutrientsAnalysisController::class, 'index'])->name('lscefa.technical.analyses.micronutrients.index');
+            Route::get('/technical/analyses/micronutrients/process/{processId}/{serviceId}', [MicronutrientsAnalysisController::class, 'process'])->name('lscefa.technical.analyses.micronutrients.process');
+            Route::post('/technical/analyses/micronutrients/store', [MicronutrientsAnalysisController::class, 'storeMicronutrientsAnalysis'])->name('lscefa.technical.analyses.micronutrients.store');
+            Route::get('/technical/analyses/micronutrients/batch', [MicronutrientsAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.micronutrients.batch');
+            Route::post('/technical/analyses/micronutrients/batch', [MicronutrientsAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.micronutrients.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.micronutrients.batch.post');
+            Route::post('/technical/analyses/micronutrients/batch-store', [MicronutrientsAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.micronutrients.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.micronutrients.batch_store');
+            Route::get('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'show'])->name('lscefa.technical.analyses.micronutrients.show');
+            Route::get('/technical/analyses/micronutrients/{id}/edit', [MicronutrientsAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.micronutrients.edit');
+            Route::put('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'update'])->name('lscefa.technical.analyses.micronutrients.update');
+            Route::delete('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.micronutrients.destroy');
+            Route::get('/technical/analyses/micronutrients/{id}/report', [MicronutrientsAnalysisController::class, 'report'])->name('lscefa.technical.analyses.micronutrients.report');
 
             // Rutas para Análisis de Bases Cambiables
             Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');

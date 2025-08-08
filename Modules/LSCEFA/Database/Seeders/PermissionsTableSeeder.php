@@ -610,6 +610,96 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
+
+        // Permisos para Análisis de Micronutrientes
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.index'], [
+            'name' => 'Ver listado de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede ver el listado de análisis de micronutrientes (technical)',
+            'description_english' => 'Can view micronutrients analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.process'], [
+            'name' => 'Procesar Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede procesar análisis de micronutrientes (technical)',
+            'description_english' => 'Can process micronutrients analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.store'], [
+            'name' => 'Guardar Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede guardar análisis de micronutrientes (technical)',
+            'description_english' => 'Can save micronutrients analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.edit'], [
+            'name' => 'Editar Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede editar análisis de micronutrientes (technical)',
+            'description_english' => 'Can edit micronutrients analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.update'], [
+            'name' => 'Actualizar Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede actualizar análisis de micronutrientes (technical)',
+            'description_english' => 'Can update micronutrients analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.destroy'], [
+            'name' => 'Eliminar Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede eliminar análisis de micronutrientes (technical)',
+            'description_english' => 'Can delete micronutrients analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.show'], [
+            'name' => 'Ver detalle de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede ver el detalle de análisis de micronutrientes (technical)',
+            'description_english' => 'Can view micronutrients analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.report'], [
+            'name' => 'Generar reporte de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede generar reportes de análisis de micronutrientes (technical)',
+            'description_english' => 'Can generate micronutrients analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        // Permisos para procesamiento por lotes de análisis de micronutrientes
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede procesar múltiples análisis de micronutrientes por lotes (technical)',
+            'description_english' => 'Can process multiple micronutrients analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de micronutrientes (technical)',
+            'description_english' => 'Can access the batch processing form for micronutrients analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Micronutrientes (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de micronutrientes (technical)',
+            'description_english' => 'Can save batch processing of micronutrients analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
         
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);

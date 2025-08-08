@@ -136,7 +136,7 @@ class BoronAnalysisController extends Controller
             // Preparar items de ensayo
             $testItems = [];
             $items = $request->input('items', []);
-            
+
             foreach ($items as $item) {
                 $testItems[] = [
                     'internal_code' => $item['codigo_interno'] ?? '',

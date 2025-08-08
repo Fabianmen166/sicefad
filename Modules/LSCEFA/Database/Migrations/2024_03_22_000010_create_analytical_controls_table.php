@@ -60,6 +60,10 @@ class CreateAnalyticalControlsTable extends Migration
             $table->decimal('dpr_resultado', 8, 4)->nullable();
             $table->string('dpr_aceptabilidad')->nullable();
             
+            // Campos de curva de calibración
+            $table->decimal('curva_valor_leido', 8, 4)->nullable();
+            $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
+            
             $table->timestamps();
         });
     }

@@ -87,6 +87,13 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.micronutrients.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Micronutrientes</p>
+                            </a>
+                        </li>
 
 
                         <li class="nav-item">

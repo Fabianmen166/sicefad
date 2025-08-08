@@ -33,6 +33,21 @@ return new class extends Migration
             $table->decimal('fosforo_disponible_mg_kg', 8, 4)->nullable();
             $table->text('observaciones_item')->nullable();
             
+            // Columnas en inglés
+            $table->string('analysis_date')->nullable();
+            $table->string('equipment_used')->nullable();
+            $table->string('method_interval')->nullable();
+            $table->string('analyst_name')->nullable();
+            $table->text('observations')->nullable();
+            $table->string('internal_code')->nullable();
+            $table->decimal('sample_weight', 8, 4)->nullable();
+            $table->decimal('extractant_volume', 8, 2)->nullable();
+            $table->decimal('blank_reading', 8, 4)->nullable();
+            $table->decimal('dilution_factor', 8, 4)->nullable();
+            $table->decimal('available_phosphorus_mg_l', 8, 4)->nullable();
+            $table->decimal('available_phosphorus_mg_kg', 8, 4)->nullable();
+            $table->text('item_observations')->nullable();
+            
             $table->timestamps();
 
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');

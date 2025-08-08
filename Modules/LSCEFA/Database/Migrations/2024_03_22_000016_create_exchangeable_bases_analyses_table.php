@@ -26,6 +26,29 @@ return new class extends Migration
             $table->decimal('bases_cambiables_mg_kg', 8, 4)->nullable();
             $table->text('observaciones_item')->nullable();
             
+            // Columnas para Na (Sodio)
+            $table->decimal('na_blank', 8, 4)->nullable();
+            $table->decimal('na_factor', 8, 4)->nullable();
+            $table->decimal('na_result', 8, 4)->nullable();
+            
+            // Columnas para K (Potasio)
+            $table->decimal('k_blank', 8, 4)->nullable();
+            $table->decimal('k_factor', 8, 4)->nullable();
+            $table->decimal('k_result', 8, 4)->nullable();
+            
+            // Columnas para Ca (Calcio)
+            $table->decimal('ca_blank', 8, 4)->nullable();
+            $table->decimal('ca_factor', 8, 4)->nullable();
+            $table->decimal('ca_result', 8, 4)->nullable();
+            
+            // Columnas para Mg (Magnesio)
+            $table->decimal('mg_blank', 8, 4)->nullable();
+            $table->decimal('mg_factor', 8, 4)->nullable();
+            $table->decimal('mg_result', 8, 4)->nullable();
+            
+            // Campo de observaciones
+            $table->text('observations')->nullable();
+            
             $table->timestamps();
 
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
