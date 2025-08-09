@@ -52,94 +52,98 @@
                                 @foreach($pendingProcesses as $process)
                                 <div class="process-item mb-4">
                                     <div class="card">
-                                        <div class="card-header">
-                                            <h5>Proceso: {{ $process->process_id }}</h5>
+                                        <div class="card-header py-2">
+                                            <span class="process-title text-monospace">Proceso: {{ $process->process_id }}</span>
                                             <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
                                         </div>
                                         <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <p><strong>Cliente:</strong> {{ $process->customer->nombre ?? 'N/A' }}</p>
-                                                    <p><strong>Servicio:</strong> 
-                                                        @foreach($process->serviceProcessDetails as $detail)
-                                                            @if(str_contains(strtolower($detail->service->descripcion), 'micronutrientes') || 
-                                                                str_contains(strtolower($detail->service->descripcion), 'micronutrients') ||
-                                                                str_contains(strtolower($detail->service->descripcion), 'zinc') ||
-                                                                str_contains(strtolower($detail->service->descripcion), 'hierro') ||
-                                                                str_contains(strtolower($detail->service->descripcion), 'manganeso') ||
-                                                                str_contains(strtolower($detail->service->descripcion), 'cobre'))
-                                                                {{ $detail->service->descripcion }}
-                                                            @endif
-                                                        @endforeach
-                                                    </p>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <p><strong>Estado:</strong> {{ $process->status }}</p>
-                                                    <p><strong>Fecha:</strong> {{ $process->created_at->format('d/m/Y') }}</p>
-                                                </div>
-                                            </div>
+                                            <!-- Info superior simplificada removida por solicitud -->
 
-                                            <!-- Items para este proceso -->
-                                            <div class="items-container">
-                                                <h6>Items de Ensayo</h6>
-                                                <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
-                                                    <table class="table table-bordered table-hover" style="min-width: 1800px;">
-                                                        <thead class="thead-light">
-                                                            <tr>
-                                                                <th colspan="4" class="text-center bg-light">Información de la muestra</th>
-                                                                <th colspan="3" class="text-center bg-light">Mn</th>
-                                                                <th colspan="3" class="text-center bg-light">Fe</th>
-                                                                <th colspan="3" class="text-center bg-light">Zn</th>
-                                                                <th colspan="3" class="text-center bg-light">Cu</th>
-                                                                <th rowspan="2" class="text-center bg-light">OBSERVACIONES</th>
-                                                            </tr>
-                                                            <tr>
-                                                                <th class="text-center">Código interno</th>
-                                                                <th class="text-center">Peso (g) muestra</th>
-                                                                <th class="text-center">Humedad (pW)</th>
-                                                                <th class="text-center">Vol final (mL)</th>
-                                                                <th class="text-center">Lectura (mg/L)</th>
-                                                                <th class="text-center">Factor dilución</th>
-                                                                <th class="text-center">Resultados [mg/kg]</th>
-                                                                <th class="text-center">Lectura (mg/L)</th>
-                                                                <th class="text-center">Factor dilución</th>
-                                                                <th class="text-center">Resultados [mg/kg]</th>
-                                                                <th class="text-center">Lectura (mg/L)</th>
-                                                                <th class="text-center">Factor dilución</th>
-                                                                <th class="text-center">Resultados [mg/kg]</th>
-                                                                <th class="text-center">Lectura (mg/L)</th>
-                                                                <th class="text-center">Factor dilución</th>
-                                                                <th class="text-center">Resultados [mg/kg]</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr class="fila-muestra">
-                                                                <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items_ensayo[{{ $process->process_id }}][0][humedad]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items_ensayo[{{ $process->process_id }}][0][volumen_final]"></td>
-                                                                <!-- Mn -->
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][mn_lectura]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][mn_factor]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][0][mn_resultado]" readonly></td>
-                                                                <!-- Fe -->
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][fe_lectura]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][fe_factor]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][0][fe_resultado]" readonly></td>
-                                                                <!-- Zn -->
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][zn_lectura]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][zn_factor]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][0][zn_resultado]" readonly></td>
-                                                                <!-- Cu -->
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][cu_lectura]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][0][cu_factor]"></td>
-                                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][0][cu_resultado]" readonly></td>
-                                                                <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[{{ $process->process_id }}][0][observaciones]"></td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
+                                            <!-- Items por cada servicio de micronutrientes pendiente en este proceso -->
+                                            @php
+                                                $micronutrientDetails = $process->serviceProcessDetails->filter(function($detail){
+                                                    $d = strtolower($detail->service->descripcion ?? '');
+                                                    return (
+                                                        str_contains($d,'micronutrientes') ||
+                                                        str_contains($d,'micronutrients') ||
+                                                        str_contains($d,'zinc') ||
+                                                        str_contains($d,'hierro') ||
+                                                        str_contains($d,'manganeso') ||
+                                                        str_contains($d,'cobre')
+                                                    ) && ($detail->status === 'pending');
+                                                });
+                                            @endphp
+
+                                            @foreach($micronutrientDetails as $detail)
+                                                <div class="card items-card mb-4 border border-secondary-subtle">
+                                                    <div class="card-header py-2 bg-white">
+                                                        <h6 class="mb-0">Items de Ensayo — {{ $detail->service->descripcion }}</h6>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <input type="hidden" name="processes[{{ $process->process_id }}][{{ $detail->service_id }}][process_id]" value="{{ $process->process_id }}">
+                                                        <input type="hidden" name="processes[{{ $process->process_id }}][{{ $detail->service_id }}][service_id]" value="{{ $detail->service_id }}">
+                                                        <div class="table-responsive items-table-responsive">
+                                                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1800px;">
+                                                            <thead class="thead-light">
+                                                                <tr>
+                                                                    <th colspan="5" class="text-center bg-light">Información de la muestra</th>
+                                                                    <th colspan="3" class="text-center bg-light">Mn</th>
+                                                                    <th colspan="3" class="text-center bg-light">Fe</th>
+                                                                    <th colspan="3" class="text-center bg-light">Zn</th>
+                                                                    <th colspan="3" class="text-center bg-light">Cu</th>
+                                                                    <th rowspan="2" class="text-center bg-light">OBSERVACIONES</th>
+                                                                </tr>
+                                                                <tr>
+                                                                    <th class="text-center">Proceso</th>
+                                                                    <th class="text-center">Código interno</th>
+                                                                    <th class="text-center">Peso (g) muestra</th>
+                                                                    <th class="text-center">Humedad (pW)</th>
+                                                                    <th class="text-center">Vol final (mL)</th>
+                                                                    <th class="text-center">Lectura (mg/L)</th>
+                                                                    <th class="text-center">Factor dilución</th>
+                                                                    <th class="text-center">Resultados [mg/kg]</th>
+                                                                    <th class="text-center">Lectura (mg/L)</th>
+                                                                    <th class="text-center">Factor dilución</th>
+                                                                    <th class="text-center">Resultados [mg/kg]</th>
+                                                                    <th class="text-center">Lectura (mg/L)</th>
+                                                                    <th class="text-center">Factor dilución</th>
+                                                                    <th class="text-center">Resultados [mg/kg]</th>
+                                                                    <th class="text-center">Lectura (mg/L)</th>
+                                                                    <th class="text-center">Factor dilución</th>
+                                                                    <th class="text-center">Resultados [mg/kg]</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr class="fila-muestra">
+                                                                    <td><input type="text" class="form-control form-control-sm text-monospace" style="min-width:100px; font-size: 11px;" value="{{ $process->process_id }}" readonly></td>
+                                                                    <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][codigo_interno]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][peso_muestra]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][humedad]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][volumen_final]"></td>
+                                                                    <!-- Mn -->
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][mn_lectura]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][mn_factor]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][mn_resultado]" readonly></td>
+                                                                    <!-- Fe -->
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][fe_lectura]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][fe_factor]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][fe_resultado]" readonly></td>
+                                                                    <!-- Zn -->
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][zn_lectura]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][zn_factor]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][zn_resultado]" readonly></td>
+                                                                    <!-- Cu -->
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][cu_lectura]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][cu_factor]"></td>
+                                                                    <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][cu_resultado]" readonly></td>
+                                                                    <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][observaciones]"></td>
+                                                                </tr>
+                                                            </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
@@ -674,4 +678,22 @@
 
 });
 </script>
+<style>
+/* Evitar superposición entre tarjetas de items */
+.items-card { margin-top: 12px; position: relative; z-index: 1; }
+.items-table-responsive { overflow-x: auto; min-width: 100%; position: relative; z-index: 0; }
+
+/* Separadores visuales */
+.items-card .card-header { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+.items-card .card-body { padding: 0.75rem; }
+.items-card + .items-card { margin-top: 16px; }
+
+/* Mantener barras horizontales independientes por tabla */
+.items-table-responsive::-webkit-scrollbar { height: 8px; }
+.items-table-responsive::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 4px; }
+/* Ajuste para input de proceso */
+.text-monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+/* Título de proceso pequeño */
+.process-title { font-size: 0.95rem; font-weight: 600; }
+</style>
 @endsection

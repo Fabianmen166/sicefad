@@ -70,119 +70,92 @@ class MicronutrientsAnalysisController extends Controller
     {
         $processId = $request->input('process_id');
         $serviceId = $request->input('service_id');
-        
+
         try {
             DB::beginTransaction();
 
-            $request->validate([
+            $validated = $request->validate([
+                'process_id' => 'required|string',
+                'service_id' => 'required|integer',
                 'consecutivo_no' => 'required|string',
                 'fecha_analisis' => 'required|date',
                 'equipo_utilizado' => 'nullable|string',
                 'intervalo_metodo' => 'nullable|string',
-                'analista' => 'nullable|string',
-                'controles_analiticos' => 'required|array',
-                'controles_analiticos.*.identificacion' => 'required|string',
-                'controles_analiticos.*.valor_esperado' => 'nullable|numeric|min:0',
-                'controles_analiticos.*.valor_leido' => 'nullable|numeric|min:0',
-                'controles_analiticos.*.porcentaje_error' => 'nullable|numeric',
-                'controles_analiticos.*.aceptabilidad_error' => 'nullable|string',
-                'controles_analiticos.*.porcentaje_recuperacion' => 'nullable|numeric',
-                'controles_analiticos.*.aceptabilidad_recuperacion' => 'nullable|string',
-                'controles_analiticos.*.porcentaje_dpr' => 'nullable|numeric',
-                'controles_analiticos.*.aceptabilidad_dpr' => 'nullable|string',
-                'items' => 'required|array',
-                'items.*.codigo_interno' => 'nullable|string',
-                'items.*.peso_muestra' => 'nullable|numeric|min:0',
-                'items.*.vol_extractante' => 'nullable|numeric|min:0',
-                'items.*.lectura_blanco' => 'nullable|numeric|min:0',
-                'items.*.factor_dilucion' => 'nullable|numeric|min:0',
-                'items.*.concentracion_mg_l' => 'nullable|numeric|min:0',
-                'items.*.concentracion_mg_kg' => 'nullable|numeric',
-                'items.*.observaciones_item' => 'nullable|string',
+                'nombre_analista' => 'nullable|string',
+
+                'items_ensayo' => 'required|array|min:1',
+                'items_ensayo.*.codigo_interno' => 'nullable|string',
+                'items_ensayo.*.peso_muestra' => 'nullable|numeric',
+                'items_ensayo.*.humedad' => 'nullable|numeric',
+                'items_ensayo.*.volumen_final' => 'nullable|numeric',
+                'items_ensayo.*.mn_lectura' => 'nullable|numeric',
+                'items_ensayo.*.mn_factor' => 'nullable|numeric',
+                'items_ensayo.*.mn_resultado' => 'nullable|numeric',
+                'items_ensayo.*.fe_lectura' => 'nullable|numeric',
+                'items_ensayo.*.fe_factor' => 'nullable|numeric',
+                'items_ensayo.*.fe_resultado' => 'nullable|numeric',
+                'items_ensayo.*.zn_lectura' => 'nullable|numeric',
+                'items_ensayo.*.zn_factor' => 'nullable|numeric',
+                'items_ensayo.*.zn_resultado' => 'nullable|numeric',
+                'items_ensayo.*.cu_lectura' => 'nullable|numeric',
+                'items_ensayo.*.cu_factor' => 'nullable|numeric',
+                'items_ensayo.*.cu_resultado' => 'nullable|numeric',
+                'items_ensayo.*.observaciones' => 'nullable|string',
+
+                'blanco_metodo' => 'nullable|array',
+                'duplicado_muestra' => 'nullable|array',
+                'controles_calidad' => 'nullable|array',
+                'control_estandar' => 'nullable|array',
+                'curva_calibracion' => 'nullable|array',
             ]);
 
-            Log::info('Iniciando guardado de análisis de micronutrientes', [
-                'process_id' => $processId,
-                'user_id' => Auth::id(),
-                'request_data' => $request->all()
-            ]);
+            // Resolver analysis_id desde process_id + service_id
+            $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
+                ->where('service_id', $serviceId)
+                ->orderBy('id', 'desc')
+                ->firstOrFail();
 
-            // Create or update micronutrients analysis
-            $micronutrientsAnalysis = MicronutrientsAnalysis::updateOrCreate(
-                ['process_id' => $processId, 'service_id' => $serviceId],
+            $controlesAnaliticos = [
+                'blanco_metodo' => $request->input('blanco_metodo', []),
+                'duplicado_muestra' => $request->input('duplicado_muestra', []),
+                'controles_calidad' => $request->input('controles_calidad', []),
+                'control_estandar' => $request->input('control_estandar', []),
+                'curva_calibracion' => $request->input('curva_calibracion', []),
+            ];
+
+            $itemsEnsayo = array_values($request->input('items_ensayo', []));
+
+            MicronutrientsAnalysis::updateOrCreate(
+                ['analysis_id' => $serviceProcessDetail->id],
                 [
                     'consecutivo_no' => $request->consecutivo_no,
                     'fecha_analisis' => $request->fecha_analisis,
+                    'user_id' => Auth::id(),
                     'equipo_utilizado' => $request->equipo_utilizado,
                     'intervalo_metodo' => $request->intervalo_metodo,
-                    'analista' => $request->analista ?? Auth::user()->name,
+                    'controles_analiticos' => $controlesAnaliticos,
+                    'items_ensayo' => $itemsEnsayo,
+                    'observaciones' => $request->observaciones,
+                    'review_status' => 'pending',
                 ]
             );
 
-            // Save analytical controls
-            foreach ($request->controles_analiticos as $control) {
-                AnalyticalControl::updateOrCreate(
-                    [
-                        'analysis_type' => 'micronutrients',
-                        'analysis_id' => $micronutrientsAnalysis->id,
-                        'identificacion' => $control['identificacion']
-                    ],
-                    [
-                        'valor_esperado' => $control['valor_esperado'] ?? null,
-                        'valor_leido' => $control['valor_leido'] ?? null,
-                        'porcentaje_error' => $control['porcentaje_error'] ?? null,
-                        'aceptabilidad_error' => $control['aceptabilidad_error'] ?? null,
-                        'porcentaje_recuperacion' => $control['porcentaje_recuperacion'] ?? null,
-                        'aceptabilidad_recuperacion' => $control['aceptabilidad_recuperacion'] ?? null,
-                        'porcentaje_dpr' => $control['porcentaje_dpr'] ?? null,
-                        'aceptabilidad_dpr' => $control['aceptabilidad_dpr'] ?? null,
-                    ]
-                );
-            }
-
-            // Save test items
-            foreach ($request->items as $item) {
-                $micronutrientsAnalysis->items()->updateOrCreate(
-                    [
-                        'codigo_interno' => $item['codigo_interno'] ?? 'Item-' . uniqid(),
-                    ],
-                    [
-                        'peso_muestra' => $item['peso_muestra'] ?? null,
-                        'vol_extractante' => $item['vol_extractante'] ?? null,
-                        'lectura_blanco' => $item['lectura_blanco'] ?? null,
-                        'factor_dilucion' => $item['factor_dilucion'] ?? null,
-                        'concentracion_mg_l' => $item['concentracion_mg_l'] ?? null,
-                        'concentracion_mg_kg' => $item['concentracion_mg_kg'] ?? null,
-                        'observaciones_item' => $item['observaciones_item'] ?? null,
-                    ]
-                );
-            }
-
-            // Update service process detail status
-            ServiceProcessDetail::where('process_id', $processId)
-                ->where('service_id', $serviceId)
-                ->update(['status' => 'completed']);
+            // Marcar detalle como completado
+            $serviceProcessDetail->status = 'completed';
+            $serviceProcessDetail->save();
 
             DB::commit();
-
-            Log::info('Análisis de micronutrientes guardado exitosamente', [
-                'analysis_id' => $micronutrientsAnalysis->id,
-                'process_id' => $processId
-            ]);
-
             return redirect()->route('lscefa.technical.analyses.micronutrients.index')
                 ->with('success', 'Análisis de micronutrientes guardado exitosamente.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al guardar análisis de micronutrientes: ' . $e->getMessage(), [
                 'process_id' => $processId,
+                'service_id' => $serviceId,
                 'user_id' => Auth::id(),
-                'exception' => $e
+                'trace' => $e->getTraceAsString(),
             ]);
-
-            return back()->with('error', 'Error al guardar el análisis. Por favor, intente nuevamente.')
-                ->withInput();
+            return back()->with('error', 'Error al guardar el análisis: ' . $e->getMessage())->withInput();
         }
     }
 

@@ -64,196 +64,68 @@
                             </div>
                     </div>
 
-                        <!-- Items de Ensayo -->
+                        <!-- Items de Ensayo (igual que batch_process) -->
                         <div class="card">
                             <div class="card-header">
                                 <h4><i class="fas fa-flask"></i> Items de Ensayo</h4>
                             </div>
                     <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="items_ensayo_table">
+                                <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
+                                    <table class="table table-bordered table-hover" id="items_ensayo_table" style="min-width: 1800px;">
                                 <thead class="thead-light">
                                     <tr>
-                                                <th colspan="4" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">Información de la muestra</th>
-                                                <th colspan="3" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">Mn</th>
-                                                <th colspan="3" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">Fe</th>
-                                                <th colspan="3" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">Zn</th>
-                                                <th colspan="3" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">Cu</th>
-                                                <th rowspan="2" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">OBSERVACIONES</th>
-                                                <th rowspan="2" class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">ACCIÓN</th>
+                                                <th colspan="4" class="text-center bg-light">Información de la muestra</th>
+                                                <th colspan="3" class="text-center bg-light">Mn</th>
+                                                <th colspan="3" class="text-center bg-light">Fe</th>
+                                                <th colspan="3" class="text-center bg-light">Zn</th>
+                                                <th colspan="3" class="text-center bg-light">Cu</th>
+                                                <th rowspan="2" class="text-center bg-light">OBSERVACIONES</th>
                                     </tr>
                                     <tr>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 120px;">Código interno</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 120px;">Peso (g) muestra</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 120px;">Humedad (pW)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 120px;">Vol final (mL)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Lectura (mg/L)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Factor dilución</th>
-                                                <th class="text-center" style="background-color: #d1d3d4; border: 1px solid #dee2e6; min-width: 120px;">Resultados [mg/kg]</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Lectura (mg/L)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Factor dilución</th>
-                                                <th class="text-center" style="background-color: #d1d3d4; border: 1px solid #dee2e6; min-width: 120px;">Resultados [mg/kg]</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Lectura (mg/L)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Factor dilución</th>
-                                                <th class="text-center" style="background-color: #d1d3d4; border: 1px solid #dee2e6; min-width: 120px;">Resultados [mg/kg]</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Lectura (mg/L)</th>
-                                                <th class="text-center" style="background-color: #f8f9fa; border: 1px solid #dee2e6; min-width: 100px;">Factor dilución</th>
-                                                <th class="text-center" style="background-color: #d1d3d4; border: 1px solid #dee2e6; min-width: 120px;">Resultados [mg/kg]</th>
+                                                <th class="text-center">Código interno</th>
+                                                <th class="text-center">Peso (g) muestra</th>
+                                                <th class="text-center">Humedad (pW)</th>
+                                                <th class="text-center">Vol final (mL)</th>
+                                                <th class="text-center">Lectura (mg/L)</th>
+                                                <th class="text-center">Factor dilución</th>
+                                                <th class="text-center">Resultados [mg/kg]</th>
+                                                <th class="text-center">Lectura (mg/L)</th>
+                                                <th class="text-center">Factor dilución</th>
+                                                <th class="text-center">Resultados [mg/kg]</th>
+                                                <th class="text-center">Lectura (mg/L)</th>
+                                                <th class="text-center">Factor dilución</th>
+                                                <th class="text-center">Resultados [mg/kg]</th>
+                                                <th class="text-center">Lectura (mg/L)</th>
+                                                <th class="text-center">Factor dilución</th>
+                                                <th class="text-center">Resultados [mg/kg]</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="fila-muestra">
-                                        <td class="numero-fila text-center">1</td>
-                                                <td><input type="text" class="form-control" name="items[0][codigo_interno]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][peso_muestra]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][humedad]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][volumen_final]"></td>
+                                                <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[0][codigo_interno]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][peso_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items_ensayo[0][humedad]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items_ensayo[0][volumen_final]"></td>
                                         <!-- Mn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[0][mn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][mn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[0][mn_resultado]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][mn_lectura]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][mn_factor]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[0][mn_resultado]" readonly></td>
                                         <!-- Fe -->
-                                                <td><input type="number" step="any" class="form-control" name="items[0][fe_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][fe_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[0][fe_resultado]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][fe_lectura]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][fe_factor]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[0][fe_resultado]" readonly></td>
                                         <!-- Zn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[0][zn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][zn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[0][zn_resultado]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][zn_lectura]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][zn_factor]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[0][zn_resultado]" readonly></td>
                                         <!-- Cu -->
-                                                <td><input type="number" step="any" class="form-control" name="items[0][cu_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[0][cu_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[0][cu_resultado]" readonly></td>
-                                                <td><input type="text" class="form-control" name="items[0][observaciones]"></td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr class="fila-muestra">
-                                                <td class="numero-fila text-center">2</td>
-                                                <td><input type="text" class="form-control" name="items[1][codigo_interno]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][peso_muestra]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][humedad]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][volumen_final]"></td>
-                                                <!-- Mn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[1][mn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][mn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[1][mn_resultado]" readonly></td>
-                                                <!-- Fe -->
-                                                <td><input type="number" step="any" class="form-control" name="items[1][fe_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][fe_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[1][fe_resultado]" readonly></td>
-                                                <!-- Zn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[1][zn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][zn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[1][zn_resultado]" readonly></td>
-                                                <!-- Cu -->
-                                                <td><input type="number" step="any" class="form-control" name="items[1][cu_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[1][cu_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[1][cu_resultado]" readonly></td>
-                                                <td><input type="text" class="form-control" name="items[1][observaciones]"></td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr class="fila-muestra">
-                                                <td class="numero-fila text-center">3</td>
-                                                <td><input type="text" class="form-control" name="items[2][codigo_interno]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][peso_muestra]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][humedad]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][volumen_final]"></td>
-                                                <!-- Mn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[2][mn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][mn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[2][mn_resultado]" readonly></td>
-                                                <!-- Fe -->
-                                                <td><input type="number" step="any" class="form-control" name="items[2][fe_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][fe_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[2][fe_resultado]" readonly></td>
-                                                <!-- Zn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[2][zn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][zn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[2][zn_resultado]" readonly></td>
-                                                <!-- Cu -->
-                                                <td><input type="number" step="any" class="form-control" name="items[2][cu_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[2][cu_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[2][cu_resultado]" readonly></td>
-                                                <td><input type="text" class="form-control" name="items[2][observaciones]"></td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr class="fila-muestra">
-                                                <td class="numero-fila text-center">4</td>
-                                                <td><input type="text" class="form-control" name="items[3][codigo_interno]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][peso_muestra]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][humedad]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][volumen_final]"></td>
-                                                <!-- Mn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[3][mn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][mn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[3][mn_resultado]" readonly></td>
-                                                <!-- Fe -->
-                                                <td><input type="number" step="any" class="form-control" name="items[3][fe_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][fe_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[3][fe_resultado]" readonly></td>
-                                                <!-- Zn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[3][zn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][zn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[3][zn_resultado]" readonly></td>
-                                                <!-- Cu -->
-                                                <td><input type="number" step="any" class="form-control" name="items[3][cu_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[3][cu_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[3][cu_resultado]" readonly></td>
-                                                <td><input type="text" class="form-control" name="items[3][observaciones]"></td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                        <i class="fas fa-minus"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr class="fila-muestra">
-                                                <td class="numero-fila text-center">5</td>
-                                                <td><input type="text" class="form-control" name="items[4][codigo_interno]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][peso_muestra]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][humedad]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][volumen_final]"></td>
-                                                <!-- Mn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[4][mn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][mn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[4][mn_resultado]" readonly></td>
-                                                <!-- Fe -->
-                                                <td><input type="number" step="any" class="form-control" name="items[4][fe_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][fe_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[4][fe_resultado]" readonly></td>
-                                                <!-- Zn -->
-                                                <td><input type="number" step="any" class="form-control" name="items[4][zn_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][zn_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[4][zn_resultado]" readonly></td>
-                                                <!-- Cu -->
-                                                <td><input type="number" step="any" class="form-control" name="items[4][cu_lectura]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="items[4][cu_factor]"></td>
-                                                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[4][cu_resultado]" readonly></td>
-                                                <td><input type="text" class="form-control" name="items[4][observaciones]"></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                        </td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][cu_lectura]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[0][cu_factor]"></td>
+                                                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[0][cu_resultado]" readonly></td>
+                                                <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[0][observaciones]"></td>
                                     </tr>
                                 </tbody>
                             </table>
-                                </div>
-                                <div class="mt-3">
-                                    <button type="button" class="btn btn-success" id="add_item_row">
-                                        <i class="fas fa-plus"></i> Agregar muestra
-                            </button>
                                 </div>
                             </div>
                         </div>
@@ -583,9 +455,9 @@
     
     /* Estilos para mejorar la apariencia de la tabla */
     #items_ensayo_table th {
-        background-color: #6c757d !important;
-        color: white !important;
-        border: 2px solid #495057 !important;
+        background-color: #ffffff !important; /* header blanco */
+        color: #343a40 !important;
+        border: 1px solid #dee2e6 !important;
         font-size: 0.9rem;
     }
     
@@ -594,19 +466,19 @@
         vertical-align: middle;
     }
     
-    /* Bordes más gruesos para separar las secciones de micronutrientes */
+    /* Quitar líneas más oscuras específicas de columnas: usar el mismo tono que el resto */
     #items_ensayo_table td:nth-child(6),
     #items_ensayo_table td:nth-child(10),
     #items_ensayo_table td:nth-child(14),
     #items_ensayo_table td:nth-child(18) {
-        border-left: 3px solid #495057 !important;
+        border-left: 1px solid #dee2e6 !important;
     }
     
     #items_ensayo_table td:nth-child(9),
     #items_ensayo_table td:nth-child(13),
     #items_ensayo_table td:nth-child(17),
     #items_ensayo_table td:nth-child(21) {
-        border-right: 3px solid #495057 !important;
+        border-right: 1px solid #dee2e6 !important;
     }
     
     /* Fondo más gris para campos calculados */
@@ -685,30 +557,32 @@
     #items_ensayo_table {
         min-width: 1200px;
         max-width: 100%;
+        border-collapse: collapse !important; /* evitar doble borde */
+        border-spacing: 0 !important;
     }
     
-    /* Bordes prominentes para separar secciones principales */
-    #items_ensayo_table th:nth-child(4),
-    #items_ensayo_table td:nth-child(4) {
-        border-right: 3px solid #000 !important;
+    /* Unificar el color de TODAS las líneas del grid */
+    #items_ensayo_table th, #items_ensayo_table td {
+        border-top: 1px solid #dee2e6 !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        border-left: 1px solid #dee2e6 !important;
+        border-right: 1px solid #dee2e6 !important;
+    }
+    #items_ensayo_table thead th {
+        border-top: 1px solid #dee2e6 !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        border-left: 1px solid #dee2e6 !important;
+        border-right: 1px solid #dee2e6 !important;
+    }
+    /* Quitar cualquier borde más grueso que venga por defecto */
+    #items_ensayo_table th,
+    #items_ensayo_table td,
+    #items_ensayo_table th *,
+    #items_ensayo_table td * {
+        box-shadow: none !important;
     }
     
-    #items_ensayo_table th:nth-child(10),
-    #items_ensayo_table td:nth-child(10) {
-        border-right: 3px solid #000 !important;
-    }
-    
-    #items_ensayo_table th:nth-child(13),
-    #items_ensayo_table td:nth-child(13) {
-        border-right: 3px solid #000 !important;
-    }
-    
-    #items_ensayo_table th:nth-child(16),
-    #items_ensayo_table td:nth-child(16) {
-        border-right: 3px solid #000 !important;
-    }
-    
-    /* Fondo más oscuro para las celdas de resultados */
+    /* Fondo para celdas de resultados como en batch */
     #items_ensayo_table th:nth-child(7),
     #items_ensayo_table td:nth-child(7) input,
     #items_ensayo_table th:nth-child(10),
@@ -717,7 +591,7 @@
     #items_ensayo_table td:nth-child(13) input,
     #items_ensayo_table th:nth-child(16),
     #items_ensayo_table td:nth-child(16) input {
-        background-color: #d1d3d4 !important;
+        background-color: #e9ecef !important; /* tono claro consistente */
     }
     
     /* Estilos para los inputs de resultados */
@@ -725,7 +599,7 @@
     #items_ensayo_table td:nth-child(10) input,
     #items_ensayo_table td:nth-child(13) input,
     #items_ensayo_table td:nth-child(16) input {
-        background-color: #d1d3d4 !important;
+        background-color: #e9ecef !important;
         border: 1px solid #adb5bd !important;
     }
 </style>
@@ -733,73 +607,6 @@
 <script>
 // Cálculos automáticos para micronutrientes
     document.addEventListener('DOMContentLoaded', function() {
-        let itemRowIndex = 0;
-        
-        // Función para agregar nueva fila
-        document.getElementById('add_item_row').addEventListener('click', function() {
-            itemRowIndex++;
-            const tbody = document.querySelector('#items_ensayo_table tbody');
-            const newRow = document.createElement('tr');
-            newRow.className = 'fila-muestra';
-            newRow.innerHTML = `
-                    <td class="numero-fila text-center">${itemRowIndex + 1}</td>
-                <td><input type="text" class="form-control" name="items[${itemRowIndex}][codigo_interno]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][peso_muestra]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][humedad]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][volumen_final]"></td>
-                    <!-- Mn -->
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][mn_lectura]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][mn_factor]"></td>
-                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[${itemRowIndex}][mn_resultado]" readonly></td>
-                    <!-- Fe -->
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][fe_lectura]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][fe_factor]"></td>
-                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[${itemRowIndex}][fe_resultado]" readonly></td>
-                    <!-- Zn -->
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][zn_lectura]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][zn_factor]"></td>
-                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[${itemRowIndex}][zn_resultado]" readonly></td>
-                    <!-- Cu -->
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][cu_lectura]"></td>
-                <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][cu_factor]"></td>
-                <td><input type="number" step="any" class="form-control" style="background-color: #d1d3d4;" name="items[${itemRowIndex}][cu_resultado]" readonly></td>
-                <td><input type="text" class="form-control" name="items[${itemRowIndex}][observaciones]"></td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-row">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </td>
-            `;
-            tbody.appendChild(newRow);
-            
-            // Agregar event listeners a los nuevos inputs
-            addCalculationListeners(newRow);
-        });
-        
-        // Función para re-enumerar filas
-        function reenumerarFilas() {
-            document.querySelectorAll('#items_ensayo_table tbody tr').forEach(function(row, index) {
-                row.querySelector('.numero-fila').textContent = index + 1;
-            });
-        }
-        
-        // Función para eliminar fila
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-row') || e.target.closest('.remove-row')) {
-                const row = e.target.closest('tr');
-                if (row && row.classList.contains('fila-muestra')) {
-                    row.remove();
-                    // Reenumerar las filas restantes
-                    const filas = document.querySelectorAll('.fila-muestra');
-                    filas.forEach((fila, index) => {
-                        const numeroFila = fila.querySelector('.numero-fila');
-                        if (numeroFila) {
-                            numeroFila.textContent = index + 1;
-                        }
-                    });
-                }
-            }
-        });
         
         // Cálculos para items de micronutrientes
         document.addEventListener('input', function(e) {
@@ -1004,28 +811,26 @@
         // Cálculo automático de % ERROR para control de estándar
         function calcularErrorEstandar() {
             try {
-            document.querySelectorAll('input[name*="[concentracion]"], input[name*="[valor_leido]"]').forEach(function(input) {
-                const row = input.closest('tr');
-                const concentracion = parseFloat(row.querySelector('input[name*="[concentracion]"]').value) || 0;
-                const valorLeido = parseFloat(row.querySelector('input[name*="[valor_leido]"]').value) || 0;
-                    
-                    let porcentajeError = 0;
-                    let aceptabilidad = '';
-                    
-                    if (concentracion > 0) {
-                        // Fórmula: % Error = |(Valor leído - Concentración) / Concentración| × 100
-                        porcentajeError = Math.abs((valorLeido - concentracion) / concentracion) * 100;
-                        
-                        // Criterio de aceptabilidad: % Error ≤ 10%
-                        if (porcentajeError <= 10) {
-                            aceptabilidad = 'Aceptable';
+                document.querySelectorAll('#datos_analisis_excel ~ .card table tbody tr, #datos_analisis_excel').forEach(function(){}); // no-op guard
+                // Recalcular por cada fila del bloque Control de estándar
+                document.querySelectorAll('table tbody tr').forEach(function(row) {
+                    const concEl = row.querySelector('input[name*="[concentracion]"]');
+                    const readEl = row.querySelector('input[name*="[valor_leido]"]');
+                    const errEl = row.querySelector('input[name*="[porcentaje_error]"]');
+                    const accEl = row.querySelector('input[name*="[aceptabilidad]"]');
+                    if (!concEl || !readEl || !errEl || !accEl) return;
+
+                    const c = parseFloat(concEl.value);
+                    const r = parseFloat(readEl.value);
+
+                    if (isFinite(c) && c > 0 && isFinite(r)) {
+                        const err = Math.abs((r - c) / c) * 100;
+                        errEl.value = err.toFixed(2);
+                        accEl.value = err <= 10 ? 'Aceptable' : 'No Aceptable';
                         } else {
-                            aceptabilidad = 'No Aceptable';
+                        errEl.value = '';
+                        accEl.value = '';
                         }
-                    }
-                    
-                row.querySelector('input[name*="[porcentaje_error]"]').value = porcentajeError > 0 ? porcentajeError.toFixed(2) : '';
-                row.querySelector('input[name*="[aceptabilidad]"]').value = aceptabilidad;
                 });
             } catch (error) {
                 console.log('Error en calcularErrorEstandar:', error);
@@ -1034,7 +839,8 @@
         
         // Ejecutar al cambiar cualquier input de concentración o valor leído
     document.addEventListener('input', function(e) {
-        if (e.target.name && (e.target.name.includes('[concentracion]') || e.target.name.includes('[valor_leido]'))) {
+        const name = e.target && e.target.name ? e.target.name : '';
+        if (name.includes('[concentracion]') || name.includes('[valor_leido]')) {
             calcularErrorEstandar();
         }
     });

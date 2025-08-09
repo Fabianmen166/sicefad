@@ -63,30 +63,34 @@
                             <tbody>
                                 @forelse($processes as $process)
                                     @php
-                                        $micronutrientsService = $process->serviceProcessDetails->filter(function($detail) {
-                                            return str_contains(strtolower($detail->service->descripcion), 'micronutrientes') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'micronutrients') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'zinc') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'hierro') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'manganeso') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'cobre') ||
-                                                   str_contains(strtolower($detail->service->descripcion), 'boro');
-                                        })->first();
+                                        $matchingDetails = $process->serviceProcessDetails->filter(function($detail) {
+                                            $desc = strtolower($detail->service->descripcion ?? '');
+                                            return (
+                                                str_contains($desc, 'micronutrientes') ||
+                                                str_contains($desc, 'micronutrients') ||
+                                                str_contains($desc, 'zinc') ||
+                                                str_contains($desc, 'hierro') ||
+                                                str_contains($desc, 'manganeso') ||
+                                                str_contains($desc, 'cobre')
+                                            ) && ($detail->status === 'pending');
+                                        });
                                     @endphp
-                                    @if($micronutrientsService && $micronutrientsService->status === 'pending')
+                                    @forelse($matchingDetails as $detail)
                                         <tr data-process-id="{{ $process->process_id }}" data-service-type="micronutrients">
                                             <td><input type="checkbox" class="process-checkbox" value="{{ $process->process_id }}"></td>
                                             <td>{{ $process->process_id }}</td>
-                                            <td>{{ $micronutrientsService->service->descripcion ?? 'Análisis de Micronutrientes' }}</td>
+                                            <td>{{ $detail->service->descripcion ?? 'Análisis de Micronutrientes' }}</td>
                                             <td><span class="badge badge-warning">Pendiente</span></td>
                                             <td>
-                                                <a href="{{ route('lscefa.technical.analyses.micronutrients.process', ['processId' => $process->process_id, 'serviceId' => $micronutrientsService->service_id]) }}"
+                                                <a href="{{ route('lscefa.technical.analyses.micronutrients.process', ['processId' => $process->process_id, 'serviceId' => $detail->service_id]) }}"
                                                    class="btn btn-primary btn-sm">
                                                     Procesar Análisis
                                                 </a>
                                             </td>
                                         </tr>
-                                    @endif
+                                    @empty
+                                        {{-- No hay detalles pendientes para este proceso --}}
+                                    @endforelse
                                 @empty
                                     <tr><td colspan="5" class="text-center">No hay análisis pendientes</td></tr>
                                 @endforelse

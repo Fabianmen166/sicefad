@@ -1,30 +1,8 @@
-@extends('lscefa::layouts.technical')
+@extends('lscefa::layouts.technical_no_navbar')
 
 @section('title', 'Procesar Análisis de Bases Cambiables')
 
 @section('content')
-<div class="content-wrapper">
-    <!-- Content Header -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Procesar Análisis de Bases Cambiables</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('lscefa.technical.panel') }}">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}">Gestión de Bases Cambiables</a></li>
-                        <li class="breadcrumb-item active">Procesar Análisis</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Main Content -->
-    <section class="content">
-        <div class="container-fluid">
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible">
                     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
@@ -56,7 +34,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('lscefa.technical.analyses.exchangeable_bases.store') }}" method="POST">
+            <form action="{{ route('lscefa.technical.analyses.exchangeable_bases.store') }}" method="POST" class="mb-5">
                 @csrf
                 <input type="hidden" name="process_id" value="{{ $process->process_id }}">
                 <input type="hidden" name="service_id" value="{{ $service->services_id }}">
@@ -464,41 +442,33 @@
                     </div>
                 </div>
             </form>
-        </div>
-    </section>
-</div>
+            <div style="height: 72px;"></div>
+@endsection
 
 <style>
-    /* Estilos para hacer las divisiones más notables */
-    #items_ensayo_table th {
-        background-color: #6c757d !important;
-        color: white !important;
-        border: 2px solid #495057 !important;
+    /* Estilos consistentes con Micronutrientes - Items de Ensayo */
+    #items_ensayo_table {
+        border-collapse: collapse !important;
+        background: #ffffff !important;
     }
-    
-    #items_ensayo_table td {
+    #items_ensayo_table thead th {
+        background-color: #f8f9fa !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
+        vertical-align: middle;
+        text-align: center;
+    }
+    #items_ensayo_table th, #items_ensayo_table td {
         border: 1px solid #dee2e6 !important;
     }
-    
-    /* Bordes más gruesos para separar las secciones de cationes */
-    #items_ensayo_table td:nth-child(6),
-    #items_ensayo_table td:nth-child(10),
-    #items_ensayo_table td:nth-child(14),
-    #items_ensayo_table td:nth-child(18) {
-        border-left: 3px solid #495057 !important;
+    #items_ensayo_table input.form-control {
+        background-color: #ffffff;
+        height: 38px;
+        padding: 6px 10px;
     }
-    
-    #items_ensayo_table td:nth-child(9),
-    #items_ensayo_table td:nth-child(13),
-    #items_ensayo_table td:nth-child(17),
-    #items_ensayo_table td:nth-child(21) {
-        border-right: 3px solid #495057 !important;
-    }
-    
-    /* Fondo más gris para campos calculados */
     #items_ensayo_table input[readonly] {
-        background-color: #e9ecef !important;
-        font-weight: bold !important;
+        background-color: #f8f9fa !important;
+        font-weight: 600;
     }
 </style>
 
@@ -980,14 +950,8 @@
 
         // Ejecutar al cambiar cualquier input relevante
         $(document).on('input', '#items_ensayo_table input', calcularBasesCambiables);
-        
-        // Botón de prueba para verificar cálculos
-        $('<button type="button" class="btn btn-info btn-sm ml-2">Probar Cálculo</button>')
-            .insertAfter('#add_item_row')
-            .click(function() {
-                console.log('Botón de prueba clickeado');
-                calcularBasesCambiables();
-            });
+            
+        // Eliminado botón de prueba de cálculo
         
         // Ejecutar al cargar la página
         calcularBasesCambiables();
@@ -1055,3 +1019,13 @@
     });
 </script>
 @endpush 
+<style>
+    /* Ocultar copyright/footers en esta vista */
+    .main-footer, footer { display: none !important; }
+    /* Ocultar el header de plantilla con el título */
+    .content-header { display: none !important; }
+    /* Ocultar la barra de navegación superior (usuario/cerrar sesión) solo en esta vista */
+    .main-header.navbar { display: none !important; }
+    /* Dar espacio inferior para evitar que el debugbar tape los botones */
+    section.content { padding-bottom: 120px !important; }
+</style>

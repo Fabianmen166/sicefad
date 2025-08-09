@@ -99,18 +99,14 @@
 
                                 <!-- 2. Duplicado muestra -->
                                 <div class="card mb-3">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div class="card-header">
                                         <h5 class="mb-0"><i class="fas fa-copy mr-2"></i>Duplicado muestra</h5>
-                                        <button type="button" class="btn btn-success btn-sm" onclick="addDuplicadoRow()">
-                                            <i class="fas fa-plus"></i> Agregar Fila
-                                        </button>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
                                             <table class="table table-bordered table-hover" id="duplicado-table">
                                                 <thead class="thead-light">
                                                     <tr>
-                                                        <th class="text-center">ID Proceso</th>
                                                         <th class="text-center">Identificación muestra</th>
                                                         <th class="text-center">Replica 1</th>
                                                         <th class="text-center">Replica 2</th>
@@ -118,30 +114,45 @@
                                                         <th class="text-center">Elemento</th>
                                                         <th class="text-center">% DPR</th>
                                                         <th class="text-center">Aceptable/no aceptable</th>
-                                                        <th class="text-center">Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach($pendingProcesses as $index => $process)
-                                                    <tr class="duplicado-row">
-                                                        <td class="text-center">{{ $process->process_id }}</td>
-                                                        <td>
-                                                            <input type="hidden" name="duplicado_muestra[{{ $index }}][process_id]" value="{{ $process->process_id }}">
-                                                            <input type="text" class="form-control" name="duplicado_muestra[{{ $index }}][identificacion_muestra]">
-                                                        </td>
-                                                        <td><input type="number" step="any" class="form-control duplicado-replica" name="duplicado_muestra[{{ $index }}][replica_1]"></td>
-                                                        <td><input type="number" step="any" class="form-control duplicado-replica" name="duplicado_muestra[{{ $index }}][replica_2]"></td>
-                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[{{ $index }}][dpr_1]" readonly></td>
-                                                        <td><input type="text" class="form-control" name="duplicado_muestra[{{ $index }}][elemento]" value="Na"></td>
-                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[{{ $index }}][dpr_2]" readonly></td>
-                                                        <td><input type="text" class="form-control" name="duplicado_muestra[{{ $index }}][aceptabilidad]" readonly></td>
-                                                        <td class="text-center">
-                                                            <button type="button" class="btn btn-danger btn-sm remove-duplicado-row">
-                                                                <i class="fas fa-minus"></i>
-                                                            </button>
-                                                        </td>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[0][identificacion_muestra]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_1]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_2]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][dpr_1]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[0][elemento]" value="Na"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[0][dpr_2]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[0][aceptabilidad]" readonly></td>
                                                     </tr>
-                                                    @endforeach
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[1][identificacion_muestra]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_1]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_2]"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_1]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[1][elemento]" value="K"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_2]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[1][aceptabilidad]" readonly></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[2][identificacion_muestra]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_1]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_2]"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_1]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[2][elemento]" value="Ca"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_2]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[2][aceptabilidad]" readonly></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[3][identificacion_muestra]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_1]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_2]"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_1]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[3][elemento]" value="Mg"></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_2]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="duplicado_muestra[3][aceptabilidad]" readonly></td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -355,7 +366,7 @@
                                             <div class="items-container">
                                                 <h6>Items de Ensayo</h6>
                                                 <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
-                                                    <table class="table table-bordered table-hover" style="min-width: 1800px;">
+                                                    <table class="table table-bordered table-hover" id="items_ensayo_table" style="min-width: 1800px;">
                                                         <thead class="thead-light">
                                                             <tr>
                                                                 <th rowspan="2" class="text-center">#</th>
@@ -508,34 +519,7 @@ function removeItem(button) {
     button.closest('tr').remove();
 }
 
-function addDuplicadoRow() {
-    const tbody = document.querySelector('#duplicado-table tbody');
-    const newRow = document.createElement('tr');
-    newRow.className = 'duplicado-row';
-    newRow.innerHTML = `
-        <td class="text-center">
-            <select class="form-control" name="duplicado_muestra[${duplicadoIndex}][process_id]">
-                @foreach($pendingProcesses as $process)
-                <option value="{{ $process->process_id }}">{{ $process->process_id }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td><input type="text" class="form-control" name="duplicado_muestra[${duplicadoIndex}][identificacion_muestra]"></td>
-        <td><input type="number" step="any" class="form-control duplicado-replica" name="duplicado_muestra[${duplicadoIndex}][replica_1]"></td>
-        <td><input type="number" step="any" class="form-control duplicado-replica" name="duplicado_muestra[${duplicadoIndex}][replica_2]"></td>
-        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[${duplicadoIndex}][dpr_1]" readonly></td>
-        <td><input type="text" class="form-control" name="duplicado_muestra[${duplicadoIndex}][elemento]" value="Na"></td>
-        <td><input type="number" step="any" class="form-control" name="duplicado_muestra[${duplicadoIndex}][dpr_2]" readonly></td>
-        <td><input type="text" class="form-control" name="duplicado_muestra[${duplicadoIndex}][aceptabilidad]" readonly></td>
-        <td class="text-center">
-            <button type="button" class="btn btn-danger btn-sm remove-duplicado-row">
-                <i class="fas fa-minus"></i>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(newRow);
-    duplicadoIndex++;
-}
+// Se eliminó la función addDuplicadoRow porque la tabla no necesita agregar filas dinámicamente en batch
 
 // Event listener para remover filas de duplicado
 document.addEventListener('click', function(e) {
@@ -563,37 +547,40 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Cálculos para duplicado de muestra
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('duplicado-replica')) {
-            const row = e.target.closest('tr');
-            const replica1Input = row.querySelector('input[name*="replica_1"]');
-            const replica2Input = row.querySelector('input[name*="replica_2"]');
-            const dpr1Input = row.querySelector('input[name*="dpr_1"]');
-            const dpr2Input = row.querySelector('input[name*="dpr_2"]');
-            const aceptabilidadInput = row.querySelector('input[name*="aceptabilidad"]');
-            
-            const replica1 = parseFloat(replica1Input.value) || 0;
-            const replica2 = parseFloat(replica2Input.value) || 0;
-            
-            if (replica1 > 0 && replica2 > 0) {
-                const promedio = (replica1 + replica2) / 2;
-                const dpr = (Math.abs(replica1 - replica2) / promedio) * 100;
-                dpr1Input.value = dpr.toFixed(2);
-                dpr2Input.value = dpr.toFixed(2);
-                
-                if (dpr <= 20) {
-                    aceptabilidadInput.value = 'Aceptable';
-                } else {
-                    aceptabilidadInput.value = 'No aceptable';
+    // Cálculos para duplicado de muestra (igual que en process)
+    function calcularDPRDuplicado() {
+        try {
+            document.querySelectorAll('#duplicado-table tbody tr').forEach(function(row){
+                const replica1 = parseFloat((row.querySelector('input[name*="[replica_1]"]')?.value || '').replace(',', '.')) || 0;
+                const replica2 = parseFloat((row.querySelector('input[name*="[replica_2]"]')?.value || '').replace(',', '.')) || 0;
+                const dpr1Input = row.querySelector('input[name*="[dpr_1]"]');
+                const dpr2Input = row.querySelector('input[name*="[dpr_2]"]');
+                const aceptabilidadInput = row.querySelector('input[name*="[aceptabilidad]"]');
+
+                let dpr = 0;
+                let aceptabilidad = '';
+                if (replica1 > 0 || replica2 > 0) {
+                    const promedio = (replica1 + replica2) / 2;
+                    if (promedio > 0) {
+                        dpr = Math.abs(replica1 - replica2) / promedio * 100;
+                        aceptabilidad = (dpr <= 20) ? 'Aceptable' : 'No aceptable';
+                    }
                 }
-            } else {
-                dpr1Input.value = '';
-                dpr2Input.value = '';
-                aceptabilidadInput.value = '';
-            }
+                if (dpr1Input) dpr1Input.value = dpr.toFixed(2);
+                if (dpr2Input) dpr2Input.value = dpr.toFixed(2);
+                if (aceptabilidadInput) aceptabilidadInput.value = aceptabilidad;
+            });
+        } catch (err) {
+            console.log('Error calcularDPRDuplicado (batch):', err);
+        }
+    }
+
+    document.addEventListener('input', function(e){
+        if (e.target && (e.target.name?.includes('[replica_1]') || e.target.name?.includes('[replica_2]'))) {
+            calcularDPRDuplicado();
         }
     });
+    calcularDPRDuplicado();
 
     // Cálculos para controles de calidad (Exactitud)
     document.addEventListener('input', function(e) {
@@ -686,10 +673,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const resultadoInput = itemRow.querySelector(`input[name*="${cation}_resultado"]`);
                 
                 if (lecturaInput && blancoInput && factorInput && resultadoInput) {
-                    const lectura = parseFloat(lecturaInput.value) || 0;
-                    const blanco = parseFloat(blancoInput.value) || 0;
-                    const factor = parseFloat(factorInput.value) || 0;
-                    const equivalente = equivalentes[cation.toUpperCase()];
+                    const lectura = parseFloat((lecturaInput.value || '').replace(',', '.')) || 0;
+                    const blanco = parseFloat((blancoInput.value || '').replace(',', '.')) || 0;
+                    const factor = parseFloat((factorInput.value || '').replace(',', '.')) || 0;
+                    const key = cation.charAt(0).toUpperCase() + cation.slice(1);
+                    const equivalente = equivalentes[key];
                     
                     if (pesoMuestra > 0 && lectura > 0 && equivalente > 0) {
                         // Formula: (Lectura × Volumen final × (100 + Humedad) × Factor dilución) / (Peso húmedo × 1000 × Equivalente)
@@ -702,6 +690,38 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // Trigger inicial por si hay valores precargados
+    document.querySelectorAll('#items_ensayo_table input').forEach(function(inp){
+        inp.dispatchEvent(new Event('input'));
+    });
 });
 </script>
+
+<style>
+/* Estilos consistentes con Micronutrientes - Items de Ensayo y Duplicado */
+#items_ensayo_table, #duplicado-table {
+    border-collapse: collapse !important;
+    background: #ffffff !important;
+}
+#items_ensayo_table thead th, #duplicado-table thead th {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
+    vertical-align: middle;
+    text-align: center;
+}
+#items_ensayo_table th, #items_ensayo_table td, #duplicado-table th, #duplicado-table td {
+    border: 1px solid #dee2e6 !important;
+}
+#items_ensayo_table input.form-control, #duplicado-table input.form-control, #duplicado-table select.form-control {
+    background-color: #ffffff;
+    height: 38px;
+    padding: 6px 10px;
+}
+#items_ensayo_table input[readonly], #duplicado-table input[readonly] {
+    background-color: #f8f9fa !important;
+    font-weight: 600;
+}
+</style>
 @endsection 

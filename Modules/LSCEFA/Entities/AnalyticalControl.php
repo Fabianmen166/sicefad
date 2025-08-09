@@ -12,7 +12,12 @@ class AnalyticalControl extends Model
     protected $table = 'analytical_controls';
 
     protected $fillable = [
+        // Claves y enlaces
         'process_id',
+        'analysis_type',
+        'analysis_id',
+
+        // Campos históricos (pueden o no existir según migración previa)
         'blank_identification',
         'blank_lcm',
         'blank_measured_value',
@@ -36,13 +41,17 @@ class AnalyticalControl extends Model
         'dpr_percentage',
         'dpr_acceptable',
         'dpr_observations',
-        'analytical_controls',
         'dpr_duplicate_a',
         'dpr_duplicate_b',
         'dpr_result',
         'dpr_acceptability',
         'curve_measured_value',
         'curve_error_percentage',
+
+        // Contenedor JSON unificado para diferentes bloques de controles
+        'controles_analiticos',
+        'analytical_controls',
+
         'created_at',
         'updated_at'
     ];
@@ -59,12 +68,15 @@ class AnalyticalControl extends Model
         'dpr_replicate1' => 'decimal:2',
         'dpr_replicate2' => 'decimal:2',
         'dpr_percentage' => 'decimal:2',
-        'analytical_controls' => 'array',
         'dpr_duplicate_a' => 'decimal:4',
         'dpr_duplicate_b' => 'decimal:4',
         'dpr_result' => 'decimal:4',
         'curve_measured_value' => 'decimal:4',
-        'curve_error_percentage' => 'decimal:4'
+        'curve_error_percentage' => 'decimal:4',
+
+        // JSON
+        'controles_analiticos' => 'array',
+        'analytical_controls' => 'array',
     ];
 
     public function process()
