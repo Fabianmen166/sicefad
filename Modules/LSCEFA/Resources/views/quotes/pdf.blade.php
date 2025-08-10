@@ -178,10 +178,22 @@
                             $allAccredited = false;
                             break;
                         } elseif ($quoteService->servicePackage) {
-                            foreach ($quoteService->servicePackage->included_services as $service) {
-                                if (!$service->acreditado) {
-                                    $allAccredited = false;
-                                    break 2;
+                            // Verificar si el paquete de servicios está acreditado
+                            if (!$quoteService->servicePackage->accredited) {
+                                $allAccredited = false;
+                                break;
+                            }
+                            // Verificar si todos los servicios incluidos están acreditados
+                            $includedServices = $quoteService->servicePackage->included_services;
+                            if (is_array($includedServices)) {
+                                foreach ($includedServices as $serviceId) {
+                                    if (is_numeric($serviceId)) {
+                                        $service = \Modules\LSCEFA\Models\Service::find($serviceId);
+                                        if ($service && !$service->acreditado) {
+                                            $allAccredited = false;
+                                            break 2;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -341,12 +353,25 @@
             <p>Los servicios incluidos en esta cotización son:
                 @foreach ($quote->quoteServices as $quoteService)
                     @if ($quoteService->service)
-                        {{ $quoteService->service->descripcion }} (Cantidad: {{ $quoteService->cantidad }}, Subtotal: {{ number_format($quoteService->subtotal, 2) }})
+                        {{ $quoteService->service->descripcion }} (Cantidad: {{ $quoteService->quantity }}, Subtotal: {{ number_format($quoteService->subtotal, 2) }})
                     @elseif ($quoteService->servicePackage)
-                        {{ $quoteService->servicePackage->nombre }} (Cantidad: {{ $quoteService->cantidad }}, Subtotal: {{ number_format($quoteService->subtotal, 2) }}), que incluye:
-                        @foreach ($quoteService->servicePackage->included_services as $service)
-                            {{ $service->descripcion }}@if (!$loop->last), @endif
-                        @endforeach
+                        {{ $quoteService->servicePackage->name }} (Cantidad: {{ $quoteService->quantity }}, Subtotal: {{ number_format($quoteService->subtotal, 2) }}), que incluye:
+                        @php
+                            $includedServices = $quoteService->servicePackage->included_services;
+                            if (is_string($includedServices)) {
+                                $includedServices = json_decode($includedServices, true);
+                            }
+                        @endphp
+                        @if (is_array($includedServices))
+                            @foreach ($includedServices as $serviceId)
+                                @if (is_numeric($serviceId))
+                                    @php
+                                        $service = \Modules\LSCEFA\Models\Service::find($serviceId);
+                                    @endphp
+                                    {{ $service ? $service->descripcion : 'Servicio no disponible' }}@if (!$loop->last), @endif
+                                @endif
+                            @endforeach
+                        @endif
                     @endif
                     @if (!$loop->last), @endif
                 @endforeach.
