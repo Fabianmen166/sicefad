@@ -98,7 +98,7 @@ class LSCEFAController extends Controller
             return redirect()->route('cefa.lscefa.index')->with('error', 'No tienes permiso de personal técnico.');
         }
 
-        return view('lscefa::technical.dashboard', compact('user'));
+        return view('lscefa::technical.panel', compact('user'));
     }
 
     public function samples()
