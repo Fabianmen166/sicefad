@@ -155,7 +155,7 @@ class BoronAnalysisController extends Controller
             $analysisData = [
                 'process_id' => (string)$processId,
                 'service_id' => $serviceId,
-                'consecutive_no' => $request->consecutivo_no,
+                'consecutivo_no' => $request->consecutivo_no,
                 'applied_methodology' => $request->metodologia_aplicada,
                 'method_interval' => $request->intervalo_metodo,
                 'analysis_date' => $request->fecha_analisis,
@@ -242,7 +242,7 @@ class BoronAnalysisController extends Controller
                         ->update([
                             'status' => 'completed',
                             'result' => 'Análisis de boro completado',
-                            'observations' => 'Análisis guardado exitosamente con ' . count($boronAnalyses) . ' muestras'
+                            'observations' => 'Análisis guardado exitosamente con ' . count($testItems) . ' muestras'
                         ]);
 
                     Log::info('Actualización del estado del servicio', [

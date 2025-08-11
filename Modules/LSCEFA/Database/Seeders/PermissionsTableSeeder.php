@@ -700,6 +700,95 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
+
+        // Permisos para Análisis de Textura (Personal Técnico)
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.index'], [
+            'name' => 'Ver listado de Análisis de Textura (Technical)',
+            'description' => 'Puede ver el listado de análisis de textura pendientes (technical)',
+            'description_english' => 'Can view pending texture analyses list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.process'], [
+            'name' => 'Procesar Análisis de Textura (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento de análisis de textura (technical)',
+            'description_english' => 'Can access texture analysis processing form (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.store'], [
+            'name' => 'Guardar Análisis de Textura (Technical)',
+            'description' => 'Puede guardar análisis de textura (technical)',
+            'description_english' => 'Can save texture analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.edit'], [
+            'name' => 'Editar Análisis de Textura (Technical)',
+            'description' => 'Puede acceder al formulario de edición de análisis de textura (technical)',
+            'description_english' => 'Can access texture analysis edit form (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.update'], [
+            'name' => 'Actualizar Análisis de Textura (Technical)',
+            'description' => 'Puede actualizar análisis de textura (technical)',
+            'description_english' => 'Can update texture analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.destroy'], [
+            'name' => 'Eliminar Análisis de Textura (Technical)',
+            'description' => 'Puede eliminar análisis de textura (technical)',
+            'description_english' => 'Can delete texture analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.show'], [
+            'name' => 'Ver Análisis de Textura (Technical)',
+            'description' => 'Puede ver detalles de análisis de textura (technical)',
+            'description_english' => 'Can view texture analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.report'], [
+            'name' => 'Generar Reporte de Análisis de Textura (Technical)',
+            'description' => 'Puede generar reportes de análisis de textura (technical)',
+            'description_english' => 'Can generate texture analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.batch'], [
+            'name' => 'Procesamiento por Lotes de Análisis de Textura (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de textura (technical)',
+            'description_english' => 'Can access the batch processing form for texture analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.batch.post'], [
+            'name' => 'Procesar Lote de Análisis de Textura (Technical)',
+            'description' => 'Puede procesar lotes de análisis de textura (technical)',
+            'description_english' => 'Can process batches of texture analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.batch_store'], [
+            'name' => 'Guardar Procesamiento por Lotes de Análisis de Textura (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de textura (technical)',
+            'description_english' => 'Can save batch processing of texture analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
         
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);

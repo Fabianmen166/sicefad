@@ -111,87 +111,7 @@
                                 </div>
                             </div>
 
-                            <!-- Procesos Seleccionados -->
-                            <div class="card mt-4">
-                                <div class="card-header">
-                                    <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
-                                </div>
-                                <div class="card-body">
-                                    @foreach($pendingProcesses as $process)
-                                    <div class="process-item mb-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h5>Proceso: {{ $process->process_id }}</h5>
-                                                <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <p><strong>Cliente:</strong> {{ $process->customer->nombre ?? 'N/A' }}</p>
-                                                        <p><strong>Servicio:</strong> 
-                                                            @foreach($process->serviceProcessDetails as $detail)
-                                                                @if(str_contains(strtolower($detail->service->descripcion), 'intercambio cationico') || 
-                                                                    str_contains(strtolower($detail->service->descripcion), 'cationic exchange'))
-                                                                    {{ $detail->service->descripcion }}
-                                                                @endif
-                                                            @endforeach
-                                                        </p>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <p><strong>Estado:</strong> {{ $process->status }}</p>
-                                                        <p><strong>Fecha:</strong> {{ $process->created_at->format('d/m/Y') }}</p>
-                                                    </div>
-                                                </div>
 
-                                                <!-- Items para este proceso -->
-                                                <div class="items-container">
-                                                    <h6>Items de Ensayo</h6>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-bordered table-hover">
-                                                            <thead class="thead-light">
-                                                                <tr>
-                                                                    <th class="text-center">#</th>
-                                                                    <th class="text-center">Código interno</th>
-                                                                    <th class="text-center">Peso muestra (g)</th>
-                                                                    <th class="text-center">Vol NaOH muestra (mL)</th>
-                                                                    <th class="text-center">Vol NaOH blanco (mL)</th>
-                                                                    <th class="text-center">Normalidad NaOH</th>
-                                                                    <th class="text-center">Humedad (%)</th>
-                                                                    <th class="text-center">CIC cmol (+)/kg</th>
-                                                                    <th class="text-center">Observaciones</th>
-                                                                    <th class="text-center">Acciones</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr class="fila-resultado">
-                                                                    <td class="numero-fila text-center">1</td>
-                                                                    <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]"></td>
-                                                                    <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]"></td>
-                                                                    <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_muestra]"></td>
-                                                                    <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_blanco]"></td>
-                                                                    <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[{{ $process->process_id }}][0][normalidad_naoh]"></td>
-                                                                    <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[{{ $process->process_id }}][0][humedad_porcentaje]"></td>
-                                                                    <td><input type="text" class="form-control cic-resultado" name="items_ensayo[{{ $process->process_id }}][0][cic_resultado]" readonly></td>
-                                                                    <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][observaciones]"></td>
-                                                                    <td class="text-center">
-                                                                        <button type="button" class="btn btn-success btn-sm" onclick="addItemToProcess('{{ $process->process_id }}')">
-                                                                            <i class="fas fa-plus"></i>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                                            <i class="fas fa-minus"></i>
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-                            </div>
 
                             <!-- Observaciones -->
                             <div class="row">
@@ -203,11 +123,116 @@
                                 </div>
                             </div>
 
-                            <!-- Controles de Calidad -->
-                            <h4 class="mt-4">CONTROLES DE CALIDAD</h4>
-                            
-                            <!-- 1. Blanco método -->
-                            <h5 class="mt-3">1. Blanco método</h5>
+                            <!-- Horizontal Navigation Bar -->
+                            <div class="mt-4 mb-3">
+                                <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="items-content" aria-selected="true">
+                                            <i class="fas fa-flask"></i> Items de Ensayo
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality-content" type="button" role="tab" aria-controls="quality-content" aria-selected="false">
+                                            <i class="fas fa-check-circle"></i> Controles de Calidad
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="analysisTabContent">
+                                <!-- Items de Ensayo Tab -->
+                                <div class="tab-pane fade show active" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+                                    <!-- Procesos a Procesar -->
+                                    <div class="card mt-4">
+                                        <div class="card-header">
+                                            <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            @foreach($pendingProcesses as $process)
+                                            <div class="process-item mb-4">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <h5>Proceso: {{ $process->process_id }}</h5>
+                                                        <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <p><strong>Cliente:</strong> {{ $process->customer->nombre ?? 'N/A' }}</p>
+                                                                <p><strong>Servicio:</strong> 
+                                                                    @foreach($process->serviceProcessDetails as $detail)
+                                                                        @if(str_contains(strtolower($detail->service->descripcion), 'intercambio cationico') || 
+                                                                            str_contains(strtolower($detail->service->descripcion), 'cationic exchange'))
+                                                                            {{ $detail->service->descripcion }}
+                                                                        @endif
+                                                                    @endforeach
+                                                                </p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <p><strong>Estado:</strong> {{ $process->status }}</p>
+                                                                <p><strong>Fecha:</strong> {{ $process->created_at->format('d/m/Y') }}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Items para este proceso -->
+                                                        <div class="items-container">
+                                                            <h6>Items de Ensayo</h6>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-bordered table-hover">
+                                                                    <thead class="thead-light">
+                                                                        <tr>
+                                                                            <th class="text-center">#</th>
+                                                                            <th class="text-center">Código interno</th>
+                                                                            <th class="text-center">Peso muestra (g)</th>
+                                                                            <th class="text-center">Vol NaOH muestra (mL)</th>
+                                                                            <th class="text-center">Vol NaOH blanco (mL)</th>
+                                                                            <th class="text-center">Normalidad NaOH</th>
+                                                                            <th class="text-center">Humedad (%)</th>
+                                                                            <th class="text-center">CIC cmol (+)/kg</th>
+                                                                            <th class="text-center">Observaciones</th>
+                                                                            <th class="text-center">Acciones</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <tr class="fila-resultado">
+                                                                            <td class="numero-fila text-center">1</td>
+                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]"></td>
+                                                                            <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_muestra]"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_blanco]"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[{{ $process->process_id }}][0][normalidad_naoh]"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[{{ $process->process_id }}][0][humedad_porcentaje]"></td>
+                                                                            <td><input type="text" class="form-control cic-resultado" name="items_ensayo[{{ $process->process_id }}][0][cic_resultado]" readonly></td>
+                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][observaciones]"></td>
+                                                                            <td class="text-center">
+                                                                                <button type="button" class="btn btn-success btn-sm" onclick="addItemToProcess('{{ $process->process_id }}')">
+                                                                                    <i class="fas fa-plus"></i>
+                                                                                </button>
+                                                                                <button type="button" class="btn btn-danger btn-sm remove-row">
+                                                                                    <i class="fas fa-minus"></i>
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Controles de Calidad Tab -->
+                                <div class="tab-pane fade" id="quality-content" role="tabpanel" aria-labelledby="quality-tab">
+                                    <!-- Controles de Calidad -->
+                                    <h4 class="mt-4">CONTROLES DE CALIDAD</h4>
+                                    
+                                    <!-- 1. Blanco método -->
+                                    <h5 class="mt-3">1. Blanco método</h5>
                             <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <thead>
@@ -361,6 +386,11 @@
                                 </table>
                             </div>
 
+                                </div>
+                                <!-- End of Controles de Calidad Tab -->
+                            </div>
+                            <!-- End of Tab Content -->
+
                             <!-- Botones -->
                             <div class="row mt-4">
                                 <div class="col-md-12">
@@ -376,6 +406,49 @@
     </section>
 </div>
 @endsection
+
+@push('styles')
+<style>
+#analysisTabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+#analysisTabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    margin-right: 5px;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+#analysisTabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+#analysisTabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#analysisTabs .nav-link i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    #analysisTabs .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -601,6 +674,22 @@ $(document).ready(function() {
     $('input[name="dpr_replica1"], input[name="dpr_replica2"]').on('input', function() {
         calcularRPD();
         setTimeout(evaluarCriterios, 100);
+    });
+
+    // Tab switching functionality
+    $('#analysisTabs .nav-link').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs and content
+        $('#analysisTabs .nav-link').removeClass('active');
+        $('.tab-pane').removeClass('show active');
+        
+        // Add active class to clicked tab
+        $(this).addClass('active');
+        
+        // Show corresponding content
+        var target = $(this).data('bs-target');
+        $(target).addClass('show active');
     });
 });
 </script>

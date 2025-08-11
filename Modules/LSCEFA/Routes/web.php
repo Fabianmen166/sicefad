@@ -31,6 +31,7 @@ use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
 use Modules\LSCEFA\Http\Controllers\BoronAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
 use Modules\LSCEFA\Http\Controllers\MicronutrientsAnalysisController;
+use Modules\LSCEFA\Http\Controllers\TextureAnalysisController;
 
 
 Route::middleware(['lang'])->group(function(){
@@ -285,6 +286,22 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'update'])->name('lscefa.technical.analyses.micronutrients.update');
             Route::delete('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.micronutrients.destroy');
             Route::get('/technical/analyses/micronutrients/{id}/report', [MicronutrientsAnalysisController::class, 'report'])->name('lscefa.technical.analyses.micronutrients.report');
+
+            // Rutas para Análisis de Textura
+            Route::get('/technical/analyses/texture', [TextureAnalysisController::class, 'index'])->name('lscefa.technical.analyses.texture.index');
+            Route::get('/technical/analyses/texture/process/{processId}/{serviceId}', [TextureAnalysisController::class, 'process'])->name('lscefa.technical.analyses.texture.process');
+            Route::post('/technical/analyses/texture/store', [TextureAnalysisController::class, 'storeTextureAnalysis'])->name('lscefa.technical.analyses.texture.store');
+            Route::get('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.texture.batch');
+            Route::post('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.texture.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch.post');
+            Route::post('/technical/analyses/texture/batch-store', [TextureAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.texture.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch_store');
+            Route::get('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'show'])->name('lscefa.technical.analyses.texture.show');
+            Route::get('/technical/analyses/texture/{id}/edit', [TextureAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.texture.edit');
+            Route::put('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'update'])->name('lscefa.technical.analyses.texture.update');
+            Route::delete('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.texture.destroy');
+            Route::get('/technical/analyses/texture/{id}/report', [TextureAnalysisController::class, 'report'])->name('lscefa.technical.analyses.texture.report');
 
             // Rutas para Análisis de Bases Cambiables
             Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');

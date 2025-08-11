@@ -65,384 +65,407 @@
                         </table>
                     </div>
 
-                            <h4 class="mb-3">
-                                <i class="fas fa-list-alt mr-2" style="color: #28a745;"></i>Ítems de Ensayo
-                            </h4>
-                            <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
-                                <table class="table table-bordered table-hover" id="items_ensayo_table" style="min-width: 1800px;">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th rowspan="2" class="text-center">#</th>
-                                            <th rowspan="2" class="text-center">Código interno</th>
-                                            <th rowspan="2" class="text-center">Peso muestra (g)</th>
-                                            <th rowspan="2" class="text-center">Humedad (%)</th>
-                                            <th rowspan="2" class="text-center">Volumen final (mL)</th>
-                                            <th colspan="4" class="text-center">Na</th>
-                                            <th colspan="4" class="text-center">K</th>
-                                            <th colspan="4" class="text-center">Ca</th>
-                                            <th colspan="4" class="text-center">Mg</th>
-                                            <th rowspan="2" class="text-center">Observaciones</th>
-                                            <th rowspan="2" class="text-center">Acciones</th>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-center">Lectura (mg/L)</th>
-                                            <th class="text-center">Blanco</th>
-                                            <th class="text-center">Factor dilución</th>
-                                            <th class="text-center">Resultados cmol(+)/kg</th>
-                                            <th class="text-center">Lectura (mg/L)</th>
-                                            <th class="text-center">Blanco</th>
-                                            <th class="text-center">Factor dilución</th>
-                                            <th class="text-center">Resultados cmol(+)/kg</th>
-                                            <th class="text-center">Lectura (mg/L)</th>
-                                            <th class="text-center">Blanco</th>
-                                            <th class="text-center">Factor dilución</th>
-                                            <th class="text-center">Resultados cmol(+)/kg</th>
-                                            <th class="text-center">Lectura (mg/L)</th>
-                                            <th class="text-center">Blanco</th>
-                                            <th class="text-center">Factor dilución</th>
-                                            <th class="text-center">Resultados cmol(+)/kg</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="fila-muestra">
-                                            <td class="numero-fila text-center">1</td>
-                                            <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items[0][codigo_interno]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][peso_muestra]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items[0][humedad]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items[0][volumen_final]"></td>
-                                            <!-- Na -->
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_lectura]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_factor]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][na_resultado]" readonly></td>
-                                            <!-- K -->
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_lectura]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_factor]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][k_resultado]" readonly></td>
-                                            <!-- Ca -->
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_lectura]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_factor]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][ca_resultado]" readonly></td>
-                                            <!-- Mg -->
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_lectura]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_factor]"></td>
-                                            <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][mg_resultado]" readonly></td>
-                                            <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items[0][observaciones]"></td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-sm remove-row">
-                                                    <i class="fas fa-minus"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <button type="button" class="btn btn-success btn-sm mt-2" id="add_item_row">
-                                    <i class="fas fa-plus mr-1" style="color: #28a745;"></i>Agregar muestra
-                                </button>
+                <!-- Barra de Navegación Horizontal -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link active" id="items-tab" data-toggle="tab" href="#items-content" role="tab" aria-controls="items-content" aria-selected="true">
+                                            <i class="fas fa-list-alt mr-2"></i>Ítems de Ensayo
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link" id="controls-tab" data-toggle="tab" href="#controls-content" role="tab" aria-controls="controls-content" aria-selected="false">
+                                            <i class="fas fa-flask mr-2"></i>Controles Analíticos
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
-
-                            <hr class="my-4">
-                            <h4 class="mb-3">
-                                <i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos
-                            </h4>
-                            
-
-
-                            <!-- 1. Blanco del método -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-vial mr-2"></i>Blanco del método</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th class="text-center">Blanco del Método</th>
-                                                    <th class="text-center">Resultado mg/kg</th>
-                                                    <th class="text-center">LCM</th>
-                                                    <th class="text-center">Aceptable/no aceptable</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="blanco_metodo[0][identificacion]" value="Blanco Na"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[0][resultado]"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[0][lcm]"></td>
-                                                    <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[0][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="blanco_metodo[1][identificacion]" value="Blanco K"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[1][resultado]"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[1][lcm]"></td>
-                                                    <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[1][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="blanco_metodo[2][identificacion]" value="Blanco Ca"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[2][resultado]"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[2][lcm]"></td>
-                                                    <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[2][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="blanco_metodo[3][identificacion]" value="Blanco Mg"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[3][resultado]"></td>
-                                                    <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[3][lcm]"></td>
-                                                    <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[3][aceptabilidad]" readonly></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 2. Duplicado muestra -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-copy mr-2"></i>Duplicado muestra</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th class="text-center">Identificación muestra</th>
-                                                    <th class="text-center">Replica 1</th>
-                                                    <th class="text-center">Replica 2</th>
-                                                    <th class="text-center">% DPR</th>
-                                                    <th class="text-center">Elemento</th>
-                                                    <th class="text-center">% DPR</th>
-                                                    <th class="text-center">Aceptable/no aceptable</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[0][identificacion_muestra]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_1]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_2]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][dpr_1]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[0][elemento]" value="Na"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[0][dpr_2]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[0][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[1][identificacion_muestra]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_1]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_2]"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_1]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[1][elemento]" value="K"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_2]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[1][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[2][identificacion_muestra]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_1]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_2]"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_1]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[2][elemento]" value="Ca"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_2]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[2][aceptabilidad]" readonly></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[3][identificacion_muestra]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_1]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_2]"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_1]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[3][elemento]" value="Mg"></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_2]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="duplicado_muestra[3][aceptabilidad]" readonly></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 3. Controles de calidad (Exactitud) -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-check-circle mr-2"></i>Controles de calidad (Exactitud)</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th class="text-center">Identificación</th>
-                                                    <th class="text-center">Valor esperado mg/kg</th>
-                                                    <th class="text-center">Valor leído mg/kg</th>
-                                                    <th class="text-center">% Recuperación</th>
-                                                    <th class="text-center">Aceptable/no aceptable</th>
-                                                    <th class="text-center">OBSERVACIONES</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[0][identificacion]" value="Material de Referencia o MRC Na"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[0][valor_esperado]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[0][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[0][porcentaje_recuperacion]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[0][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[0][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[1][identificacion]" value="Material de Referencia o MRC K"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[1][valor_esperado]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[1][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[1][porcentaje_recuperacion]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[1][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[1][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[2][identificacion]" value="Material de Referencia o MRC Ca"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[2][valor_esperado]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[2][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[2][porcentaje_recuperacion]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[2][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[2][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[3][identificacion]" value="Material de Referencia o MRC Mg"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[3][valor_esperado]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[3][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="controles_calidad[3][porcentaje_recuperacion]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[3][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="controles_calidad[3][observaciones]"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-                            <!-- 4. Control de estándar (Exactitud) -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-star mr-2"></i>Control de estándar (Exactitud)</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th class="text-center">Estandar</th>
-                                                    <th class="text-center">Concentración mg/L</th>
-                                                    <th class="text-center">Valor Leído mg/L</th>
-                                                    <th class="text-center">% Error</th>
-                                                    <th class="text-center">Aceptable / No Aceptable</th>
-                                                    <th class="text-center">Observaciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="control_estandar[0][estandar]" value="Na"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[0][concentracion]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[0][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[0][porcentaje_error]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[0][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[0][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="control_estandar[1][estandar]" value="K"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[1][concentracion]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[1][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[1][porcentaje_error]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[1][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[1][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="control_estandar[2][estandar]" value="Ca"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[2][concentracion]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[2][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[2][porcentaje_error]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[2][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[2][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="control_estandar[3][estandar]" value="Mg"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[3][concentracion]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[3][valor_leido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="control_estandar[3][porcentaje_error]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[3][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="control_estandar[3][observaciones]"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 5. Curva de calibración -->
-                            <div class="card mb-3">
-                                <div class="card-header">
-                                    <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>Curva de calibración</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th class="text-center">Elemento</th>
-                                                    <th class="text-center">R² Obtenido</th>
-                                                    <th class="text-center">R² Esperado</th>
-                                                    <th class="text-center">Aceptable / No Aceptable</th>
-                                                    <th class="text-center">Observaciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[0][elemento]" value="Na"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[0][r2_obtenido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[0][r2_esperado]" value="0.995" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[0][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[0][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[1][elemento]" value="K"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[1][r2_obtenido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[1][r2_esperado]" value="0.995" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[1][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[1][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[2][elemento]" value="Ca"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[2][r2_obtenido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[2][r2_esperado]" value="0.995" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[2][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[2][observaciones]"></td>
-                                                </tr>
-                                                <tr>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[3][elemento]" value="Mg"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[3][r2_obtenido]"></td>
-                                                    <td><input type="number" step="any" class="form-control" name="curva_calibracion[3][r2_esperado]" value="0.995" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[3][aceptabilidad]" readonly></td>
-                                                    <td><input type="text" class="form-control" name="curva_calibracion[3][observaciones]"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-1" style="color: #28a745;"></i>Guardar Análisis
-                        </button>
-                        <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times mr-1" style="color: #28a745;"></i>Cancelar
-                        </a>
+                </div>
+
+                <!-- Contenido de las Pestañas -->
+                <div class="tab-content" id="analysisTabsContent">
+                    <!-- Pestaña Ítems de Ensayo -->
+                    <div class="tab-pane fade show active" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+                        <h4 class="mb-3">
+                            <i class="fas fa-list-alt mr-2" style="color: #28a745;"></i>Ítems de Ensayo
+                        </h4>
+                        <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
+                            <table class="table table-bordered table-hover" id="items_ensayo_table" style="min-width: 1800px;">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th rowspan="2" class="text-center">#</th>
+                                        <th rowspan="2" class="text-center">Código interno</th>
+                                        <th rowspan="2" class="text-center">Peso muestra (g)</th>
+                                        <th rowspan="2" class="text-center">Humedad (%)</th>
+                                        <th rowspan="2" class="text-center">Volumen final (mL)</th>
+                                        <th colspan="4" class="text-center">Na</th>
+                                        <th colspan="4" class="text-center">K</th>
+                                        <th colspan="4" class="text-center">Ca</th>
+                                        <th colspan="4" class="text-center">Mg</th>
+                                        <th rowspan="2" class="text-center">Observaciones</th>
+                                        <th rowspan="2" class="text-center">Acciones</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">Lectura (mg/L)</th>
+                                        <th class="text-center">Blanco</th>
+                                        <th class="text-center">Factor dilución</th>
+                                        <th class="text-center">Resultados cmol(+)/kg</th>
+                                        <th class="text-center">Lectura (mg/L)</th>
+                                        <th class="text-center">Blanco</th>
+                                        <th class="text-center">Factor dilución</th>
+                                        <th class="text-center">Resultados cmol(+)/kg</th>
+                                        <th class="text-center">Lectura (mg/L)</th>
+                                        <th class="text-center">Blanco</th>
+                                        <th class="text-center">Factor dilución</th>
+                                        <th class="text-center">Resultados cmol(+)/kg</th>
+                                        <th class="text-center">Lectura (mg/L)</th>
+                                        <th class="text-center">Blanco</th>
+                                        <th class="text-center">Factor dilución</th>
+                                        <th class="text-center">Resultados cmol(+)/kg</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="fila-muestra">
+                                        <td class="numero-fila text-center">1</td>
+                                        <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items[0][codigo_interno]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][peso_muestra]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items[0][humedad]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items[0][volumen_final]"></td>
+                                        <!-- Na -->
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_lectura]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_blanco]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][na_factor]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][na_resultado]" readonly></td>
+                                        <!-- K -->
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_lectura]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_blanco]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][k_factor]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][k_resultado]" readonly></td>
+                                        <!-- Ca -->
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_lectura]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_blanco]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][ca_factor]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][ca_resultado]" readonly></td>
+                                        <!-- Mg -->
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_lectura]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_blanco]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items[0][mg_factor]"></td>
+                                        <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items[0][mg_resultado]" readonly></td>
+                                        <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items[0][observaciones]"></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm remove-row">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-success btn-sm mt-2" id="add_item_row">
+                                <i class="fas fa-plus mr-1" style="color: #28a745;"></i>Agregar muestra
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña Controles Analíticos -->
+                    <div class="tab-pane fade" id="controls-content" role="tabpanel" aria-labelledby="controls-tab">
+                        <h4 class="mb-3">
+                            <i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos
+                        </h4>
+                        
+                        <!-- 1. Blanco del método -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-vial mr-2"></i>Blanco del método</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">Blanco del Método</th>
+                                                <th class="text-center">Resultado mg/kg</th>
+                                                <th class="text-center">LCM</th>
+                                                <th class="text-center">Aceptable/no aceptable</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="blanco_metodo[0][identificacion]" value="Blanco Na"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[0][resultado]"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[0][lcm]"></td>
+                                                <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[0][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="blanco_metodo[1][identificacion]" value="Blanco K"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[1][resultado]"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[1][lcm]"></td>
+                                                <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[1][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="blanco_metodo[2][identificacion]" value="Blanco Ca"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[2][resultado]"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[2][lcm]"></td>
+                                                <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[2][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="blanco_metodo[3][identificacion]" value="Blanco Mg"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-resultado" name="blanco_metodo[3][resultado]"></td>
+                                                <td><input type="number" step="any" class="form-control blanco-lcm" name="blanco_metodo[3][lcm]"></td>
+                                                <td><input type="text" class="form-control blanco-aceptabilidad" name="blanco_metodo[3][aceptabilidad]" readonly></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Duplicado muestra -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-copy mr-2"></i>Duplicado muestra</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">Identificación muestra</th>
+                                                <th class="text-center">Replica 1</th>
+                                                <th class="text-center">Replica 2</th>
+                                                <th class="text-center">% DPR</th>
+                                                <th class="text-center">Elemento</th>
+                                                <th class="text-center">% DPR</th>
+                                                <th class="text-center">Aceptable/no aceptable</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[0][identificacion_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_1]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][replica_2]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[0][dpr_1]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[0][elemento]" value="Na"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[0][dpr_2]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[0][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[1][identificacion_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_1]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[1][replica_2]"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_1]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[1][elemento]" value="K"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[1][dpr_2]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[1][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[2][identificacion_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_1]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[2][replica_2]"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_1]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[2][elemento]" value="Ca"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[2][dpr_2]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[2][aceptabilidad]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[3][identificacion_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_1]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="duplicado_muestra[3][replica_2]"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_1]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[3][elemento]" value="Mg"></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[3][dpr_2]" readonly></td>
+                                                <td><input type="text" class="form-control" name="duplicado_muestra[3][aceptabilidad]" readonly></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Controles de calidad (Exactitud) -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-check-circle mr-2"></i>Controles de calidad (Exactitud)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">Identificación</th>
+                                                <th class="text-center">Valor esperado mg/kg</th>
+                                                <th class="text-center">Valor leído mg/kg</th>
+                                                <th class="text-center">% Recuperación</th>
+                                                <th class="text-center">Aceptable/no aceptable</th>
+                                                <th class="text-center">OBSERVACIONES</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_calidad[0][identificacion]" value="Material de Referencia o MRC Na"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[0][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[0][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[0][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[0][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[0][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_calidad[1][identificacion]" value="Material de Referencia o MRC K"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[1][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[1][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[1][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[1][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[1][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_calidad[2][identificacion]" value="Material de Referencia o MRC Ca"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[2][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[2][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[2][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[2][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[2][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_calidad[3][identificacion]" value="Material de Referencia o MRC Mg"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[3][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[3][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_calidad[3][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[3][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_calidad[3][observaciones]"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- 4. Control de estándar (Exactitud) -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-star mr-2"></i>Control de estándar (Exactitud)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">Estandar</th>
+                                                <th class="text-center">Concentración mg/L</th>
+                                                <th class="text-center">Valor Leído mg/L</th>
+                                                <th class="text-center">% Error</th>
+                                                <th class="text-center">Aceptable / No Aceptable</th>
+                                                <th class="text-center">Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="control_estandar[0][estandar]" value="Na"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[0][concentracion]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[0][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[0][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[0][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[0][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="control_estandar[1][estandar]" value="K"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[1][concentracion]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[1][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[1][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[1][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[1][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="control_estandar[2][estandar]" value="Ca"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[2][concentracion]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[2][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[2][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[2][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[2][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="control_estandar[3][estandar]" value="Mg"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[3][concentracion]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[3][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="control_estandar[3][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[3][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="control_estandar[3][observaciones]"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Curva de calibración -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i>Curva de calibración</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">Elemento</th>
+                                                <th class="text-center">R² Obtenido</th>
+                                                <th class="text-center">R² Esperado</th>
+                                                <th class="text-center">Aceptable / No Aceptable</th>
+                                                <th class="text-center">Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[0][elemento]" value="Na"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[0][r2_obtenido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[0][r2_esperado]" value="0.995" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[0][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[0][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[1][elemento]" value="K"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[1][r2_obtenido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[1][r2_esperado]" value="0.995" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[1][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[1][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[2][elemento]" value="Ca"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[2][r2_obtenido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[2][r2_esperado]" value="0.995" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[2][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[2][observaciones]"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[3][elemento]" value="Mg"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[3][r2_obtenido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="curva_calibracion[3][r2_esperado]" value="0.995" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[3][aceptabilidad]" readonly></td>
+                                                <td><input type="text" class="form-control" name="curva_calibracion[3][observaciones]"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </form>
-            <div style="height: 72px;"></div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1" style="color: #28a745;"></i>Guardar Análisis
+                    </button>
+                    <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times mr-1" style="color: #28a745;"></i>Cancelar
+                    </a>
+                </div>
+            </div>
+        </form>
+        <div style="height: 72px;"></div>
 @endsection
 
 <style>
@@ -469,6 +492,127 @@
     #items_ensayo_table input[readonly] {
         background-color: #f8f9fa !important;
         font-weight: 600;
+    }
+    
+    /* Estilos para la barra de navegación horizontal */
+    #analysisTabs {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    #analysisTabs .nav-link {
+        border: none;
+        border-radius: 0;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+    }
+    
+    #analysisTabs .nav-link:hover {
+        border-color: transparent;
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    
+    #analysisTabs .nav-link.active {
+        color: #007bff;
+        background-color: #fff;
+        border-bottom: 3px solid #007bff;
+        font-weight: 600;
+    }
+    
+    #analysisTabs .nav-link i {
+        font-size: 1.1rem;
+    }
+    
+    /* Estilos para el contenido de las pestañas */
+    .tab-content {
+        padding-top: 1rem;
+    }
+    
+    .tab-pane {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Estilos para las tarjetas de resumen */
+    .card.bg-light {
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .card.bg-light:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    
+    .card.bg-light .card-header {
+        background-color: #e9ecef;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .card.bg-light .card-title {
+        color: #6c757d;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Estilos para badges */
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+    }
+    
+    .badge-success {
+        background-color: #28a745;
+        color: #fff;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .badge-primary {
+        background-color: #007bff;
+        color: #fff;
+    }
+    
+    /* Estilos para botones */
+    .btn-outline-primary {
+        color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        #analysisTabs .nav-link {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        #analysisTabs .nav-link i {
+            font-size: 1rem;
+            margin-right: 0.25rem;
+        }
+        
+        .card.bg-light {
+            margin-bottom: 1rem;
+        }
     }
 </style>
 
@@ -1014,6 +1158,82 @@
                     const mgField = row.querySelector(`input[name="items[${index}][mg_resultado]"]`);
                     if (mgField) mgField.value = mgResultado.toFixed(4);
                 }
+            });
+        });
+
+        // CÁLCULOS PARA CONTROL DE ESTÁNDAR (EXACTITUD)
+        document.addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('control_estandar') && (e.target.name.includes('concentracion') || e.target.name.includes('valor_leido'))) {
+                const row = e.target.closest('tr');
+                const concentracion = parseFloat(row.querySelector('input[name*="concentracion"]').value) || 0;
+                const valorLeido = parseFloat(row.querySelector('input[name*="valor_leido"]').value) || 0;
+                const errorInput = row.querySelector('input[name*="porcentaje_error"]');
+                const aceptabilidadInput = row.querySelector('input[name*="aceptabilidad"]');
+                
+                if (concentracion > 0) {
+                    // Fórmula: % Error = |(Valor Leído - Concentración) / Concentración| × 100
+                    const error = Math.abs((valorLeido - concentracion) / concentracion) * 100;
+                    errorInput.value = error.toFixed(2);
+                    
+                    // Criterio: ≤ 10% es Aceptable
+                    if (error <= 10) {
+                        aceptabilidadInput.value = 'Aceptable';
+                    } else {
+                        aceptabilidadInput.value = 'No aceptable';
+                    }
+                } else {
+                    errorInput.value = '';
+                    aceptabilidadInput.value = '';
+                }
+            }
+        });
+
+        // CÁLCULOS PARA CURVA DE CALIBRACIÓN
+        document.addEventListener('input', function(e) {
+            if (e.target.name && e.target.name.includes('curva_calibracion') && e.target.name.includes('r2_obtenido')) {
+                const row = e.target.closest('tr');
+                const r2Obtenido = parseFloat(e.target.value) || 0;
+                const r2Esperado = parseFloat(row.querySelector('input[name*="r2_esperado"]').value) || 0.995;
+                const aceptabilidadInput = row.querySelector('input[name*="aceptabilidad"]');
+                
+                // Criterio: R² Obtenido ≥ R² Esperado es Aceptable
+                if (r2Obtenido >= r2Esperado) {
+                    aceptabilidadInput.value = 'Aceptable';
+                } else if (r2Obtenido > 0) {
+                    aceptabilidadInput.value = 'No aceptable';
+                } else {
+                    aceptabilidadInput.value = '';
+                }
+            }
+        });
+
+        // EJECUTAR CÁLCULOS INICIALES AL CARGAR LA PÁGINA
+        document.addEventListener('DOMContentLoaded', function() {
+            // Calcular control de estándar inicial
+            document.querySelectorAll('input[name*="control_estandar"][name*="concentracion"], input[name*="control_estandar"][name*="valor_leido"]').forEach(function(input) {
+                input.dispatchEvent(new Event('input'));
+            });
+            
+            // Calcular curva de calibración inicial
+            document.querySelectorAll('input[name*="curva_calibracion"][name*="r2_obtenido"]').forEach(function(input) {
+                input.dispatchEvent(new Event('input'));
+            });
+        });
+        
+        // Funcionalidad para las pestañas de navegación
+        $(document).ready(function() {
+            // Navegación entre pestañas
+            $('#analysisTabs .nav-link').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).attr('href');
+                
+                // Remove active class from all tabs and content
+                $('#analysisTabs .nav-link').removeClass('active');
+                $('#analysisTabsContent .tab-pane').removeClass('show active');
+                
+                // Add active class to clicked tab
+                $(this).addClass('active');
+                $(target).addClass('show active');
             });
         });
     });

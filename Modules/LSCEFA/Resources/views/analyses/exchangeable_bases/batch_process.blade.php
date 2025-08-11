@@ -43,12 +43,32 @@
                             </div>
                         </div>
 
-                        <!-- Controles Analíticos -->
-                        <div class="card mt-4">
-                            <div class="card-header">
-                                <h4><i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos</h4>
-                            </div>
-                            <div class="card-body">
+                        <!-- Horizontal Navigation Bar -->
+                        <div class="mt-4 mb-3">
+                            <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="controls-tab" data-bs-toggle="tab" data-bs-target="#controls-content" type="button" role="tab" aria-controls="controls-content" aria-selected="true">
+                                        <i class="fas fa-check-circle"></i> Controles Analíticos
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="items-content" aria-selected="false">
+                                        <i class="fas fa-flask"></i> Items de Ensayo
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="analysisTabContent">
+                            <!-- Controles Analíticos Tab -->
+                            <div class="tab-pane fade show active" id="controls-content" role="tabpanel" aria-labelledby="controls-tab">
+                                <!-- Controles Analíticos -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h4><i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos</h4>
+                                    </div>
+                                    <div class="card-body">
 
                                 <!-- 1. Blanco del método -->
                                 <div class="card mb-3">
@@ -328,12 +348,17 @@
                             </div>
                         </div>
 
-                        <!-- Procesos Seleccionados -->
-                        <div class="card mt-4">
-                            <div class="card-header">
-                                <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
                             </div>
-                            <div class="card-body">
+                            <!-- End of Controles Analíticos Tab -->
+
+                            <!-- Items de Ensayo Tab -->
+                            <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+                                <!-- Procesos Seleccionados -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
+                                    </div>
+                                    <div class="card-body">
                                 @foreach($pendingProcesses as $process)
                                 <div class="process-item mb-4">
                                     <div class="card">
@@ -448,6 +473,11 @@
                             </div>
                         </div>
 
+                            </div>
+                            <!-- End of Items de Ensayo Tab -->
+                        </div>
+                        <!-- End of Tab Content -->
+
                         <div class="row mt-4">
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">
@@ -464,6 +494,49 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<style>
+#analysisTabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+#analysisTabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    margin-right: 5px;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+#analysisTabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+#analysisTabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#analysisTabs .nav-link i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    #analysisTabs .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+@endpush
 
 <script>
 let itemIndices = {};
@@ -694,6 +767,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Trigger inicial por si hay valores precargados
     document.querySelectorAll('#items_ensayo_table input').forEach(function(inp){
         inp.dispatchEvent(new Event('input'));
+    });
+
+    // Tab switching functionality
+    $('#analysisTabs .nav-link').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs and content
+        $('#analysisTabs .nav-link').removeClass('active');
+        $('.tab-pane').removeClass('show active');
+        
+        // Add active class to clicked tab
+        $(this).addClass('active');
+        
+        // Show corresponding content
+        var target = $(this).data('bs-target');
+        $(target).addClass('show active');
     });
 });
 </script>

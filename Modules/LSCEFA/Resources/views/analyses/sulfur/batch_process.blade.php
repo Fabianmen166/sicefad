@@ -84,8 +84,29 @@
                     @foreach ($pendingProcesses as $index => $process)
                         <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
                     @endforeach
-                    <!-- Controles Analíticos (primero) -->
-                    <div class="card">
+
+                    <!-- Horizontal Navigation Bar -->
+                    <div class="mt-4 mb-3">
+                        <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="controls-tab" data-bs-toggle="tab" data-bs-target="#controls-content" type="button" role="tab" aria-controls="controls-content" aria-selected="true">
+                                    <i class="fas fa-check-circle"></i> Controles Analíticos
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items-content" type="button" role="tab" aria-controls="items-content" aria-selected="false">
+                                    <i class="fas fa-flask"></i> Items de Ensayo
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="analysisTabContent">
+                        <!-- Controles Analíticos Tab -->
+                        <div class="tab-pane fade show active" id="controls-content" role="tabpanel" aria-labelledby="controls-tab">
+                            <!-- Controles Analíticos (primero) -->
+                            <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Controles Analíticos (aplican a todo el lote)</h3>
                         </div>
@@ -171,12 +192,17 @@
                         </table>
                     </div>
                     
-                    <!-- Ítems de Ensayo -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Ítems de Ensayo</h3>
                         </div>
-                        <div class="card-body">
+                        <!-- End of Controles Analíticos Tab -->
+
+                        <!-- Items de Ensayo Tab -->
+                        <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
+                            <!-- Ítems de Ensayo -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Ítems de Ensayo</h3>
+                                </div>
+                                <div class="card-body">
                             <div class="alert alert-info">
                                 Complete los valores para los análisis seleccionados. El cálculo de Azufre disponible (mg/kg) es automático.
                             </div>
@@ -212,14 +238,60 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            </div>
+                            <!-- End of Items de Ensayo Tab -->
                         </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Guardar Análisis de Azufre (Lote)</button>
+                        <!-- End of Tab Content -->
+
+                        <button type="submit" class="btn btn-primary">Guardar Análisis de Azufre (Lote)</button>
                 </form>
             @endif
         </div>
     </section>
 </div>
+
+@push('styles')
+<style>
+#analysisTabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+#analysisTabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    margin-right: 5px;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+#analysisTabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+#analysisTabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#analysisTabs .nav-link i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    #analysisTabs .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -326,6 +398,22 @@
         }
         $(document).on('input', '#curva_valor_leido', calcularErrorCurva);
         calcularErrorCurva();
+
+        // Tab switching functionality
+        $('#analysisTabs .nav-link').on('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs and content
+            $('#analysisTabs .nav-link').removeClass('active');
+            $('.tab-pane').removeClass('show active');
+            
+            // Add active class to clicked tab
+            $(this).addClass('active');
+            
+            // Show corresponding content
+            var target = $(this).data('bs-target');
+            $(target).addClass('show active');
+        });
     });
 </script>
 @endpush

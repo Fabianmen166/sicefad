@@ -88,93 +88,121 @@
                         </table>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <label for="items_ensayo" class="h5 mb-3">
-                                    <i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos
-                                </label>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="controles_analiticos_table">
-                                        <thead>
-                                            <tr>
-                                                <th class="text-center">Identificación del Control</th>
-                                                <th class="text-center">Valor Esperado</th>
-                                                <th class="text-center">Valor Leído</th>
-                                                <th class="text-center">% de Error</th>
-                                                <th class="text-center">Aceptabilidad</th>
-                                                <th class="text-center">% Recuperación</th>
-                                                <th class="text-center">Aceptabilidad</th>
-                                                <th class="text-center">% DPR</th>
-                                                <th class="text-center">Aceptabilidad</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]" value="30"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
-                                            </tr>
-                                            <tr>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]" value="5"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
-                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
-                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                    <!-- Barra de Navegación Horizontal -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body p-0">
+                                    <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link active" id="controls-tab" data-toggle="tab" href="#controls-content" role="tab" aria-controls="controls-content" aria-selected="true">
+                                                <i class="fas fa-flask mr-2"></i>Controles Analíticos
+                                            </a>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="items-tab" data-toggle="tab" href="#items-content" role="tab" aria-controls="items-content" aria-selected="false">
+                                                <i class="fas fa-list-alt mr-2"></i>Ítems de Ensayo
+                                            </a>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div class="table-responsive mt-4">
-                                <table class="table table-bordered table-hover" id="curva_duplicados_table">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center">Curva de Calibración</th>
-                                            <th class="text-center">Valor</th>
-                                            <th class="text-center">Valor Leído</th>
-                                            <th class="text-center">% ERROR</th>
-                                            <th class="text-center">Aceptabilidad</th>
-                                            <th></th>
-                                            <th class="text-center">Duplicado</th>
-                                            <th class="text-center">Valor Leído</th>
-                                            <th class="text-center">% DPR</th>
-                                            <th class="text-center">Aceptabilidad</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td rowspan="2" class="align-middle text-center"><strong>Curva de calibración</strong></td>
-                                            <td rowspan="2" class="align-middle"><input type="number" class="form-control" value="0.995" readonly></td>
-                                            <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_valor_leido"></td>
-                                            <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_error_porcentaje" readonly></td>
-                                            <td rowspan="2" class="align-middle"><input type="text" class="form-control" id="curva_error_aceptabilidad" readonly></td>
-                                            <td colspan="2" rowspan="2"></td>
-                                            <td class="text-center"><strong>Duplicado A</strong></td>
-                                            <td><input type="number" step="any" class="form-control" id="duplicado_a"></td>
-                                            <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" readonly></td>
-                                            <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" readonly></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-center"><strong>Duplicado B</strong></td>
-                                            <td><input type="number" step="any" class="form-control" id="duplicado_b"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                    <!-- Contenido de las Pestañas -->
+                    <div class="tab-content" id="analysisTabsContent">
+                        <!-- Pestaña Controles Analíticos -->
+                        <div class="tab-pane fade show active" id="controls-content" role="tabpanel" aria-labelledby="controls-tab">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="items_ensayo" class="h5 mb-3">
+                                            <i class="fas fa-flask mr-2" style="color: #28a745;"></i>Controles Analíticos
+                                        </label>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-hover" id="controles_analiticos_table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">Identificación del Control</th>
+                                                        <th class="text-center">Valor Esperado</th>
+                                                        <th class="text-center">Valor Leído</th>
+                                                        <th class="text-center">% de Error</th>
+                                                        <th class="text-center">Aceptabilidad</th>
+                                                        <th class="text-center">% Recuperación</th>
+                                                        <th class="text-center">Aceptabilidad</th>
+                                                        <th class="text-center">% DPR</th>
+                                                        <th class="text-center">Aceptabilidad</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]" value="30"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]" value="5"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
+                                                        <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
+                                                        <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="table-responsive mt-4">
+                                            <table class="table table-bordered table-hover" id="curva_duplicados_table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">Curva de Calibración</th>
+                                                        <th class="text-center">Valor</th>
+                                                        <th class="text-center">Valor Leído</th>
+                                                        <th class="text-center">% ERROR</th>
+                                                        <th class="text-center">Aceptabilidad</th>
+                                                        <th class="text-center">Duplicado</th>
+                                                        <th class="text-center">Valor Leído</th>
+                                                        <th class="text-center">% DPR</th>
+                                                        <th class="text-center">Aceptabilidad</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td rowspan="2" class="align-middle text-center"><strong>Curva de calibración</strong></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" class="form-control" value="0.995" readonly></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_valor_leido"></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_error_porcentaje" readonly></td>
+                                                        <td rowspan="2" class="align-middle"><input type="text" class="form-control" id="curva_aceptabilidad" readonly></td>
+                                                        <td class="text-center"><strong>Duplicado A</strong></td>
+                                                        <td><input type="number" step="any" class="form-control" id="duplicado_a"></td>
+                                                        <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" readonly></td>
+                                                        <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" readonly></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-center"><strong>Duplicado B</strong></td>
+                                                        <td><input type="number" step="any" class="form-control" id="duplicado_b"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                        </div>
 
-                            <hr class="my-4">
+                        <!-- Pestaña Ítems de Ensayo -->
+                        <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
                             <h4 class="mb-3">
                                 <i class="fas fa-list-alt mr-2" style="color: #28a745;"></i>Ítems de Ensayo
                             </h4>
@@ -182,14 +210,14 @@
                                 <table class="table table-bordered table-hover" id="items_ensayo_table">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">Código interno</th>
-                                            <th class="text-center">Peso muestra (g)</th>
+                                            <th class="text-center">Código Interno</th>
+                                            <th class="text-center">Peso Muestra (g)</th>
                                             <th class="text-center">pW</th>
                                             <th class="text-center">V. Extractante (mL)</th>
                                             <th class="text-center">Lectura Blanco (mg/L)</th>
-                                            <th class="text-center">Factor de dilución (fd)</th>
-                                            <th class="text-center">Azufre disponible (mg/L)</th>
-                                            <th class="text-center">Azufre disponible (mg/kg)</th>
+                                            <th class="text-center">Factor de Dilución (fd)</th>
+                                            <th class="text-center">Azufre Disponible (mg/L)</th>
+                                            <th class="text-center">Azufre Disponible (mg/kg)</th>
                                             <th class="text-center">Observaciones</th>
                                             <th class="text-center">Acciones</th>
                                         </tr>
@@ -519,7 +547,7 @@
             }
 
             $('#curva_error_porcentaje').val(errorPorcentaje.toFixed(2));
-            $('#curva_error_aceptabilidad').val(aceptabilidad);
+            $('#curva_aceptabilidad').val(aceptabilidad);
         }
         $(document).on('input', '#curva_valor_leido', calcularErrorCurva);
         calcularErrorCurva();
@@ -552,6 +580,85 @@
         $(document).on('input', '#items_ensayo_table input', calcularAzufreEnsayo);
         // Ejecutar al cargar la página
         calcularAzufreEnsayo();
+        
+        // Funcionalidad para las pestañas de navegación
+        $(document).ready(function() {
+            // Navegación entre pestañas
+            $('#analysisTabs .nav-link').on('click', function(e) {
+                e.preventDefault();
+                const target = $(this).attr('href');
+                
+                // Remove active class from all tabs and content
+                $('#analysisTabs .nav-link').removeClass('active');
+                $('#analysisTabsContent .tab-pane').removeClass('show active');
+                
+                // Add active class to clicked tab
+                $(this).addClass('active');
+                $(target).addClass('show active');
+            });
+        });
     });
 </script>
 @endpush
+
+<style>
+    /* Estilos para la barra de navegación horizontal */
+    #analysisTabs {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    #analysisTabs .nav-link {
+        border: none;
+        border-radius: 0;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 1rem 1.5rem;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+    }
+    
+    #analysisTabs .nav-link:hover {
+        border-color: transparent;
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    
+    #analysisTabs .nav-link.active {
+        color: #007bff;
+        background-color: #fff;
+        border-bottom: 3px solid #007bff;
+        font-weight: 600;
+    }
+    
+    #analysisTabs .nav-link i {
+        font-size: 1.1rem;
+    }
+    
+    /* Estilos para el contenido de las pestañas */
+    .tab-content {
+        padding-top: 1rem;
+    }
+    
+    .tab-pane {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        #analysisTabs .nav-link {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+        
+        #analysisTabs .nav-link i {
+            font-size: 1rem;
+            margin-right: 0.25rem;
+        }
+    }
+</style>

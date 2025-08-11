@@ -121,13 +121,13 @@
                 <div class="card feature-card h-100">
                     <div class="card-body text-center">
                         <div class="feature-icon">
-                            <i class="fas fa-tint"></i>
+                            <i class="fas fa-layer-group"></i>
                         </div>
-                        <h4>Análisis de Conductividad</h4>
-                        <p class="text-muted">Gestione los análisis de conductividad eléctrica.</p>
-                        <button class="btn btn-outline-secondary" disabled>
-                            <i class="fas fa-clock me-1"></i> Próximamente
-                        </button>
+                        <h4>Análisis de Textura</h4>
+                        <p class="text-muted">Gestione los análisis de textura del suelo.</p>
+                        <a href="{{ route('lscefa.technical.analyses.texture.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-right me-1"></i> Acceder
+                        </a>
                     </div>
                 </div>
             </div>

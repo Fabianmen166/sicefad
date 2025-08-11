@@ -146,6 +146,16 @@
 
 
                         <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-layer-group"></i>
+                                <p>Textura</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
