@@ -198,9 +198,11 @@ AnalyticalControl::create($analyticalData);
 
             return redirect()->route('lscefa.technical.analyses.humidity.index')->with('success', 'Análisis de humedad registrado correctamente.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Error al guardar el análisis: ' . $e->getMessage());
-        }
+    Log::error('Error al guardar análisis: '.$e->getMessage(), [
+        'trace' => $e->getTraceAsString()
+    ]);
+    return back()->with('error', 'Hubo un error al guardar el análisis.');
+}
     }
     public function process(Request $request)
 {

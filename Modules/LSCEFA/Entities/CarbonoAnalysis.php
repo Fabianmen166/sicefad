@@ -4,18 +4,27 @@ namespace Modules\LSCEFA\Entities;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Modules\LSCEFA\Models\Process;
+use Modules\LSCEFA\Models\AnalyticalControl;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+
+
 
 class CarbonoAnalysis extends Model
 {
-    use HasFactory;
+    protected $table = 'carbono_analyses';
 
-     protected $fillable = [
-        'analysis_id',
+    protected $fillable = [
+        'process_id',
         'consecutivo_no',
         'fecha_analisis',
-        'user_id',
-        'nombre_metodo',
         'unidades_reporte_equipo',
+        'nombre_metodo',
         'equipo_utilizado',
         'intervalo_metodo',
         'resolucion_instrumental',
@@ -23,6 +32,7 @@ class CarbonoAnalysis extends Model
         'valor_cot_leido',
         'valor_leido',
         'porcentaje_humedad',
+        'peso_muestra',
         'volumen_sulfato_blanco',
         'volumen_sulfato_muestra',
         'volumen_dicromato',
@@ -31,34 +41,49 @@ class CarbonoAnalysis extends Model
         'porcentaje_cot',
         'porcentaje_mo',
         'fortificado',
-        'peso_muestra',
         'cot_muestra',
         'error_analitico',
         'observaciones',
-     
-        
+        'review_status',
+        'reviewed_by',
+        'reviewer_role',
+        'review_date',
+        'review_observations',
     ];
-    public function process(): BelongsTo
+
+    // Relación con Process
+    public function process()
     {
         return $this->belongsTo(Process::class, 'process_id', 'process_id');
     }
 
-     public function reviewer(): BelongsTo
+     public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function analyticalControl(): HasOne
+    {
+        return $this->hasOne(AnalyticalControl::class, 'carbono_analysis_id');
+    }
+
+    public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
 
-    
+    public function scopePendingReview($query)
+    {
+        return $query->where('review_status', 'pending');
+    }
 
-    
-    protected static function newFactory()
+    public function scopeApproved($query)
     {
-        return \Modules\LSCEFA\Database\factories\CarbonoAnalysisFactory::new();
+        return $query->where('review_status', 'approved');
     }
-    
-    public function analyticalControl(): HasOne
+
+    public function scopeRejected($query)
     {
-        return $this->hasOne(AnalyticalControl::class, 'humidity_analysis_id');
+        return $query->where('review_status', 'rejected');
     }
-    
 }

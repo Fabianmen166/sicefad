@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddCurvaValorLeidoToAnalyticalControlsTable extends Migration
+class CreateAcidezAnalysesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class AddCurvaValorLeidoToAnalyticalControlsTable extends Migration
      */
     public function up()
     {
-        Schema::table('analytical_controls', function (Blueprint $table) {
-            $table->decimal('curva_valor_leido', 8, 4)->nullable();
+        Schema::create('acidez_analyses', function (Blueprint $table) {
+            $table->id();
+
+            $table->timestamps();
         });
     }
 
@@ -25,8 +27,6 @@ class AddCurvaValorLeidoToAnalyticalControlsTable extends Migration
      */
     public function down()
     {
-        Schema::table('analytical_controls', function (Blueprint $table) {
-            $table->dropColumn('curva_valor_leido');
-        });
+        Schema::dropIfExists('acidez_analyses');
     }
-} 
+}

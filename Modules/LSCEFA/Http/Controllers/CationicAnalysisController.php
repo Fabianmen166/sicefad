@@ -534,8 +534,8 @@ class CationicAnalysisController extends Controller
             }
 
             $request->validate([
-                'proceso_numero' => 'required|array',
-                'proceso_numero.*' => 'required|exists:processes,process_id',
+                'process_ids' => 'required|array',
+                'process_ids.*' => 'required|string',
                 'consecutivo_no' => 'required|string',
                 'fecha_analisis' => 'required|date',
                 'unidades_reporte_equipo' => 'required|string',
@@ -546,21 +546,16 @@ class CationicAnalysisController extends Controller
                 'resolucion_instrumental' => 'nullable|string',
                 'observaciones' => 'nullable|string',
                 
-                // Campos de resultados (arrays)
-                'codigo_interno' => 'required|array',
-                'codigo_interno.*' => 'required|string',
-                'peso_muestra' => 'required|array',
-                'peso_muestra.*' => 'required|numeric|min:0',
-                'vol_naoh_muestra' => 'required|array',
-                'vol_naoh_muestra.*' => 'required|numeric|min:0',
-                'vol_naoh_blanco' => 'required|array',
-                'vol_naoh_blanco.*' => 'required|numeric|min:0',
-                'normalidad_naoh' => 'required|array',
-                'normalidad_naoh.*' => 'required|numeric|min:0',
-                'humedad_porcentaje' => 'required|array',
-                'humedad_porcentaje.*' => 'required|numeric|min:0',
-                'cic_resultado' => 'required|array',
-                'cic_resultado.*' => 'required|numeric',
+                // Campos de resultados organizados por process_id
+                'items_ensayo' => 'nullable|array',
+                'items_ensayo.*.codigo_interno' => 'nullable|string',
+                'items_ensayo.*.peso_muestra' => 'nullable|numeric|min:0',
+                'items_ensayo.*.vol_naoh_muestra' => 'nullable|numeric|min:0',
+                'items_ensayo.*.vol_naoh_blanco' => 'nullable|numeric|min:0',
+                'items_ensayo.*.normalidad_naoh' => 'nullable|numeric|min:0',
+                'items_ensayo.*.humedad_porcentaje' => 'nullable|numeric|min:0',
+                'items_ensayo.*.cic_resultado' => 'nullable|numeric',
+                'items_ensayo.*.observaciones' => 'nullable|string',
                 
                 // Campos de controles de calidad
                 'blanco_identificacion' => 'nullable|string',
@@ -593,7 +588,6 @@ class CationicAnalysisController extends Controller
 
             DB::beginTransaction();
 
-            $procesosNumeros = $request->input('proceso_numero');
             $cationicService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%intercambio%'])
                                     ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%catiónico%'])
                                     ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%cationic%'])
@@ -609,36 +603,7 @@ class CationicAnalysisController extends Controller
             $savedAnalyses = [];
             $savedControls = [];
 
-            // Agrupar análisis por proceso
-            $analysesByProcess = [];
-            $codigosInternos = $request->input('codigo_interno', []);
-            $pesosMuestra = $request->input('peso_muestra', []);
-            $volNaohMuestras = $request->input('vol_naoh_muestra', []);
-            $volNaohBlancos = $request->input('vol_naoh_blanco', []);
-            $normalidadesNaoh = $request->input('normalidad_naoh', []);
-            $humedadesPorcentaje = $request->input('humedad_porcentaje', []);
-            $cicResultados = $request->input('cic_resultado', []);
-
-            // Agrupar los datos por proceso
-            for ($i = 0; $i < count($codigosInternos); $i++) {
-                $processId = $procesosNumeros[$i] ?? null;
-                if ($processId) {
-                    if (!isset($analysesByProcess[$processId])) {
-                        $analysesByProcess[$processId] = [];
-                    }
-                    $analysesByProcess[$processId][] = [
-                        'codigo_interno' => $codigosInternos[$i] ?? null,
-                        'peso_muestra' => $pesosMuestra[$i] ?? null,
-                        'vol_naoh_muestra' => $volNaohMuestras[$i] ?? null,
-                        'vol_naoh_blanco' => $volNaohBlancos[$i] ?? null,
-                        'normalidad_naoh' => $normalidadesNaoh[$i] ?? null,
-                        'humedad_porcentaje' => $humedadesPorcentaje[$i] ?? null,
-                        'cic_resultado' => $cicResultados[$i] ?? null,
-                    ];
-                }
-            }
-
-            foreach ($analysesByProcess as $processId => $analyses) {
+            foreach ($request->process_ids as $processId) {
                 Log::info("Procesando proceso: {$processId}");
 
                 // Verificar si ya existe un control analítico para este proceso
@@ -648,12 +613,12 @@ class CationicAnalysisController extends Controller
                         'process_id' => $processId,
                         'control_id' => $existingControl->id
                     ]);
-                    // No saltar el proceso, solo actualizar el estado del servicio
-                    $processAnalyses = [];
-                } else {
-                    // Guardar múltiples análisis de CIC para este proceso
-                    $processAnalyses = [];
-                    foreach ($analyses as $analysis) {
+                    continue;
+                }
+
+                // Guardar análisis de CIC para este proceso
+                if (isset($request->items_ensayo[$processId])) {
+                    foreach ($request->items_ensayo[$processId] as $item) {
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'consecutivo_no' => $request->consecutivo_no,
@@ -664,115 +629,108 @@ class CationicAnalysisController extends Controller
                             'unidades_reporte_equipo' => $request->unidades_reporte_equipo,
                             'nombre_analista' => $request->nombre_analista,
                             'resolucion_instrumental' => $request->resolucion_instrumental,
-                            'peso_muestra' => $analysis['peso_muestra'] ?? null,
-                            'vol_naoh_muestra' => $analysis['vol_naoh_muestra'] ?? null,
-                            'vol_naoh_blanco' => $analysis['vol_naoh_blanco'] ?? null,
-                            'normalidad_naoh' => $analysis['normalidad_naoh'] ?? null,
-                            'humedad_porcentaje' => $analysis['humedad_porcentaje'] ?? null,
-                            'cic_resultado' => $analysis['cic_resultado'] ?? null,
-                            'observaciones' => $request->observaciones,
+                            'peso_muestra' => $item['peso_muestra'] ?? null,
+                            'vol_naoh_muestra' => $item['vol_naoh_muestra'] ?? null,
+                            'vol_naoh_blanco' => $item['vol_naoh_blanco'] ?? null,
+                            'normalidad_naoh' => $item['normalidad_naoh'] ?? null,
+                            'humedad_porcentaje' => $item['humedad_porcentaje'] ?? null,
+                            'cic_resultado' => $item['cic_resultado'] ?? null,
+                            'observaciones' => $item['observaciones'] ?? $request->observaciones,
                         ];
 
                         $cationicAnalysis = CationicAnalysis::create($analysisData);
-                        $processAnalyses[] = $cationicAnalysis;
                         $savedAnalyses[] = $cationicAnalysis;
+                        
+                        Log::info("Análisis creado para proceso {$processId}", [
+                            'analysis_id' => $cationicAnalysis->id,
+                            'codigo_interno' => $item['codigo_interno'] ?? ''
+                        ]);
                     }
-
-                    // Guardar control analítico para este proceso
-                    $controlData = [
-                        'process_id' => $processId,
-                        
-                        // 1. Blanco método
-                        'blanco_identificacion' => $request->blanco_identificacion,
-                        'blanco_lcm' => $request->blanco_lcm,
-                        'blanco_valor_leido' => $request->blanco_valor_leido,
-                        'blanco_aceptable' => $request->blanco_aceptable,
-                        'blanco_observaciones' => $request->blanco_observaciones,
-                        
-                        // 2. Control de Laboratorio (CRM/SRM)
-                        'error_identificacion' => $request->error_identificacion,
-                        'error_valor_teorico' => $request->error_valor_teorico,
-                        'error_valor_leido' => $request->error_valor_leido,
-                        'error_porcentaje' => $request->error_porcentaje,
-                        'error_aceptable' => $request->error_aceptable,
-                        'error_observaciones' => $request->error_observaciones,
-                        
-                        // 3. Recuperación de Estándar (Spike Recovery)
-                        'recuperacion_identificacion' => $request->recuperacion_identificacion,
-                        'recuperacion_valor_teorico' => $request->recuperacion_valor_teorico,
-                        'recuperacion_valor_leido' => $request->recuperacion_valor_leido,
-                        'recuperacion_porcentaje' => $request->recuperacion_porcentaje,
-                        'recuperacion_aceptable' => $request->recuperacion_aceptable,
-                        'recuperacion_observaciones' => $request->recuperacion_observaciones,
-                        
-                        // 4. Duplicados (DPR/RPD)
-                        'dpr_identificacion' => $request->dpr_identificacion,
-                        'dpr_replica1' => $request->dpr_replica1,
-                        'dpr_replica2' => $request->dpr_replica2,
-                        'dpr_porcentaje' => $request->dpr_porcentaje,
-                        'dpr_aceptable' => $request->dpr_aceptable,
-                        'dpr_observaciones' => $request->dpr_observaciones,
-                    ];
-
-                    $analyticalControl = AnalyticalControl::create($controlData);
-                    $savedControls[] = $analyticalControl;
                 }
+
+                // Guardar control analítico para este proceso
+                $controlData = [
+                    'process_id' => $processId,
+                    
+                    // 1. Blanco método
+                    'blanco_identificacion' => $request->blanco_identificacion,
+                    'blanco_lcm' => $request->blanco_lcm,
+                    'blanco_valor_leido' => $request->blanco_valor_leido,
+                    'blanco_aceptable' => $request->blanco_aceptable,
+                    'blanco_observaciones' => $request->blanco_observaciones,
+                    
+                    // 2. Control de Laboratorio (CRM/SRM)
+                    'error_identificacion' => $request->error_identificacion,
+                    'error_valor_teorico' => $request->error_valor_teorico,
+                    'error_valor_leido' => $request->error_valor_leido,
+                    'error_porcentaje' => $request->error_porcentaje,
+                    'error_aceptable' => $request->error_aceptable,
+                    'error_observaciones' => $request->error_observaciones,
+                    
+                    // 3. Recuperación de Estándar (Spike Recovery)
+                    'recuperacion_identificacion' => $request->recuperacion_identificacion,
+                    'recuperacion_valor_teorico' => $request->recuperacion_valor_teorico,
+                    'recuperacion_valor_leido' => $request->recuperacion_valor_leido,
+                    'recuperacion_porcentaje' => $request->recuperacion_porcentaje,
+                    'recuperacion_aceptable' => $request->recuperacion_aceptable,
+                    'recuperacion_observaciones' => $request->recuperacion_observaciones,
+                    
+                    // 4. Duplicados (DPR/RPD)
+                    'dpr_identificacion' => $request->dpr_identificacion,
+                    'dpr_replica1' => $request->dpr_replica1,
+                    'dpr_replica2' => $request->dpr_replica2,
+                    'dpr_porcentaje' => $request->dpr_porcentaje,
+                    'dpr_aceptable' => $request->dpr_aceptable,
+                    'dpr_observaciones' => $request->dpr_observaciones,
+                ];
+
+                $analyticalControl = AnalyticalControl::create($controlData);
+                $savedControls[] = $analyticalControl;
+
+                Log::info('Control analítico creado para proceso', [
+                    'control_id' => $analyticalControl->id,
+                    'process_id' => $processId
+                ]);
 
                 // Actualizar el estado del servicio a 'completed'
-                Log::info("Intentando actualizar estado para proceso: {$processId}");
-                
-                if ($cationicService) {
-                    Log::info("Servicio catiónico encontrado: {$cationicService->services_id}");
-                    
-                    // Verificar que el ServiceProcessDetail existe antes de actualizar
-                    $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
-                        ->where('service_id', $cationicService->services_id)
-                        ->first();
+                $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
+                    ->where('service_id', $cationicService->services_id)
+                    ->first();
 
-                    if ($serviceProcessDetail) {
-                        Log::info("ServiceProcessDetail encontrado: ID {$serviceProcessDetail->id}, Status actual: {$serviceProcessDetail->status}");
-                        
-                        $updatedRows = ServiceProcessDetail::where('process_id', $processId)
-                            ->where('service_id', $cationicService->services_id)
-                            ->update([
-                                'status' => 'completed',
-                                'result' => 'Análisis de intercambio catiónico completado',
-                                'observations' => 'Análisis guardado exitosamente con ' . count($processAnalyses) . ' muestras'
-                            ]);
+                if ($serviceProcessDetail) {
+                    $serviceProcessDetail->status = 'completed';
+                    $serviceProcessDetail->save();
 
-                        Log::info('Actualización del estado del servicio', [
-                            'process_id' => $processId,
-                            'service_id' => $cationicService->services_id,
-                            'rows_updated' => $updatedRows,
-                            'service_process_detail_id' => $serviceProcessDetail->id
-                        ]);
-                        
-                        // Verificar si realmente se actualizó
-                        $updatedSpd = ServiceProcessDetail::find($serviceProcessDetail->id);
-                        Log::info("Status después de actualización: {$updatedSpd->status}");
-                    } else {
-                        Log::warning('ServiceProcessDetail no encontrado para actualizar', [
-                            'process_id' => $processId,
-                            'service_id' => $cationicService->services_id
-                        ]);
-                    }
-                } else {
-                    Log::warning('No se encontró el servicio de intercambio catiónico para actualizar estado');
+                    Log::info('Estado del detalle del proceso actualizado a completado', [
+                        'service_process_detail_id' => $serviceProcessDetail->id,
+                        'process_id' => $processId
+                    ]);
                 }
 
-                Log::info("Proceso {$processId} procesado exitosamente", [
-                    'analyses_count' => count($processAnalyses),
-                    'control_id' => isset($analyticalControl) ? $analyticalControl->id : 'existing_control'
-                ]);
+                // Verificar si todos los detalles del proceso están completados
+                $pendingDetails = ServiceProcessDetail::where('process_id', $processId)
+                    ->where('status', 'pending')
+                    ->count();
+
+                if ($pendingDetails == 0) {
+                    $process = Process::find($processId);
+                    if ($process) {
+                        $process->status = 'completed';
+                        $process->save();
+
+                        Log::info('Proceso marcado como completado', [
+                            'process_id' => $processId
+                        ]);
+                    }
+                }
             }
 
             DB::commit();
 
-            Log::info('Análisis de intercambio catiónico guardados exitosamente por lotes', [
-                'user_id' => Auth::id(),
-                'process_ids' => array_keys($analysesByProcess),
-                'total_analyses_saved' => count($savedAnalyses),
-                'total_controls_saved' => count($savedControls)
+            Log::info('Procesamiento por lotes completado', [
+                'total_processes' => count($request->process_ids),
+                'saved_analyses' => count($savedAnalyses),
+                'saved_controls' => count($savedControls)
             ]);
 
             return redirect()->route('lscefa.technical.analyses.cationic.index')
@@ -780,8 +738,14 @@ class CationicAnalysisController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al guardar análisis de intercambio catiónico por lotes: ' . $e->getMessage());
-            return back()->with('error', 'Error al guardar los análisis: ' . $e->getMessage());
+
+            Log::error('Error al procesar análisis de intercambio catiónico por lotes', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withInput()->with('error', 'Error al procesar los análisis por lotes: ' . $e->getMessage());
         }
     }
 } 

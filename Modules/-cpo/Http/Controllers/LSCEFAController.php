@@ -27,19 +27,6 @@ public function admin()
 }
 
 
-<<<<<<< HEAD
-
-public function intern()
-{
-    return view('lscefa::panelpas');
-}
-
-public function panelpas()
-{
-    return view('lscefa::panelpas');
-}
-
-=======
 public function intern()
 {
    
@@ -57,7 +44,6 @@ public function technical()
 }
 
 
->>>>>>> 0e4ae791 (aaaaaa)
 
     /**
      * Show the form for creating a new resource.
@@ -118,10 +104,6 @@ public function technical()
     {
         //
     }
-<<<<<<< HEAD
-}
-=======
 }
 
 
->>>>>>> 0e4ae791 (aaaaaa)

@@ -25,6 +25,7 @@ use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 
+
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
         // Rutas públicas

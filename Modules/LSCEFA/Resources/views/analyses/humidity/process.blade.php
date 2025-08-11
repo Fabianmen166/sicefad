@@ -381,7 +381,7 @@
                                         </td>
                                         <td><input type="number" step="0.0001" id="peso_capsula_muestra_seca"
                                                 name="peso_capsula_muestra_seca" class="form-control pms"></td>
-                                        <td><input type="text" name="porcentaje_humedad" class="form-control humedad"
+                                        <td><input type="text" id='porcentaje_humedad' name="porcentaje_humedad" class="form-control humedad"
                                                 readonly></td>
                                         <td><input type="text" name="observaciones" class="form-control"></td>
                                     </tr>
