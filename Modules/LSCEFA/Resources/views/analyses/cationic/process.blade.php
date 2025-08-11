@@ -101,9 +101,28 @@
                             </div>
                         </div>
 
-                                                 <!-- Información de Resultados -->
-                         <h4 class="mt-4">Información de Resultados</h4>
-                         <div class="table-responsive">
+                                                 <!-- Horizontal Navigation Bar -->
+                        <div class="mt-4 mb-3">
+                            <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-content" type="button" role="tab" aria-controls="results-content" aria-selected="true">
+                                        <i class="fas fa-table"></i> Información de Resultados
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality-content" type="button" role="tab" aria-controls="quality-content" aria-selected="false">
+                                        <i class="fas fa-check-circle"></i> Controles de Calidad
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="analysisTabContent">
+                            <!-- Información de Resultados Tab -->
+                            <div class="tab-pane fade show active" id="results-content" role="tabpanel" aria-labelledby="results-tab">
+                                <h4 class="mt-4">Información de Resultados</h4>
+                                <div class="table-responsive">
                              <table class="table table-bordered" id="tabla-resultados">
                                  <thead>
                                      <tr>
@@ -156,6 +175,9 @@
                              </div>
                          </div>
 
+                        </div>
+                        <!-- End of Información de Resultados Tab -->
+
                         <!-- Observaciones -->
                         <div class="row">
                             <div class="col-md-12">
@@ -166,11 +188,12 @@
                             </div>
                         </div>
 
-                        <!-- Controles de Calidad -->
-                        <h4 class="mt-4">CONTROLES DE CALIDAD</h4>
-                        
-                        <!-- 1. Blanco método -->
-                        <h5 class="mt-3">1. Blanco método</h5>
+                            <!-- Controles de Calidad Tab -->
+                            <div class="tab-pane fade" id="quality-content" role="tabpanel" aria-labelledby="quality-tab">
+                                <h4 class="mt-4">CONTROLES DE CALIDAD</h4>
+                                
+                                <!-- 1. Blanco método -->
+                                <h5 class="mt-3">1. Blanco método</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -324,6 +347,11 @@
                             </table>
                         </div>
 
+                            </div>
+                            <!-- End of Controles de Calidad Tab -->
+                        </div>
+                        <!-- End of Tab Content -->
+
                         <!-- Botones -->
                         <div class="row mt-4">
                             <div class="col-md-12">
@@ -338,6 +366,49 @@
     </section>
 </div>
 @endsection
+
+@push('styles')
+<style>
+#analysisTabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+#analysisTabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    margin-right: 5px;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+#analysisTabs .nav-link:hover {
+    background-color: #e9ecef;
+    color: #495057;
+    transform: translateY(-2px);
+}
+
+#analysisTabs .nav-link.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#analysisTabs .nav-link i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    #analysisTabs .nav-link {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -563,6 +634,22 @@ $(document).ready(function() {
     $('input[name="dpr_replica1"], input[name="dpr_replica2"]').on('input', function() {
         calcularRPD();
         setTimeout(evaluarCriterios, 100);
+    });
+
+    // Tab switching functionality
+    $('#analysisTabs .nav-link').on('click', function(e) {
+        e.preventDefault();
+        
+        // Remove active class from all tabs and content
+        $('#analysisTabs .nav-link').removeClass('active');
+        $('.tab-pane').removeClass('show active');
+        
+        // Add active class to clicked tab
+        $(this).addClass('active');
+        
+        // Show corresponding content
+        var target = $(this).data('bs-target');
+        $(target).addClass('show active');
     });
 
 });

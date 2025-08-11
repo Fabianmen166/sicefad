@@ -138,31 +138,9 @@
                 return;
             }
 
-            // Crear un formulario temporal para enviar los IDs de procesos seleccionados
-            var form = $('<form>', {
-                'method': 'POST',
-                'action': '{{ route('lscefa.technical.analyses.phosphorus.batch.post') }}'
-            });
-
-            // Agregar el token CSRF
-            form.append($('<input>', {
-                'type': 'hidden',
-                'name': '_token',
-                'value': '{{ csrf_token() }}'
-            }));
-
-            // Agregar cada ID de proceso seleccionado
-            selectedProcesses.forEach(function(processId) {
-                form.append($('<input>', {
-                    'type': 'hidden',
-                    'name': 'process_ids[]',
-                    'value': processId
-                }));
-            });
-
-            // Agregar el formulario al DOM y enviarlo
-            $('body').append(form);
-            form.submit();
+            // Redirect to batch process with selected processes
+            var batchUrl = "{{ route('lscefa.technical.analyses.phosphorus.batch') }}?processes=" + selectedProcesses.join(',');
+            window.location.href = batchUrl;
         });
 
         updateProcessButtonState(); // Initial state on page load

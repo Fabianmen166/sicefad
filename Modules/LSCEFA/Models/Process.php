@@ -35,6 +35,12 @@ class Process extends Model
         'delivery_date',
     ];
 
+    protected $casts = [
+        'reception_date' => 'date',
+        'sampling_date' => 'date',
+        'delivery_date' => 'date',
+    ];
+
     public function quote()
     {
         return $this->belongsTo(Quote::class, 'quote_id', 'quote_id');
