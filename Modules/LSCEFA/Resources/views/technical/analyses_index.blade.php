@@ -6,6 +6,37 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
+            <!-- Enlaces rápidos a análisis específicos -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h5 class="m-0 font-weight-bold text-primary">Análisis Específicos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                                                  <div class="col-md-3 mb-3">
+                              <a href="{{ route('lscefa.ph_analysis.index') }}" class="btn btn-outline-primary btn-block">
+                                  <i class="fas fa-flask me-2"></i>Análisis de pH
+                              </a>
+                          </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-flask me-2"></i>Análisis de Fósforo
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" class="btn btn-outline-info btn-block">
+                                <i class="fas fa-layer-group me-2"></i>Análisis de Textura
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" class="btn btn-outline-warning btn-block">
+                                <i class="fas fa-flask me-2"></i>Bases Cambiables
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Enlaces a análisis específicos -->
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">

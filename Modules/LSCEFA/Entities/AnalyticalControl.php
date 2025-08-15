@@ -12,7 +12,12 @@ class AnalyticalControl extends Model
     protected $table = 'analytical_controls';
 
     protected $fillable = [
+        // Claves y enlaces
         'process_id',
+        'analysis_type',
+        'analysis_id',
+
+        // Campos históricos (pueden o no existir según migración previa)
         'blank_identification',
         'blank_lcm',
         'blank_measured_value',
@@ -31,18 +36,32 @@ class AnalyticalControl extends Model
         'recovery_acceptable',
         'recovery_observations',
         'dpr_identification',
-        'dpr_replicate1',
+        'dpr',
+        'replica_1',
+        'replica_2',
+        'identificacion_mf',
+        'identificacion_bm',
+        'identificacion_mr',
+        'identificacion_dm',
+        'valor_obtenido',
+        'valor_referencia',
+        'valor_leido',
+        'limite_cuantificacion_metodo',
         'dpr_replicate2',
         'dpr_percentage',
         'dpr_acceptable',
         'dpr_observations',
-        'analytical_controls',
         'dpr_duplicate_a',
         'dpr_duplicate_b',
         'dpr_result',
         'dpr_acceptability',
         'curve_measured_value',
         'curve_error_percentage',
+
+        // Contenedor JSON unificado para diferentes bloques de controles
+        'controles_analiticos',
+        'analytical_controls',
+
         'created_at',
         'updated_at'
     ];
@@ -56,15 +75,20 @@ class AnalyticalControl extends Model
         'recovery_theoretical_value' => 'decimal:2',
         'recovery_measured_value' => 'decimal:2',
         'recovery_percentage' => 'decimal:2',
-        'dpr_replicate1' => 'decimal:2',
+        'dpr' => 'decimal:2',
+        'replica_1' => 'decimal:2',
+        'replica_2' => 'decimal:2',
         'dpr_replicate2' => 'decimal:2',
         'dpr_percentage' => 'decimal:2',
-        'analytical_controls' => 'array',
         'dpr_duplicate_a' => 'decimal:4',
         'dpr_duplicate_b' => 'decimal:4',
         'dpr_result' => 'decimal:4',
         'curve_measured_value' => 'decimal:4',
-        'curve_error_percentage' => 'decimal:4'
+        'curve_error_percentage' => 'decimal:4',
+
+        // JSON
+        'controles_analiticos' => 'array',
+        'analytical_controls' => 'array',
     ];
 
     public function process()
@@ -76,10 +100,8 @@ class AnalyticalControl extends Model
     {
         return \Modules\LSCEFA\Database\factories\AnalyticalControlFactory::new();
     }
-    public function carbonoAnalysis()
-    {
-        return $this->belongsTo(CarbonoAnalysis::class, 'carbono_analysis_id');
-    }
+
+    
     
     
 }

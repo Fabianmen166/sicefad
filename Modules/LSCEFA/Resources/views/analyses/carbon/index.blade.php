@@ -2,113 +2,87 @@
 
 @section('title', 'Gestión de Análisis de Carbono Orgánico')
 
-@section('contenido')
-<div class="content-wrapper">
-    <!-- Encabezado -->
-    <section class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Gestión de Análisis de Carbono Orgánico</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="">Inicio</a></li>
-                        <li class="breadcrumb-item active">Gestión de Carbono</li>
-                    </ol>
+@section('content')
+    <div class="content-wrapper">
+        <!-- Encabezado -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2 align-items-center">
+                    <div class="col-sm-6">
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Contenido Principal -->
-    <section class="content">
-        <div class="container-fluid">
-            @if (session('success'))
-                <div class="alert alert-success alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                    {{ session('error') }}
-                </div>
-            @endif
+        <!-- Contenido Principal -->
+        <section class="content">
+            <div class="container-fluid">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
 
-            <!-- Sección de análisis individual -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Procesar Análisis de Carbono Orgánico</h3>
-                </div>
-                <div class="card-body">
-                    @if($hasProcesses)
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Proceso</th>
-                                        <th>Cliente</th>
-                                        <th>Servicio</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($processes as $process)
-                                        @foreach($process->services as $service)
-                                            @if(str_contains($service->descripcion, 'Carbono'))
-                                                <tr>
-                                                    <td>PRC-{{ $process->id }}</td>
-                                                    <td>{{ $process->quote->customer->nombre ?? 'N/A' }}</td>
-                                                    <td>{{ $service->descripcion }}</td>
-                                                    <td>
-                                                        <a href="{{ route('lscefa.technical.analyses.carbon.process', [$process->id, $service->id]) }}" 
-                                                           class="btn btn-sm btn-primary">
-                                                            Realizar Análisis
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @endif
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
+                <!-- Tabla de Procesos -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0">Lista de Procesos con Análisis de Carbono Orgánico</h3>
+                    </div>
+                    <div class="card-body">
+                        @if ($processes->isEmpty())
+                            <div class="text-center">
+                                <p class="mb-0">No hay procesos con análisis de carbono orgánico registrados.</p>
+                            </div>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center align-middle">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>ID Proceso</th>
+                                            <th>Descripción</th>
+                                            <th>Fecha de Recepción</th>
+                                            <th>Cantidad de Análisis</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($processes as $proceso)
+                                            <tr>
+                                                <td>{{ $proceso->process_id }}</td>
+                                                <td>{{ $proceso->description }}</td>
+                                                <td>{{ \Carbon\Carbon::parse($proceso->reception_date)->format('d/m/Y') }}
+                                                </td>
+                                                <td>{{ $proceso->analyses->count() }}</td>
+                                                <td>
+                                                    <a href="{{ route('lscefa.technical.analyses.carbon.process', [
+                                                        'processId' => $proceso->process_id,
+                                                        'serviceId' => $proceso->serviceProcessDetails->first()->service_id,
+                                                    ]) }}"
+                                                        class="btn btn-primary">
+                                                        Procesar
+                                                    </a>
+                                                </td>
+                                            </tr>
                                         @endforeach
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <!-- Botón para procesar todos -->
-                        <div class="mt-3 text-right">
-                            <button class="btn btn-green">
-                                <i class="fas fa-play mr-2"></i> Procesar Todos los Análisis
-                            </button>
-                        </div>
-                    @else
-                        <div class="text-center py-4">
-                            <p>No hay análisis de carbono orgánico pendientes para procesar.</p>
-                        </div>
-                    @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </div>
-
-            <!-- Sección de análisis en lote -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h3 class="card-title">Análisis de Carbono Pendientes (Procesar en Lotes)</h3>
-                </div>
-                <div class="card-body">
-                    @if($hasProcesses)
-                        <!-- Contenido cuando hay procesos para lotes -->
-                        <div class="alert alert-info">
-                            Seleccione los análisis que desea procesar en lote.
-                        </div>
-                        <!-- Aquí iría la tabla para selección múltiple -->
-                    @else
-                        <div class="alert alert-info">
-                            No hay análisis disponibles para procesar en lote.
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
+@endsection

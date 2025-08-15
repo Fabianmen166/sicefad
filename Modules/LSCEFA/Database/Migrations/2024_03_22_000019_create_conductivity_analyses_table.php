@@ -30,6 +30,12 @@ class CreateConductivityAnalysesTable extends Migration
             $table->string('reviewer_role')->nullable();
             $table->dateTime('review_date')->nullable();
             $table->text('review_observations')->nullable();
+            
+            // Campos de proyecto formativo
+            $table->string('formative_project_name')->nullable();
+            $table->string('formative_project_code')->nullable();
+            $table->string('formative_project_instructor')->nullable();
+            
             $table->timestamps();
 
             // Foreign key constraints

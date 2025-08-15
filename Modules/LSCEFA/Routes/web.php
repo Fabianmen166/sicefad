@@ -21,9 +21,7 @@ use Modules\LSCEFA\Http\Controllers\QuoteController;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
-
-use Modules\LSCEFA\Http\Controllers\UserManagementController;
-
+use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
@@ -233,6 +231,97 @@ Route::middleware(['lang'])->group(function(){
             Route::delete('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.exchangeable_bases.destroy');
             Route::get('/technical/analyses/exchangeable_bases/{id}/report', [ExchangeableBasesAnalysisController::class, 'report'])->name('lscefa.technical.analyses.exchangeable_bases.report');
         }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.technical'])
+            // Rutas para Análisis de Azufre
+            Route::get('/technical/analyses/sulfur', [SulfurAnalysisController::class, 'index'])->name('lscefa.technical.analyses.sulfur.index');
+            Route::get('/technical/analyses/sulfur/process/{processId}/{serviceId}', [SulfurAnalysisController::class, 'process'])->name('lscefa.technical.analyses.sulfur.process');
+            Route::post('/technical/analyses/sulfur/store', [SulfurAnalysisController::class, 'storeSulfurAnalysis'])->name('lscefa.technical.analyses.sulfur.store');
+            Route::get('/technical/analyses/sulfur/batch', [SulfurAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.sulfur.batch');
+            Route::post('/technical/analyses/sulfur/batch', [SulfurAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.sulfur.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.sulfur.batch.post');
+            Route::post('/technical/analyses/sulfur/batch-store', [SulfurAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.sulfur.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.sulfur.batch_store');
+            Route::get('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'show'])->name('lscefa.technical.analyses.sulfur.show');
+            Route::get('/technical/analyses/sulfur/{id}/edit', [SulfurAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.sulfur.edit');
+            Route::put('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'update'])->name('lscefa.technical.analyses.sulfur.update');
+            Route::delete('/technical/analyses/sulfur/{id}', [SulfurAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.sulfur.destroy');
+            Route::get('/technical/analyses/sulfur/{id}/report', [SulfurAnalysisController::class, 'report'])->name('lscefa.technical.analyses.sulfur.report');
+
+            // Rutas para Análisis de Boro
+            Route::get('/technical/analyses/boron', [BoronAnalysisController::class, 'index'])->name('lscefa.technical.analyses.boron.index');
+            Route::get('/technical/analyses/boron/process/{processId}/{serviceId}', [BoronAnalysisController::class, 'process'])->name('lscefa.technical.analyses.boron.process');
+            Route::post('/technical/analyses/boron/store', [BoronAnalysisController::class, 'storeBoronAnalysis'])->name('lscefa.technical.analyses.boron.store');
+            Route::get('/technical/analyses/boron/batch', [BoronAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.boron.batch');
+            Route::post('/technical/analyses/boron/batch', [BoronAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.boron.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.batch.post');
+            Route::post('/technical/analyses/boron/batch-store', [BoronAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.boron.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.batch_store');
+            Route::get('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'show'])->name('lscefa.technical.analyses.boron.show');
+            Route::get('/technical/analyses/boron/{id}/edit', [BoronAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.boron.edit');
+            Route::put('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'update'])->name('lscefa.technical.analyses.boron.update');
+            Route::delete('/technical/analyses/boron/{id}', [BoronAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.boron.destroy');
+            Route::get('/technical/analyses/boron/{id}/report', [BoronAnalysisController::class, 'report'])->name('lscefa.technical.analyses.boron.report');
+
+            // Rutas para Análisis de Carbono
+            Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');
+            Route::get('/technical/analyses/carbon/process/{processId}/{serviceId}', [CarbonoAnalysisController::class, 'carbonoAnalysis'])->name('lscefa.technical.analyses.carbon.process');
+            Route::post('/technical/analyses/carbon/store', [CarbonoAnalysisController::class, 'storeCarbonoAnalysis'])->name('lscefa.technical.analyses.carbon.store');
+            Route::get('/technical/analyses/carbon/batch', [CarbonoAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.carbon.batch');
+            Route::post('/technical/analyses/carbon/batch', [CarbonoAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.carbon.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.carbon.batch.post');
+            Route::post('/technical/analyses/carbon/batch-store', [CarbonoAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.carbon.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.carbon.batch_store');
+            Route::get('/technical/analyses/carbon/{id}', [CarbonoAnalysisController::class, 'show'])->name('lscefa.technical.analyses.carbon.show');
+            Route::get('/technical/analyses/carbon/{id}/edit', [CarbonoAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.carbon.edit');
+            Route::put('/technical/analyses/carbon/{id}', [CarbonoAnalysisController::class, 'update'])->name('lscefa.technical.analyses.carbon.update');
+            Route::delete('/technical/analyses/carbon/{id}', [CarbonoAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.carbon.destroy');
+            Route::get('/technical/analyses/carbon/{id}/report', [CarbonoAnalysisController::class, 'report'])->name('lscefa.technical.analyses.carbon.report');
+
+            // Rutas para Análisis de Micronutrientes
+            Route::get('/technical/analyses/micronutrients', [MicronutrientsAnalysisController::class, 'index'])->name('lscefa.technical.analyses.micronutrients.index');
+            Route::get('/technical/analyses/micronutrients/process/{processId}/{serviceId}', [MicronutrientsAnalysisController::class, 'process'])->name('lscefa.technical.analyses.micronutrients.process');
+            Route::post('/technical/analyses/micronutrients/store', [MicronutrientsAnalysisController::class, 'storeMicronutrientsAnalysis'])->name('lscefa.technical.analyses.micronutrients.store');
+            Route::get('/technical/analyses/micronutrients/batch', [MicronutrientsAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.micronutrients.batch');
+            Route::post('/technical/analyses/micronutrients/batch', [MicronutrientsAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.micronutrients.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.micronutrients.batch.post');
+            Route::post('/technical/analyses/micronutrients/batch-store', [MicronutrientsAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.micronutrients.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.micronutrients.batch_store');
+            Route::get('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'show'])->name('lscefa.technical.analyses.micronutrients.show');
+            Route::get('/technical/analyses/micronutrients/{id}/edit', [MicronutrientsAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.micronutrients.edit');
+            Route::put('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'update'])->name('lscefa.technical.analyses.micronutrients.update');
+            Route::delete('/technical/analyses/micronutrients/{id}', [MicronutrientsAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.micronutrients.destroy');
+            Route::get('/technical/analyses/micronutrients/{id}/report', [MicronutrientsAnalysisController::class, 'report'])->name('lscefa.technical.analyses.micronutrients.report');
+
+            // Rutas para Análisis de Textura
+            Route::get('/technical/analyses/texture', [TextureAnalysisController::class, 'index'])->name('lscefa.technical.analyses.texture.index');
+            Route::get('/technical/analyses/texture/process/{processId}/{serviceId}', [TextureAnalysisController::class, 'process'])->name('lscefa.technical.analyses.texture.process');
+            Route::post('/technical/analyses/texture/store', [TextureAnalysisController::class, 'storeTextureAnalysis'])->name('lscefa.technical.analyses.texture.store');
+            Route::get('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.texture.batch');
+            Route::post('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.texture.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch.post');
+            Route::post('/technical/analyses/texture/batch-store', [TextureAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.texture.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch_store');
+            Route::get('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'show'])->name('lscefa.technical.analyses.texture.show');
+            Route::get('/technical/analyses/texture/{id}/edit', [TextureAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.texture.edit');
+            Route::put('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'update'])->name('lscefa.technical.analyses.texture.update');
+            Route::delete('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.texture.destroy');
+            Route::get('/technical/analyses/texture/{id}/report', [TextureAnalysisController::class, 'report'])->name('lscefa.technical.analyses.texture.report');
+
+        // Rutas para Análisis de Carbono Orgánico
+        Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');
+        Route::get('/technical/analyses/carbon/process/{processId}/{serviceId}', [CarbonoAnalysisController::class, 'carbonAnalysis'])->name('lscefa.technical.analyses.carbon.process');
+        Route::post('/technical/analyses/carbon/store', [CarbonoAnalysisController::class, 'storeCarbonoAnalysis'])->name('lscefa.technical.analyses.carbon.store');
+    //});
+     // Route::post('/admin/units/productive_units/environment_pus/store', [UnitController::class, 'environment_pus_store'])->name('sica.admin.units.productive_units.environment_pus.store'); /* Registrar asociación de ambiente y unidad productiva (Administrador) */
+      
 
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');

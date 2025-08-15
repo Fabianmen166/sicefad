@@ -31,4 +31,9 @@ class Quote extends Model
     {
         return $this->hasMany(Process::class, 'quote_id', 'quote_id');
     }
+
+    public function service()
+    {
+    return $this->belongsTo(Service::class, 'service_id', 'service_id');
+    }
 } 

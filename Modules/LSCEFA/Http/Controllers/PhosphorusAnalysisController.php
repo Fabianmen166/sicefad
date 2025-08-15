@@ -150,21 +150,21 @@ class PhosphorusAnalysisController extends Controller
                 $analysisData = [
                     'process_id' => (string)$processId,
                     'service_id' => $serviceId,
-                    'consecutive_no' => $request->consecutivo_no,
-                    'analysis_date' => $request->fecha_analisis,
-                    'equipment_used' => $request->equipo_utilizado,
-                    'method_interval' => $request->intervalo_metodo,
-                    'analyst_name' => $request->analista,
-                    'observations' => $request->observaciones ?? '',
-                    'internal_code' => $item['codigo_interno'] ?? '',
-                    'sample_weight' => $item['peso_muestra'] ?? 0,
+                    'consecutivo_no' => $request->consecutivo_no,
+                    'fecha_analisis' => $request->fecha_analisis,
+                    'equipo_utilizado' => $request->equipo_utilizado,
+                    'intervalo_metodo' => $request->intervalo_metodo,
+                    'nombre_analista' => $request->analista,
+                    'observaciones' => $request->observaciones ?? '',
+                    'codigo_interno' => $item['codigo_interno'] ?? '',
+                    'peso_muestra' => $item['peso_muestra'] ?? 0,
                     'pw' => $item['pw'] ?? 0,
-                    'extractant_volume' => $item['v_extractante'] ?? 0,
-                    'blank_reading' => $item['lectura_blanco'] ?? 0,
-                    'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                    'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                    'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                    'item_observations' => $item['observaciones_item'] ?? '',
+                    'v_extractante' => $item['v_extractante'] ?? 0,
+                    'lectura_blanco' => $item['lectura_blanco'] ?? 0,
+                    'factor_dilucion' => $item['factor_dilucion'] ?? 0,
+                    'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
+                    'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                    'observaciones_item' => $item['observaciones_item'] ?? '',
                 ];
 
                 Log::info("Creando análisis {$index}", $analysisData);
@@ -261,15 +261,40 @@ class PhosphorusAnalysisController extends Controller
         }
     }
 
-    public function batchProcess()
+    public function batchProcess(Request $request)
     {
+        // Obtener los IDs de procesos seleccionados desde la URL
+        $selectedProcessIds = [];
+        if ($request->has('processes')) {
+            $selectedProcessIds = explode(',', $request->processes);
+        }
+
+        // Si no hay procesos seleccionados, redirigir al index
+        if (empty($selectedProcessIds)) {
+            return redirect()->route('lscefa.technical.analyses.phosphorus.index')
+                ->with('error', 'No se seleccionaron procesos para procesar.');
+        }
+
+        // Obtener solo los procesos seleccionados que estén pendientes
         $pendingProcesses = Process::with(['serviceProcessDetails.service'])
+            ->whereIn('process_id', $selectedProcessIds)
             ->whereHas('serviceProcessDetails', function ($query) {
                 $query->whereHas('service', function ($serviceQuery) {
                     $serviceQuery->where('descripcion', 'like', '%fósforo%');
                 })->where('status', 'pending');
             })
             ->get();
+
+        // Verificar que todos los procesos seleccionados se encontraron
+        if ($pendingProcesses->count() !== count($selectedProcessIds)) {
+            $foundIds = $pendingProcesses->pluck('process_id')->toArray();
+            $missingIds = array_diff($selectedProcessIds, $foundIds);
+            
+            if (!empty($missingIds)) {
+                return redirect()->route('lscefa.technical.analyses.phosphorus.index')
+                    ->with('error', 'Algunos procesos seleccionados no están disponibles: ' . implode(', ', $missingIds));
+            }
+        }
 
         return view('lscefa::analyses.phosphorus.batch_process', compact('pendingProcesses'));
     }
@@ -405,21 +430,21 @@ class PhosphorusAnalysisController extends Controller
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'service_id' => $serviceId,
-                            'consecutive_no' => $consecutivoNo,
-                            'analysis_date' => $fechaAnalisis,
-                            'equipment_used' => $request->equipo_utilizado ?? '',
-                            'method_interval' => $request->intervalo_metodo ?? '',
-                            'analyst_name' => $request->nombre_analista ?? '',
-                            'observations' => $request->observaciones ?? '',
-                            'internal_code' => $item['codigo_interno'] ?? '',
-                            'sample_weight' => $item['peso_muestra'] ?? 0,
+                            'consecutivo_no' => $consecutivoNo,
+                            'fecha_analisis' => $fechaAnalisis,
+                            'equipo_utilizado' => $request->equipo_utilizado ?? '',
+                            'intervalo_metodo' => $request->intervalo_metodo ?? '',
+                            'nombre_analista' => $request->nombre_analista ?? '',
+                            'observaciones' => $request->observaciones ?? '',
+                            'codigo_interno' => $item['codigo_interno'] ?? '',
+                            'peso_muestra' => $item['peso_muestra'] ?? 0,
                             'pw' => $item['pw'] ?? 0,
-                            'extractant_volume' => $item['v_extractante'] ?? 0,
-                            'blank_reading' => $item['lectura_blanco'] ?? 0,
-                            'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                            'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                            'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                            'item_observations' => $item['observaciones_item'] ?? '',
+                            'v_extractante' => $item['v_extractante'] ?? 0,
+                            'lectura_blanco' => $item['lectura_blanco'] ?? 0,
+                            'factor_dilucion' => $item['factor_dilucion'] ?? 0,
+                            'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
+                            'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                            'observaciones_item' => $item['observaciones_item'] ?? '',
                         ];
 
                         Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);

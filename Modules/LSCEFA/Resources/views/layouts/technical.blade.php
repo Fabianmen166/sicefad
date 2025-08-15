@@ -87,6 +87,13 @@
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.micronutrients.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Micronutrientes</p>
+                            </a>
+                        </li>
 
 
                         <li class="nav-item">
@@ -119,7 +126,67 @@
 
 
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
+                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Azufre</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Boro</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-layer-group"></i>
+                                <p>Textura</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Azufre</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Boro</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-layer-group"></i>
+                                <p>Textura</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Bases Cambiables</p>

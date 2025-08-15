@@ -131,6 +131,7 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_technical[] = $permission->id;
 
+
         // Permiso para ver el listado de análisis técnicos
         $permission = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.index'], [
             'name' => 'Ver listado de Análisis Técnicos',
@@ -178,11 +179,11 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
-        // Permisos para Análisis de Intercambio Catiónico
-        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.index'], [
-            'name' => 'Ver listado de Análisis de Intercambio Catiónico (Technical)',
-            'description' => 'Puede ver el listado de análisis de intercambio catiónico (technical)',
-            'description_english' => 'Can view cationic exchange analysis list (technical)',
+        // Permisos para Análisis de Carbono Orgánico
+       $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.index'], [
+            'name' => 'Ver listado de Análisis de Carbono Orgánico (Technical)',
+            'description' => 'Puede ver el listado de análisis de carbono orgánico (technical)',
+            'description_english' => 'Can view carbon organic analysis list (technical)',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
@@ -190,21 +191,20 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
-        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.process'], [
-            'name' => 'Procesar Análisis de Intercambio Catiónico (Technical)',
-            'description' => 'Puede procesar análisis de intercambio catiónico (technical)',
-            'description_english' => 'Can process cationic exchange analysis (technical)',
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.process'], [
+            'name' => 'Procesar Análisis de Carbono Orgánico (Technical)',
+            'description' => 'Puede procesar los análisis de carbono orgánico (technical)',
+            'description_english' => 'Can process carbon organic analyses (technical)',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
-        
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
-        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.store'], [
-            'name' => 'Guardar Análisis de Intercambio Catiónico (Technical)',
-            'description' => 'Puede guardar análisis de intercambio catiónico (technical)',
-            'description_english' => 'Can store cationic exchange analysis (technical)',
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.carbon.store'], [
+            'name' => 'Guardar Análisis de Carbono Orgánico (Technical)',
+            'description' => 'Puede guardar los análisis de carbono orgánico (technical)',
+            'description_english' => 'Can store carbon organic analyses (technical)',
             'app_id' => $app->id
         ]);
         $permissions_technical[] = $permision->id;
@@ -795,13 +795,19 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.index'], [
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.index'], [
             'name' => 'Ver listado de Clientes (Quality)',
             'description' => 'Puede ver el listado de clientes (quality)',
             'description_english' => 'Can view customers list (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
+        $permisos_quality_customers[] = $permision->id;
+
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
+
+
 
         // create
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.create'], [
@@ -811,13 +817,20 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.create'], [
+
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.create'], [
             'name' => 'Crear Cliente (Quality)',
             'description' => 'Puede acceder al formulario de creación de clientes (quality)',
             'description_english' => 'Can access customer creation form (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
+        $permisos_quality_customers[] = $permision->id;
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
+
+
+         
 
         // store
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.store'], [
@@ -827,13 +840,18 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.store'], [
+
+            // Permiso para registrar un cliente (quality)
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.store'], [
             'name' => 'Registrar Cliente (Quality)',
             'description' => 'Puede registrar un nuevo cliente (quality)',
             'description_english' => 'Can store a new customer (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
+        $permisos_quality_customers[] = $permision->id;
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
 
         // edit
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.edit'], [
@@ -843,13 +861,19 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.edit'], [
+        
+
+
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.edit'], [
             'name' => 'Editar Cliente (Quality)',
             'description' => 'Puede acceder al formulario de edición de clientes (quality)',
             'description_english' => 'Can access customer edit form (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
+        $permisos_quality_customers[] = $permision->id;
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
 
         // update
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.update'], [
@@ -859,13 +883,16 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.update'], [
+       
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.update'], [
             'name' => 'Actualizar Cliente (Quality)',
             'description' => 'Puede actualizar un cliente (quality)',
             'description_english' => 'Can update a customer (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
+        $permisos_quality_customers[] = $permision->id;
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
 
         // destroy
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.customers.destroy'], [
@@ -875,14 +902,17 @@ class PermissionsTableSeeder extends Seeder
             'app_id' => $app->id
         ]);
         $permisos_admin_customers[] = $perm->id;
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.destroy'], [
+        
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.quality.customers.destroy'], [
             'name' => 'Eliminar Cliente (Quality)',
             'description' => 'Puede eliminar un cliente (quality)',
             'description_english' => 'Can delete a customer (quality)',
             'app_id' => $app->id
         ]);
-        $permisos_quality_customers[] = $perm->id;
-
+        $permisos_quality_customers[] = $permision->id;
+        $rol_quality = Role::where('slug', 'lscefa.quality')->first();
+        $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_customers);
+        
         // Permisos CRUD Cotizaciones
         $permisos_admin_quotes = [];
         $permisos_quality_quotes = [];
@@ -1224,44 +1254,8 @@ $permisos_admin_quotes[] = $perm->id;
         // Asignar permisos de conductividad al rol técnico
         $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_conductivity);
 
-        // Permisos para la gestión de usuarios
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.index'], [
-            'name' => 'Listar usuarios',
-            'description' => 'Permite ver la lista de usuarios del sistema',
-            'description_english' => 'Can view the list of system users',
-            'app_id' => $app->id
-        ]);
-        $permissions_admin[] = $perm->id;
-
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.create'], [
-            'name' => 'Crear usuarios',
-            'description' => 'Permite crear nuevos usuarios en el sistema',
-            'description_english' => 'Can create new users in the system',
-            'app_id' => $app->id
-        ]);
-        $permissions_admin[] = $perm->id;
-
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.edit'], [
-            'name' => 'Editar usuarios',
-            'description' => 'Permite editar usuarios existentes en el sistema',
-            'description_english' => 'Can edit existing users in the system',
-            'app_id' => $app->id
-        ]);
-        $permissions_admin[] = $perm->id;
-
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.destroy'], [
-            'name' => 'Eliminar usuarios',
-            'description' => 'Permite eliminar usuarios del sistema',
-            'description_english' => 'Can delete users from the system',
-            'app_id' => $app->id
-        ]);
-        $permissions_admin[] = $perm->id;
-
-        // Asignar permisos específicos al rol de administrador
+        // Asignar todos los permisos al rol de administrador al final del método run()
         $adminRole = Role::where('slug', 'lscefa.admin')->first();
-        $adminRole->permissions()->syncWithoutDetaching($permissions_admin);
-
-        // Como medida de precaución, también asignamos todos los permisos al rol admin
         $allPermissions = Permission::where('app_id', $app->id)->pluck('id')->toArray();
         $adminRole->permissions()->syncWithoutDetaching($allPermissions);
     }

@@ -21,7 +21,7 @@
         <!-- Main Content -->
         <form action="{{ route('lscefa.technical.analyses.humidity.store') }}" method="POST">
             @csrf
-             <input type="hidden" name="process_id" value="{{ $process->process_id }}">
+            <input type="hidden" name="process_id" value="{{ $process->process_id }}">
             <input type="hidden" name="service_id" value="{{ $service->services_id }}">
             <section class="content">
                 <div class="container-fluid">
@@ -74,8 +74,8 @@
                                 <!--fecha fin del analis -->
                                 <div class="form-group col-md-3">
                                     <label for="fecha_fin_analisis">Fecha fin del Análisis</label>
-                                    <input type="date" class="form-control" id="fecha_fin_analisis" name="fecha_fin_analisis"
-                                        value="{{ old('fecha_fin_analisis') }}">
+                                    <input type="date" class="form-control" id="fecha_fin_analisis"
+                                        name="fecha_fin_analisis" value="{{ old('fecha_fin_analisis') }}">
                                 </div>
                                 <!-- Analista (solo lectura) -->
                                 <div class="form-group col-md-3">
@@ -200,11 +200,11 @@
                                                 value="{{ old('controles_analiticos.humedad_obtenida') }}">
                                         </div>
                                         <div class="col-3">
-                                            <label class="small">% Humedad obtenido en la muestra fortificada</label>
+                                            <label class="small">% Humedad muestra fortificada</label>
                                             <input type="number" step="any" id="humedad_fortificada"
                                                 name="controles_analiticos[humedad_fortificada]"
                                                 class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.humedad_fortificada') }}">
+                                                value="{{ old('controles_analiticos.humedad_fortificada') }}" readonly>
                                         </div>
                                         <div class="col-2">
                                             <label class="small">%REC</label>
@@ -366,18 +366,23 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td><input type="text" id="codigo_interno" name="codigo_interno" class="form-control" required>
+                                        <td>
+                                            <input type="text" id="codigo_interno" name="codigo_interno"
+                                                class="form-control" required value="Arena(Blanco)"
+                                                onfocus="if(this.value === 'Arena(Blanco)') this.value = ''"
+                                                onblur="if(this.value === '') this.value = 'Arena(Blanco)'">
                                         </td>
                                         <td><input type="number" step="0.0001" id="peso_capsula" name="peso_capsula"
                                                 class="form-control pc" required></td>
-                                        <td><input type="number" step="0.0001"  id="peso_muestra" name="peso_muestra"
+                                        <td><input type="number" step="0.0001" id="peso_muestra" name="peso_muestra"
                                                 class="form-control muestra"></td>
-                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_humedad" name="peso_capsula_muestra_humedad"
-                                                class="form-control pmh" readonly></td>
-                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_seca" name="peso_capsula_muestra_seca"
-                                                class="form-control pms" ></td>
-                                        <td><input type="text" name="porcentaje_humedad"
-                                                class="form-control humedad" readonly></td>
+                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_humedad"
+                                                name="peso_capsula_muestra_humedad" class="form-control pmh" readonly>
+                                        </td>
+                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_seca"
+                                                name="peso_capsula_muestra_seca" class="form-control pms"></td>
+                                        <td><input type="text" id='porcentaje_humedad' name="porcentaje_humedad" class="form-control humedad"
+                                                readonly></td>
                                         <td><input type="text" name="observaciones" class="form-control"></td>
                                     </tr>
                                 </tbody>
@@ -402,6 +407,7 @@
             </section>
         </form>
     </div>
+ @endsection
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -430,7 +436,8 @@
                             const recuperacion = (humedadFortificada / humedadTeorica) * 100;
                             document.getElementById('recuperacion').value = recuperacion.toFixed(2);
 
-                            const aceptable = (recuperacion >= 70 && recuperacion <= 130) ? "Aceptable" : "No aceptable";
+                            const aceptable = (recuperacion >= 70 && recuperacion <= 130) ? "Aceptable" :
+                                "No aceptable";
                             document.getElementById('aceptable_fortificada').value = aceptable;
                         }
                     }
@@ -449,7 +456,8 @@
                     const recuperacionReferencia = Math.abs(valorObtenido) / valorReferencia * 100;
                     document.getElementById('recuperacion_referencia').value = recuperacionReferencia.toFixed(2);
 
-                    const aceptableRef = (recuperacionReferencia >= 70 && recuperacionReferencia <= 130) ? "Aceptable" :
+                    const aceptableRef = (recuperacionReferencia >= 70 && recuperacionReferencia <= 130) ?
+                        "Aceptable" :
                         "No aceptable";
                     document.getElementById('aceptable_referencia').value = aceptableRef;
                 }
@@ -509,12 +517,20 @@
             pmhInput.value = pmh > 0 ? pmh.toFixed(4) : '';
 
             // Calcular % Humedad si hay datos válidos
-            if (pmh > 0 && pc > 0 && pms > 0 && (pmh - pc) !== 0) {
-                const humedad = ((pmh - pms) / (pmh - pc)) * 100;
+            if (pmh > 0 && pc > 0 && pms > 0 && (pms - pc) !== 0) {
+                const humedad = ((pmh - pms) / (pms - pc)) * 100;
                 humedadInput.value = humedad.toFixed(2);
+
+                // Si es la segunda fila, copiar a "% Humedad muestra fortificada"
+                const humedadFortificada = document.getElementById('humedad_fortificada');
+                if (humedadFortificada && row.rowIndex === 2) {
+                    humedadFortificada.value = humedad.toFixed(2);
+                }
             } else {
                 humedadInput.value = '';
             }
+
+
         }
 
         function agregarFila() {
@@ -537,9 +553,9 @@
 
         document.addEventListener('input', function(e) {
             if (e.target.closest('tr') &&
-                (e.target.classList.contains('pc') || 
-                 e.target.classList.contains('muestra') || 
-                 e.target.classList.contains('pms'))) {
+                (e.target.classList.contains('pc') ||
+                    e.target.classList.contains('muestra') ||
+                    e.target.classList.contains('pms'))) {
                 calcularValores(e.target.closest('tr'));
             }
         });

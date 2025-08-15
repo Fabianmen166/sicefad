@@ -2,7 +2,6 @@
 
 namespace Modules\LSCEFA\Http\Controllers;
 
-use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -15,90 +14,149 @@ use Modules\LSCEFA\Entities\CarbonoAnalysis;
 
 class CarbonoAnalysisController extends Controller
 {
-  public function index()
-{
-    try {
-        Log::info('Usuario accede a index de análisis de Carbono', [
-            'user_id' => Auth::id(),
-            'role' => Auth::user()->role ?? 'N/A'
-        ]);
-
-        // Obtener procesos pendientes con servicios de carbono
-        $processes = Process::where('status', 'pending')
-            ->with(['services' => function($query) {
-                $query->where('descripcion', 'like', '%Carbono%')
-                      ->wherePivot('status', 'pending');
-            }])
-            ->whereHas('services', function($query) {
-                $query->where('descripcion', 'like', '%Carbono%');
-            })
-            ->get();
-
-        // Verificar si hay procesos
-        $hasProcesses = $processes->isNotEmpty();
-
-        return view('lscefa::analyses.carbon.index', [
-            'processes' => $processes,
-            'hasProcesses' => $hasProcesses
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error('Error al cargar el índice de análisis de Carbono: ' . $e->getMessage());
-        return view('lscefa::analyses.carbon.index', [
-            'processes' => collect(), // Colección vacía
-            'hasProcesses' => false,
-            'error' => 'Ocurrió un error al cargar los procesos. Por favor intente nuevamente.'
-        ]);
-    }
-}
-
-    public function carbonoAnalysis($processId, $serviceId)
+    /**
+     * Lista de procesos pendientes para análisis de carbono.
+     */
+    public function index()
     {
         try {
-            $process = Process::with(['quote.customer', 'services'])
-                ->findOrFail($processId);
-
-            $service = Service::findOrFail($serviceId);
-
-            return view('lscefa::analyses.carbon.process', [
-                'process' => $process,
-                'service' => $service,
-                'serviceId' => $serviceId,
+            Log::info('Usuario accede a index de análisis de carbono orgánico', [
+                'user_id' => Auth::id(),
+                'role' => optional(Auth::user())->role ?? 'N/A'
             ]);
+
+            // 🔍 Buscar el ID del servicio de CARBONO ORGÁNICO por su descripción
+            $carbonService = Service::where('descripcion', 'like', '%carbono%')->first();
+
+            if (!$carbonService) {
+                return back()->with('error', 'No se encontró el servicio de carbono orgánico en la base de datos.');
+            }
+
+            // 🔍 Procesos que tienen el servicio de carbono pendiente
+            $processes = Process::whereHas('serviceProcessDetails', function ($query) use ($carbonService) {
+                    $query->where('service_id', $carbonService->services_id)
+                          ->where('status', 'pending');
+                })
+                ->with('analyses') // Relación con CarbonAnalysis
+                ->get();
+
+            // 🔍 Análisis de carbono relacionados a procesos con servicio pendiente
+            $carbonAnalyses = CarbonoAnalysis::with('process.serviceProcessDetails')
+        ->whereHas('process.serviceProcessDetails', function ($query) use ($carbonService) {
+            $query->where('service_id', $carbonService->services_id)
+                  ->where('status', 'pending');
+        })
+        ->get();
+
+            return view('lscefa::analyses.carbon.index', compact('carbonAnalyses', 'processes'));
+
         } catch (\Exception $e) {
-            Log::error('Error al cargar el formulario de análisis: ' . $e->getMessage());
-            return back()->with('error', 'No se pudo cargar el formulario.');
+            Log::error('Error al cargar el índice de análisis de carbono orgánico: ' . $e->getMessage());
+            return back()->with('error', 'No se pudo cargar el listado.');
         }
     }
 
-    public function storeCarbonoAnalysis(Request $request, $processId, $serviceId)
+    /**
+     * Formulario para registrar un análisis de carbono.
+     */
+    public function carbonAnalysis($processId, $serviceId)
     {
         try {
-            // Normalizar campos numéricos (convertir comas a puntos)
-            $numericFields = [
-                'peso_muestra',
-               
-                'volumen_sulfato_blanco',
-                'volumen_sulfato_muestra',
-                'volumen_dicromato',
-                'molaridad_sulfato',
-                'co_total_porcentaje',
-                'cot_porcentaje',
-                'mo_porcentaje',
-                'valor_cot_leido',
-                'valor_leido',
-                'porcentaje_humedad',
-            ];
+            // Buscar el proceso
+            $process = Process::with(['quote.customer', 'serviceProcessDetails'])->find($processId);
 
-            foreach ($numericFields as $field) {
-                if ($request->has($field)) {
-                    $value = str_replace(',', '.', $request->input($field));
-                    $request->merge([$field => $value]);
-                }
+            if (!$process) {
+                return back()->with('error', "No se encontró el proceso con ID {$processId}.");
             }
 
-            // Validación completa de todos los campos
+            // Buscar el servicio
+            $service = Service::find($serviceId);
+
+            if (!$service) {
+                return back()->with('error', "No se encontró el servicio con ID {$serviceId}.");
+            }
+
+            // Validar que el proceso tenga la relación con el servicio
+            $serviceDetail = $process->serviceProcessDetails
+                ->where('service_id', $serviceId)
+                ->first();
+
+            if (!$serviceDetail) {
+                return back()->with('error', 'El proceso no tiene asociado este servicio.');
+            }
+
+            // Crear un análisis vacío para la vista (evita errores con $carbonAnalysis)
+            $carbonAnalysis = new CarbonoAnalysis();
+
+            // Cargar la vista del formulario
+            return view('lscefa::analyses.carbon.process', compact('process', 'service', 'serviceId', 'carbonAnalysis'));
+
+        } catch (\Exception $e) {
+            Log::error('Error al cargar el formulario de análisis: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Guardar un nuevo análisis de carbono.
+     */
+    public function storeCarbonoAnalysis(Request $request)
+    {
+        // Debug: Log todos los datos recibidos
+        Log::info('Datos recibidos en storeCarbonoAnalysis:', $request->all());
+
+        $process = Process::find($request->process_id);
+        if (!$process) {
+            Log::error('Proceso no encontrado: ' . $request->process_id);
+            return back()->with('error', 'Proceso no encontrado');
+        }
+
+        // Normalizar campos numéricos
+        $numericFields = [
+            'peso_muestra',
+            'volumen_sulfato_blanco',
+            'volumen_sulfato_muestra',
+            'volumen_dicromato',
+            'molaridad_sulfato',
+            'porcentaje_co_total',
+            'porcentaje_cot',
+            'porcentaje_mo',
+            'porcentaje_humedad',
+            'fortificado',
+            'cot_muestra',
+            'error_analitico',
+            'valor_leido',
+            'valor_cot_leido',
+        ];
+
+        // Normalizar campos de controles analíticos
+        if ($request->has('controles_analiticos') && is_array($request->controles_analiticos)) {
+            $controles = $request->controles_analiticos;
+            $numericControlFields = [
+                'limite_cuantificacion_metodo', 'valor_leido', 'valor_obtenido', 'recuperacion',
+                'valor_referencia', 'replica_1', 'replica_2', 'dpr'
+            ];
+            
+            foreach ($numericControlFields as $field) {
+                if (isset($controles[$field])) {
+                    $controles[$field] = str_replace(',', '.', $controles[$field]);
+                }
+            }
+            $request->merge(['controles_analiticos' => $controles]);
+        }
+
+        foreach ($numericFields as $field) {
+            if ($request->has($field) && $request->input($field) !== null) {
+                $value = str_replace(',', '.', $request->input($field));
+                $request->merge([$field => is_numeric($value) ? (float)$value : null]);
+            }
+        }
+
+        // Validaciones más flexibles
+        try {
             $validated = $request->validate([
+                'process_id' => 'required|string',
+                'service_id' => 'required|integer',
                 'consecutivo_no' => 'required|string|max:255',
                 'fecha_analisis' => 'required|date',
                 'nombre_metodo' => 'required|string|max:255',
@@ -107,189 +165,128 @@ class CarbonoAnalysisController extends Controller
                 'unidades_reporte_equipo' => 'required|string|max:255',
                 'resolucion_instrumental' => 'nullable|string|max:255',
                 'codigo_interno' => 'required|string|max:255',
-                'peso_muestra' => 'required|numeric',
-                'volumen_sulfato_blanco' => 'required|numeric',
-                'volumen_sulfato_muestra' => 'required|numeric',
-                'volumen_dicromato' => 'required|numeric',
+                'peso_muestra' => 'required|numeric|min:0',
+                'volumen_sulfato_blanco' => 'required|numeric|min:0',
+                'volumen_sulfato_muestra' => 'required|numeric|min:0',
+                'volumen_dicromato' => 'required|numeric|min:0',
                 'molaridad_sulfato' => 'nullable|numeric',
                 'porcentaje_co_total' => 'nullable|numeric',
                 'porcentaje_cot' => 'nullable|numeric',
-
                 'porcentaje_mo' => 'nullable|numeric',
-                'valor_cot_leido' => 'nullable|numeric',
-                'valor_leido' => 'nullable|numeric',
-                'fortificado' => 'nullable',
-                'cot_muestra' => 'nullable|numeric',
-                'error_analitico' => 'nullable|numeric',
                 'porcentaje_humedad' => 'nullable|numeric',
+                'fortificado' => 'nullable|numeric',
+                'cot_muestra' => 'nullable|numeric',
+                'valor_leido' => 'nullable|numeric',
+                'error_analitico' => 'nullable|numeric',
                 'observaciones' => 'nullable|string',
-                
-                // Validación para controles analíticos
                 'controles_analiticos' => 'nullable|array',
-                'controles_analiticos.identificacion_mf' => 'nullable|string|max:255',
-                'controles_analiticos.identificacion_mr' => 'nullable|string|max:255',
-                'controles_analiticos.identificacion_dm' => 'nullable|string|max:255',
-                'controles_analiticos.identificacion_bm' => 'nullable|string|max:255',
-                'controles_analiticos.valor_referencia' => 'nullable|numeric',
-                'controles_analiticos.valor_obtenido' => 'nullable|numeric',
-                'controles_analiticos.valor_leido' => 'nullable|numeric',
-                'controles_analiticos.blanco_metodo' => 'nullable|numeric',
-                'controles_analiticos.recuperacion' => 'nullable|numeric',
-                'controles_analiticos.limite_cuantificacion_metodo' => 'nullable|string|max:255',
-                'controles_analiticos.replica_1' => 'nullable|numeric',
-                'controles_analiticos.replica_2' => 'nullable|numeric',
-                'controles_analiticos.dpr' => 'nullable|numeric',
-                'controles_analiticos.aceptable' => 'nullable|string|in:aceptable,no_aceptable',
-                'controles_analiticos.observaciones' => 'nullable|string',
-            ], [
-                'consecutivo_no.required' => 'El consecutivo es obligatorio.',
-                'fecha_analisis.required' => 'La fecha del análisis es obligatoria.',
-                'nombre_metodo.required' => 'El nombre del método es obligatorio.',
-                'equipo_utilizado.required' => 'El equipo utilizado es obligatorio.',
-                'intervalo_metodo.required' => 'El intervalo del método es obligatorio.',
-                'peso_muestra.required' => 'El peso de la muestra es obligatorio.',
-                'volumen_sulfato_blanco.required' => 'El volumen de sulfato blanco es obligatorio.',
-                'volumen_sulfato_muestra.required' => 'El volumen de sulfato muestra es obligatorio.',
-                'volumen_dicromato.required' => 'El volumen de dicromato es obligatorio.',
+
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Errores de validación:', $e->errors());
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        // Verificar unicidad del consecutivo
+        $existingAnalysis = CarbonoAnalysis::where('consecutivo_no', $validated['consecutivo_no'])->first();
+        if ($existingAnalysis) {
+            return back()->with('error', 'El consecutivo ya existe. Por favor, use uno diferente.')->withInput();
+        }
+
+        DB::beginTransaction();
+
+        try {
+            Log::info('Iniciando creación de análisis de carbono:', $validated);
+
+            $carbonoAnalysis = CarbonoAnalysis::create([
+                'process_id' => $validated['process_id'],
+                'service_id' => $validated['service_id'],
+                'user_id' => auth()->id(),
+                'consecutivo_no' => $validated['consecutivo_no'],
+                'fecha_analisis' => $validated['fecha_analisis'],
+                'nombre_metodo' => $validated['nombre_metodo'],
+                'equipo_utilizado' => $validated['equipo_utilizado'],
+                'intervalo_metodo' => $validated['intervalo_metodo'],
+                'unidades_reporte_equipo' => $validated['unidades_reporte_equipo'],
+                'resolucion_instrumental' => $validated['resolucion_instrumental'] ?? null,
+                'codigo_interno' => $validated['codigo_interno'],
+                'peso_muestra' => $validated['peso_muestra'],
+                'volumen_sulfato_blanco' => $validated['volumen_sulfato_blanco'],
+                'volumen_sulfato_muestra' => $validated['volumen_sulfato_muestra'],
+                'volumen_dicromato' => $validated['volumen_dicromato'],
+                'molaridad_sulfato' => $validated['molaridad_sulfato'] ?? null,
+                'porcentaje_co_total' => $validated['porcentaje_co_total'] ?? null,
+                'porcentaje_cot' => $validated['porcentaje_cot'] ?? null,
+                'porcentaje_mo' => $validated['porcentaje_mo'] ?? null,
+                'porcentaje_humedad' => $validated['porcentaje_humedad'] ?? null,
+                'fortificado' => $validated['fortificado'] ?? null,
+                'cot_muestra' => $validated['cot_muestra'] ?? null,
+                'error_analitico' => $validated['error_analitico'] ?? null,
+                'observaciones' => $validated['observaciones'] ?? null,
             ]);
 
-            // Iniciar transacción
-            DB::beginTransaction();
+            Log::info('Análisis de carbono creado con ID: ' . $carbonoAnalysis->id);
 
-            try {
-                // Obtener el proceso y servicio
-                $process = Process::findOrFail($processId);
-                $service = Service::findOrFail($serviceId);
+            // Guardar controles analíticos si vienen
+            if (!empty($validated['controles_analiticos'])) {
+                $controles = $validated['controles_analiticos'];
+                
+                $analyticalControl = AnalyticalControl::create([
+                    'carbono_analysis_id' => $carbonoAnalysis->id,
+                    'process_id' => $validated['process_id'],
+                    'service_id' => $validated['service_id'],
+                    'identificacion_mf' => $controles['identificacion_mf'] ?? null,
+                    'identificacion_mr' => $controles['identificacion_mr'] ?? null,
+                    'identificacion_dm' => $controles['identificacion_dm'] ?? null,
+                    'identificacion_bm' => $controles['identificacion_bm'] ?? null,
+                    'limite_cuantificacion_metodo' => isset($controles['limite_cuantificacion_metodo']) ? (float)$controles['limite_cuantificacion_metodo'] : null,
+                    'valor_leido' => isset($controles['valor_leido']) ? (float)$controles['valor_leido'] : null,
+                    'valor_referencia' => isset($controles['valor_referencia']) ? (float)$controles['valor_referencia'] : null,
+                    'valor_obtenido' => isset($controles['valor_obtenido']) ? (float)$controles['valor_obtenido'] : null,
+                    'recuperacion' => isset($controles['recuperacion']) ? (float)$controles['recuperacion'] : null,
+                    'replica_1' => isset($controles['replica_1']) ? (float)$controles['replica_1'] : null,
+                    'replica_2' => isset($controles['replica_2']) ? (float)$controles['replica_2'] : null,
+                    'dpr' => isset($controles['dpr']) ? (float)$controles['dpr'] : null,
+                    'aceptable_blanco' => $controles['aceptable_blanco'] ?? null,
+                    'aceptable_fortificada' => $controles['aceptable_fortificada'] ?? null,
+                    'aceptable_referencia' => $controles['aceptable_referencia'] ?? null,
+                    'aceptable_duplicado' => $controles['aceptable_duplicado'] ?? null,
+                    'observaciones' => $controles['observaciones'] ?? null,
+                ]);
 
-                // Preparar datos para carbono_analysis
-                $carbonoData = [
-                    'process_id' => $processId,
-                    'service_id' => $serviceId,
-                    'user_id' => auth()->id(),
-                    'consecutivo_no' => $validated['consecutivo_no'],
-                    'fecha_analisis' => $validated['fecha_analisis'],
-                    'nombre_metodo' => $validated['nombre_metodo'],
-                    'equipo_utilizado' => $validated['equipo_utilizado'],
-                    'intervalo_metodo' => $validated['intervalo_metodo'],
-                    'unidades_reporte_equipo' => $validated['unidades_reporte_equipo'],
-                    'resolucion_instrumental' => $validated['resolucion_instrumental'] ?? null,
-                    'codigo_interno' => $validated['codigo_interno'],
-                    'peso_muestra' => $validated['peso_muestra'],
-                    'volumen_sulfato_blanco' => $validated['volumen_sulfato_blanco'],
-                    'volumen_sulfato_muestra' => $validated['volumen_sulfato_muestra'],
-                    'volumen_dicromato' => $validated['volumen_dicromato'],
-                    'molaridad_sulfato' => $validated['molaridad_sulfato'] ?? null,
-                    'porcentaje_cot_total' => $validated['porcentaje_cot_total'] ?? null,
-                    'porcentaje_cot' => $validated['porcentaje_cot'] ?? null,
-                    'porcentaje_mo' => $validated['porcentaje_mo'] ?? null,
-                    'fortificado' => $validated['fortificado'] ?? false,
-                    'cot_muestra' => $validated['cot_muestra'] ?? null,
-                    'porcentaje_humedad' => $validated['porcentaje_humedad'] ?? null,
-                    'error_analitico' => $validated['error_analitico'] ?? null,
-                    'valor_cot_leido' => $validated['valor_cot_leido'] ?? null,
-                    'valor_leido' => $validated['valor_leido'] ?? null,
-                    'observaciones' => $validated['observaciones'] ?? null,
-                ];
-
-                // Crear el registro en carbono_analysis
-                $carbonoAnalysis = CarbonoAnalysis::create($carbonoData);
-
-                // Crear controles analíticos si existen
-                if (!empty($validated['controles_analiticos'])) {
-                    $analyticalData = [
-                        'process_id' => $processId,
-                        'service_id' => $serviceId,
-                        'identificacion_mf' => $validated['controles_analiticos']['identificacion_mf'] ?? null,
-                        'identificacion_mr' => $validated['controles_analiticos']['identificacion_mr'] ?? null,
-                        'identificacion_dm' => $validated['controles_analiticos']['identificacion_dm'] ?? null,
-                        'identificacion_bm' => $validated['controles_analiticos']['identificacion_bm'] ?? null,
-                        'valor_referencia' => $validated['controles_analiticos']['valor_referencia'] ?? null,
-                        'valor_obtenido' => $validated['controles_analiticos']['valor_obtenido'] ?? null,
-                        'valor_leido' => $validated['controles_analiticos']['valor_leido'] ?? null,
-                        'blanco_metodo' => $validated['controles_analiticos']['blanco_metodo'] ?? null,
-                        'recuperacion' => $validated['controles_analiticos']['recuperacion'] ?? null,
-                        'limite_cuantificacion_metodo' => $validated['controles_analiticos']['limite_cuantificacion_metodo'] ?? null,
-                        'replica_1' => $validated['controles_analiticos']['replica_1'] ?? null,
-                        'replica_2' => $validated['controles_analiticos']['replica_2'] ?? null,
-                        'dpr' => $validated['controles_analiticos']['dpr'] ?? null,
-                        'estado' => isset($validated['controles_analiticos']['aceptable']) ? 
-                                      ($validated['controles_analiticos']['aceptable'] === 'aceptable' ? 'Aceptable' : 'No Aceptable') : null,
-                        'observaciones' => $validated['controles_analiticos']['observaciones'] ?? null,
-                    ];
-
-                    AnalyticalControl::create($analyticalData);
-                }
-
-                // Actualizar el estado del servicio en el proceso
-                $process->services()->updateExistingPivot($serviceId, ['status' => 'completed']);
-
-                // Verificar si todos los servicios están completados
-                $pendingServices = $process->services()->wherePivot('status', 'pending')->count();
-                if ($pendingServices === 0) {
-                    $process->status = 'completed';
-                    $process->save();
-                }
-
-                // Confirmar la transacción
-                DB::commit();
-
-                return redirect()->route('carbono.index')
-                    ->with('success', 'Análisis de carbono registrado correctamente.');
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Error al guardar análisis de carbono (transacción): ' . $e->getMessage());
-                throw $e;
+                Log::info('Control analítico creado con ID: ' . $analyticalControl->id);
             }
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::debug('Errores de validación:', $e->errors());
-            return redirect()->back()
-                ->withErrors($e->validator)
-                ->withInput();
+            // Actualizar estado del servicio
+            $updated = $process->serviceProcessDetails()
+                ->where('service_id', $validated['service_id'])
+                ->update(['status' => 'completed']);
+
+            Log::info('Servicios actualizados: ' . $updated);
+
+            // Verificar si todos los servicios están completados
+            $pendingServices = $process->serviceProcessDetails()
+                ->where('status', 'pending')
+                ->count();
+
+            if ($pendingServices === 0) {
+                $process->status = 'completed';
+                $process->save();
+                Log::info('Proceso marcado como completado: ' . $process->process_id);
+            }
+
+            DB::commit();
+
+            Log::info('Transacción completada exitosamente');
+
+            return redirect()->route('lscefa.technical.analyses.carbon.index')
+                ->with('success', 'Análisis de carbono registrado correctamente.');
+
         } catch (\Exception $e) {
+            DB::rollBack();
             Log::error('Error al guardar análisis de carbono: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Hubo un error al guardar el análisis de carbono: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return back()->with('error', 'Hubo un error al guardar el análisis: ' . $e->getMessage())->withInput();
         }
-    }
-
-    public function edit($id)
-    {
-        $carbonoAnalysis = CarbonoAnalysis::findOrFail($id);
-        return view('lscefa::analyses.carbon.edit', compact('carbonoAnalysis'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $carbonoAnalysis = CarbonoAnalysis::findOrFail($id);
-        $carbonoAnalysis->update($request->all());
-
-        return redirect()->route('carbon_analysis.index')
-            ->with('success', 'Análisis actualizado.');
-    }
-
-    public function review(Request $request, $id)
-    {
-        $carbonoAnalysis = CarbonoAnalysis::findOrFail($id);
-
-        $carbonoAnalysis->update([
-            'review_status' => $request->review_status,
-            'reviewed_by' => Auth::id(),
-            'reviewer_role' => Auth::user()->role,
-            'review_date' => now(),
-            'review_observations' => $request->review_observations,
-        ]);
-
-        return redirect()->route('carbon_analysis.index')
-            ->with('success', 'Revisión registrada.');
-    }
-
-    public function destroy($id)
-    {
-        $carbonoAnalysis = CarbonoAnalysis::findOrFail($id);
-        $carbonoAnalysis->delete();
-
-        return back()->with('success', 'Análisis eliminado.');
     }
 }

@@ -43,6 +43,7 @@
             <a href="{{ route('lscefa.quality.services.index') }}" class="btn btn-secondary ml-2">Limpiar</a>
         @endif
     </form>
+    
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>

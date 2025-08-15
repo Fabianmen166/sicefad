@@ -10,6 +10,8 @@ use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
 use Modules\LSCEFA\Entities\CationicAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
+use Modules\LSCEFA\Entities\CarbonoAnalysis;
+use Modules\LSCEFA\Models\Service;
 
 class Process extends Model
 {
@@ -33,6 +35,12 @@ class Process extends Model
         'delivery_date',
     ];
 
+    protected $casts = [
+        'reception_date' => 'date',
+        'sampling_date' => 'date',
+        'delivery_date' => 'date',
+    ];
+
     public function quote()
     {
         return $this->belongsTo(Quote::class, 'quote_id', 'quote_id');
@@ -48,6 +56,13 @@ class Process extends Model
 {
     return $this->hasMany(HumidityAnalysis::class, 'process_id', 'process_id');
 }
+  // Relación con CarbonoAnalysis
+ public function carbonoAnalyses()
+{
+    return $this->hasMany(CarbonoAnalysis::class, 'process_id', 'process_id');
+}
+
+
 
     // Relación con CationicAnalysis
  public function cationicAnalyses()
@@ -78,5 +93,8 @@ class Process extends Model
 {
     return $this->belongsTo(Service::class, 'service_id');
 }
+
+
+
 
 } 

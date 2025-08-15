@@ -245,8 +245,7 @@ class ExchangeableBasesAnalysisController extends Controller
                 'blanco_metodo.*.lcm' => 'nullable|numeric',
                 'blanco_metodo.*.aceptabilidad' => 'nullable|string',
                 
-                // Duplicado muestra
-                'duplicado_muestra.*.process_id' => 'nullable|string',
+                // Duplicado muestra (misma estructura que en process; sin process_id)
                 'duplicado_muestra.*.identificacion_muestra' => 'nullable|string',
                 'duplicado_muestra.*.replica_1' => 'nullable|numeric',
                 'duplicado_muestra.*.replica_2' => 'nullable|numeric',
@@ -368,11 +367,14 @@ class ExchangeableBasesAnalysisController extends Controller
                             'nombre_analista' => $request->nombre_analista ?? '',
                             'curva_valor_leido' => $request->curva_valor_leido ?? null,
                             'curva_error_porcentaje' => $request->curva_error_porcentaje ?? null,
-                            'controles_analiticos' => json_encode($request->controles_analiticos ?? []),
-                            'dpr_duplicado_a' => $request->duplicado_a ?? null,
-                            'dpr_duplicado_b' => $request->duplicado_b ?? null,
-                            'dpr_resultado' => $request->dpr_resultado ?? null,
-                            'dpr_aceptabilidad' => $request->dpr_aceptabilidad ?? '',
+                            // Unificamos en un JSON los bloques de controles
+                            'controles_analiticos' => json_encode([
+                                'blanco_metodo' => $request->blanco_metodo ?? [],
+                                'duplicado_muestra' => $request->duplicado_muestra ?? [],
+                                'controles_calidad' => $request->controles_calidad ?? [],
+                                'control_estandar' => $request->control_estandar ?? [],
+                                'curva_calibracion' => $request->curva_calibracion ?? [],
+                            ]),
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]
@@ -383,31 +385,7 @@ class ExchangeableBasesAnalysisController extends Controller
                         'process_id' => $processId
                     ]);
 
-                    // Procesar datos de duplicado muestra para este proceso
-                    if (isset($request->duplicado_muestra)) {
-                        foreach ($request->duplicado_muestra as $duplicadoIndex => $duplicadoData) {
-                            // Solo procesar si el process_id coincide o si no hay process_id (filas originales)
-                            if (!isset($duplicadoData['process_id']) || $duplicadoData['process_id'] == $processId) {
-                                Log::info('Procesando duplicado muestra', [
-                                    'process_id' => $processId,
-                                    'duplicado_index' => $duplicadoIndex,
-                                    'duplicado_data' => $duplicadoData
-                                ]);
-                                
-                                // Aquí puedes guardar los datos de duplicado muestra en la base de datos
-                                // Por ahora, los guardamos en el control analítico como JSON
-                                $duplicadoData['process_id'] = $processId;
-                                $duplicadoData['created_at'] = now();
-                                
-                                // Guardar en la tabla analytical_controls o crear una tabla específica
-                                // Por simplicidad, lo guardamos como parte del control analítico
-                                $existingDuplicados = json_decode($analyticalControl->controles_analiticos ?? '[]', true);
-                                $existingDuplicados[] = $duplicadoData;
-                                $analyticalControl->controles_analiticos = json_encode($existingDuplicados);
-                                $analyticalControl->save();
-                            }
-                        }
-                    }
+                    // No es necesario procesar duplicado por separado: ya quedó embebido en controles_analiticos
 
                     // Guardar análisis de bases cambiables para este proceso
                     if (isset($request->items_ensayo[$processId])) {
@@ -416,36 +394,36 @@ class ExchangeableBasesAnalysisController extends Controller
                                 'process_id' => $processId,
                                 'service_id' => $serviceId,
                                 'analytical_control_id' => $analyticalControl->id,
-                                'internal_code' => $item['codigo_interno'] ?? '',
-                                'sample_weight' => $item['peso_muestra'] ?? 0,
-                                'moisture' => $item['humedad'] ?? 0,
-                                'final_volume' => $item['volumen_final'] ?? 0,
+                                'codigo_interno' => $item['codigo_interno'] ?? '',
+                                'peso_muestra' => $item['peso_muestra'] ?? 0,
+                                'pw' => $item['pw'] ?? null,
+                                'v_extractante' => $item['volumen_final'] ?? 0,
+                                'lectura_blanco' => $item['lectura_blanco'] ?? null,
+                                'factor_dilucion' => $item['factor_dilucion'] ?? null,
+                                'bases_cambiables_mg_l' => $item['bases_cambiables_mg_l'] ?? null,
+                                'bases_cambiables_mg_kg' => $item['bases_cambiables_mg_kg'] ?? null,
                                 
-                                // Campos para Na
-                                'na_reading' => $item['na_lectura'] ?? 0,
+                                // Campos para Na (solo almacenamos los de salida definidos en migración)
                                 'na_blank' => $item['na_blanco'] ?? 0,
                                 'na_factor' => $item['na_factor'] ?? 0,
                                 'na_result' => $item['na_resultado'] ?? 0,
                                 
                                 // Campos para K
-                                'k_reading' => $item['k_lectura'] ?? 0,
                                 'k_blank' => $item['k_blanco'] ?? 0,
                                 'k_factor' => $item['k_factor'] ?? 0,
                                 'k_result' => $item['k_resultado'] ?? 0,
                                 
                                 // Campos para Ca
-                                'ca_reading' => $item['ca_lectura'] ?? 0,
                                 'ca_blank' => $item['ca_blanco'] ?? 0,
                                 'ca_factor' => $item['ca_factor'] ?? 0,
                                 'ca_result' => $item['ca_resultado'] ?? 0,
                                 
                                 // Campos para Mg
-                                'mg_reading' => $item['mg_lectura'] ?? 0,
                                 'mg_blank' => $item['mg_blanco'] ?? 0,
                                 'mg_factor' => $item['mg_factor'] ?? 0,
                                 'mg_result' => $item['mg_resultado'] ?? 0,
                                 
-                                'observations' => $item['observaciones'] ?? '',
+                                'observaciones_item' => $item['observaciones'] ?? '',
                             ];
 
                             $exchangeableBasesAnalysis = ExchangeableBasesAnalysis::create($analysisData);
