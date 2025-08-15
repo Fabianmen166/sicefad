@@ -80,7 +80,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.carbon.index') }}"
+                            <a href=""
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.carbon.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Carbono Orgánico</p>

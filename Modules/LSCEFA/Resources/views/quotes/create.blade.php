@@ -46,14 +46,26 @@
                         </div>
                         <div class="mb-3">
                             <label for="customer_id" class="form-label">Cliente</label>
-                            <select class="form-control" id="customer_id" name="customer_id" required>
-                                <option value="">Seleccione un cliente</option>
-                                @foreach ($customers as $customer)
-                                    <option value="{{ $customer->customer_id }}" data-discount="{{ $customer->customerType->discount_percentage ?? 0 }}" {{ old('customer_id') == $customer->customer_id ? 'selected' : '' }}>
-                                        {{ $customer->applicant }} - {{ $customer->tax_id }} ({{ $customer->customerType->name ?? 'Sin tipo' }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="row align-items-center">
+                                <div class="col-md-8 mb-2 mb-md-0">
+                                    <select class="form-control" id="customer_id" name="customer_id" required>
+                                        <option value="">Seleccione un cliente</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->customer_id }}"
+                                                    data-discount="{{ $customer->customerType->discount_percentage ?? 0 }}"
+                                                    data-applicant="{{ $customer->applicant }}"
+                                                    data-tax="{{ $customer->tax_id }}"
+                                                    {{ old('customer_id') == $customer->customer_id ? 'selected' : '' }}>
+                                                {{ $customer->applicant }} - {{ $customer->tax_id }} ({{ $customer->customerType->name ?? 'Sin tipo' }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4 position-relative">
+                                    <input type="text" id="customer_search" class="form-control" placeholder="Buscar (nombre o NIT/Cédula)">
+                                    <div id="customer_suggestions" class="list-group position-absolute w-100" style="z-index:1000; max-height: 240px; overflow:auto;"></div>
+                                </div>
+                            </div>
                             @error('customer_id')
                                 <div class="text-danger">{{ $message }}</div>
                             @enderror
@@ -428,6 +440,77 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     // Initial total calculation
     calculateTotal();
+
+    // --- Búsqueda con sugerencias para clientes (por nombre y NIT/Cédula) ---
+    const customerSelect = document.getElementById('customer_id');
+    const customerSearch = document.getElementById('customer_search');
+    const suggestionBox = document.getElementById('customer_suggestions');
+    const customers = Array.from(customerSelect.options)
+        .filter((o, idx) => idx > 0) // omitir placeholder
+        .map(o => ({
+            value: o.value,
+            applicant: (o.getAttribute('data-applicant') || o.text).trim(),
+            tax: (o.getAttribute('data-tax') || '').trim(),
+            discount: o.getAttribute('data-discount') || ''
+        }));
+
+    function clearSuggestions() {
+        suggestionBox.innerHTML = '';
+        suggestionBox.style.display = 'none';
+    }
+
+    function renderSuggestions(items) {
+        suggestionBox.innerHTML = '';
+        if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'list-group-item list-group-item-action disabled';
+            empty.textContent = 'Sin resultados';
+            suggestionBox.appendChild(empty);
+            suggestionBox.style.display = 'block';
+            return;
+        }
+        items.slice(0, 12).forEach(it => {
+            const a = document.createElement('button');
+            a.type = 'button';
+            a.className = 'list-group-item list-group-item-action';
+            a.innerHTML = `<div><strong>${it.applicant}</strong></div><small>${it.tax}</small>`;
+            a.addEventListener('click', () => {
+                customerSelect.value = it.value;
+                // Disparar cambio para recalcular descuento/total
+                customerSelect.dispatchEvent(new Event('change'));
+                // Reflejar en el input y cerrar
+                customerSearch.value = `${it.applicant}`;
+                clearSuggestions();
+            });
+            suggestionBox.appendChild(a);
+        });
+        suggestionBox.style.display = 'block';
+    }
+
+    customerSearch.addEventListener('input', () => {
+        const q = customerSearch.value.trim().toLowerCase();
+        if (!q) return clearSuggestions();
+        const results = customers.filter(c =>
+            (c.applicant || '').toLowerCase().includes(q) ||
+            (c.tax || '').toLowerCase().includes(q)
+        );
+        renderSuggestions(results);
+    });
+
+    // Cerrar sugerencias al hacer click fuera
+    document.addEventListener('click', (e) => {
+        if (!suggestionBox.contains(e.target) && e.target !== customerSearch) {
+            clearSuggestions();
+        }
+    });
+    // Enter selecciona la primera sugerencia disponible
+    customerSearch.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const first = suggestionBox.querySelector('.list-group-item-action:not(.disabled)');
+            if (first) first.click();
+        }
+    });
 });
 </script>
 @endpush

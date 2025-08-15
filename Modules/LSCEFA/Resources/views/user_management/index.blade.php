@@ -1,4 +1,4 @@
-@extends('lscefa::layouts.technical')
+@extends('lscefa::layouts.master')
 
 @section('title', 'Gestión de Usuarios - LSCEFA')
 
@@ -52,7 +52,7 @@
                             @forelse ($users as $user)
                                 <tr>
                                     <td>{{ $user->id }}</td>
-                                    <td>{{ $user->name }}</td>
+                                    <td>{{ $user->nickname }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->roles->first() ? ucfirst(str_replace('lscefa.', '', $user->roles->first()->name)) : 'Sin rol' }}</td>
                                     <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>

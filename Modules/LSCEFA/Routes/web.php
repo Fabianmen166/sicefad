@@ -28,6 +28,7 @@ use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
 
+use Modules\LSCEFA\Http\Controllers\FileDownloadController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -156,23 +157,24 @@ Route::middleware(['lang'])->group(function(){
             Route::get('processes', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'allProcessesIndex'])->name('lscefa.quality.processes.index');
             Route::get('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'processShow'])->name('lscefa.quality.processes.show');
             Route::delete('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'destroyProcess'])->name('lscefa.quality.processes.destroy');
-        });
+        }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.admin,lscefa.quality'])
+
+        // Rutas de descarga de archivos
+        Route::get('download/communication/{filename}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadCommunication'])
+            ->where('filename', '.*')
+            ->name('lscefa.download.communication');
+            
+        // Ruta para descargar comprobantes con parámetro opcional 'type'
+        Route::get('download/comprobante/{quote_id}/{filename}/{type?}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadComprobante'])
+            ->where('quote_id', '.*')  // Acepta cualquier carácter en quote_id
+            ->name('cefa.lscefa.download.comprobante');
 
         Route::middleware(['auth'])->group(function () {
-            // Rutas de descarga de archivos
-            Route::get('communication-file/{filename}', [QuoteController::class, 'downloadCommunicationFile'])
-                ->name('lscefa.communication_file.download');
-                
-            Route::get('comprobante-file/{quote_id}/{filename}', [QuoteController::class, 'downloadComprobante'])
-                ->name('lscefa.comprobante_file.download');
+            // Ruta para subir archivos (mantener esta ruta como está si es necesaria para usuarios no autenticados)
+            Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
+                ->name('lscefa.quality.quotes.upload.form')
+                ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
         });
-
-        // Ruta para subir archivos (mantener esta ruta como está si es necesaria para usuarios no autenticados)
-        Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
-            ->name('lscefa.quality.quotes.upload.form')
-            ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
-
-         });
 
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             // Rutas para Analisis de humedad
@@ -230,14 +232,9 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'update'])->name('lscefa.technical.analyses.exchangeable_bases.update');
             Route::delete('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.exchangeable_bases.destroy');
             Route::get('/technical/analyses/exchangeable_bases/{id}/report', [ExchangeableBasesAnalysisController::class, 'report'])->name('lscefa.technical.analyses.exchangeable_bases.report');
-
-    //});
-     // Route::post('/admin/units/productive_units/environment_pus/store', [UnitController::class, 'environment_pus_store'])->name('sica.admin.units.productive_units.environment_pus.store'); /* Registrar asociación de ambiente y unidad productiva (Administrador) */
-      
+        }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.technical'])
 
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
-    });
-
-         
-});
+    }); // Cierre de Route::prefix('lscefa')
+}); // Cierre de Route::middleware(['lang'])

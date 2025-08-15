@@ -22,6 +22,7 @@
                                         <th>Código de Item</th>
                                         <th>Servicios Pendientes</th>
                                         <th>Servicios Realizados</th>
+                                        <th>Fecha de Entrega</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,6 +49,34 @@
                                                             <li>{{ $spd->service->descripcion ?? 'Servicio' }} (ID: {{ $spd->service_id }})</li>
                                                         @endforeach
                                                     </ul>
+                                                @endif
+                                            </td>
+                                            <td class="align-middle">
+                                                @php
+                                                    $date = !empty($process->delivery_date) ? \Carbon\Carbon::parse($process->delivery_date) : null;
+                                                    $daysLeft = $date ? \Carbon\Carbon::now()->startOfDay()->diffInDays($date->startOfDay(), false) : null;
+                                                    $badgeClass = 'bg-secondary';
+                                                    if (!is_null($daysLeft)) {
+                                                        if ($daysLeft < 0) {
+                                                            $badgeClass = 'bg-danger';
+                                                        } elseif ($daysLeft <= 2) {
+                                                            $badgeClass = 'bg-danger';
+                                                        } elseif ($daysLeft <= 5) {
+                                                            $badgeClass = 'bg-orange';
+                                                        } elseif ($daysLeft <= 7) {
+                                                            $badgeClass = 'bg-warning text-dark';
+                                                        } else {
+                                                            $badgeClass = 'bg-success';
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if($date)
+                                                    <span class="badge {{ $badgeClass }}">
+                                                        {{ $date->format('d/m/Y') }}
+                                                        @if(!is_null($daysLeft)) ({{ $daysLeft }} días) @endif
+                                                    </span>
+                                                @else
+                                                    —
                                                 @endif
                                             </td>
                                         </tr>
@@ -159,5 +188,8 @@
         line-height: 1.5;
         border-radius: 0.2rem;
     }
+    
+    /* Helper para naranja (Bootstrap usa warning como amarillo) */
+    .bg-orange { background-color: #fd7e14 !important; color: #fff !important; }
 </style>
 @endsection
