@@ -224,21 +224,21 @@
                         <td>
                             <div class="info-item">
                                 <span class="label">NIT/CC:</span>
-                                {{ $quote->customer->nit ?? 'No disponible' }}
+                                {{ !empty($quote->customer->tax_id) ? $quote->customer->tax_id : 'No disponible' }}
                             </div>
                             <div class="info-item">
                                 <span class="label">Correo electrónico:</span>
-                                {{ $quote->customer->correo ?? 'No Reportado' }}
+                                {{ !empty($quote->customer->email) ? $quote->customer->email : 'No Reportado' }}
                             </div>
                         </td>
                         <td>
                             <div class="info-item">
                                 <span class="label">Solicitante:</span>
-                                {{ $quote->customer->razon_social ?? 'No disponible' }}
+                                {{ !empty($quote->customer->applicant) ? $quote->customer->applicant : 'No disponible' }}
                             </div>
                             <div class="info-item">
                                 <span class="label">Contacto:</span>
-                                {{ $quote->customer->contacto ?? 'No disponible' }}
+                                {{ !empty($quote->customer->contact) ? $quote->customer->contact : 'No disponible' }}
                             </div>
                         </td>
                         <td>
@@ -248,7 +248,7 @@
                             </div>
                             <div class="info-item">
                                 <span class="label">Teléfono:</span>
-                                {{ $quote->customer->telefono ?? 'No disponible' }}
+                                {{ !empty($quote->customer->phone) ? $quote->customer->phone : 'No disponible' }}
                             </div>
                         </td>
                     </tr>
@@ -316,16 +316,20 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>
-                                @if ($quoteService->service)
+                                @if ($quoteService->service && !empty($quoteService->service->descripcion))
                                     {{ $quoteService->service->descripcion }}
-                                @elseif ($quoteService->servicePackage)
+                                @elseif ($quoteService->servicePackage && !empty($quoteService->servicePackage->nombre))
                                     {{ $quoteService->servicePackage->nombre }}
+                                @elseif ($quoteService->servicePackage && !empty($quoteService->servicePackage->name))
+                                    {{ $quoteService->servicePackage->name }}
+                                @else
+                                    No disponible
                                 @endif
                             </td>
-                            <td>{{ $quoteService->cantidad }}</td>
+                            <td>{{ !empty($quoteService->quantity) && $quoteService->quantity > 0 ? $quoteService->quantity : 'No disponible' }}</td>
                             <td>
-                                @if (isset($quoteService->subtotal) && $quoteService->cantidad > 0)
-                                    {{ number_format($quoteService->subtotal / $quoteService->cantidad, 0) }}
+                                @if (isset($quoteService->subtotal) && !empty($quoteService->quantity) && $quoteService->quantity > 0)
+                                    {{ number_format($quoteService->subtotal / $quoteService->quantity, 0) }}
                                 @else
                                     NA
                                 @endif
@@ -344,13 +348,13 @@
         <!-- Información del cliente -->
         <div class="section info" style="transform: translate(0px, -34px);">
             <div class="title">Información del Cliente</div>
-            <p>{{ $clientText }}</p>
+            <p style="text-align: justify;">{{ $clientText }}</p>
         </div>
 
         <!-- Descripción de los servicios -->
         <div class="section services-text" style="transform: translate(0px, -34px);">
             <div class="title">Descripción de los Servicios</div>
-            <p>Los servicios incluidos en esta cotización son:
+            <p style="text-align: justify;">Los servicios incluidos en esta cotización son:
                 @foreach ($quote->quoteServices as $quoteService)
                     @if ($quoteService->service)
                         {{ $quoteService->service->descripcion }} (Cantidad: {{ $quoteService->quantity }}, Subtotal: {{ number_format($quoteService->subtotal, 2) }})
@@ -381,51 +385,51 @@
         <!-- Condiciones Generales -->
         <div class="section filler" style="transform: translate(0px, -34px);">
             <div class="title">Condiciones Generales</div>
-            <p>Esta cotización tiene una vigencia de 30 días calendario. La aceptación de la oferta implica que el cliente está de acuerdo con todas las condiciones aquí descritas, incluyendo que sus muestras se analicen por los métodos indicados. En caso de tener cualquier inconformidad la debe manifestar al laboratorio para elaborar una nueva cotización.</p>
-            <p>La cantidad de muestra requerida es de aproximadamente 1 kg, la cual debe ser empacada en bolsa limpia, seca, bien sellada y rotulada. La recepción de las muestras para análisis fisicoquímico se hará de lunes a viernes de 08:00 h a 15:00 h. La entrega de resultados se hará en aproximadamente (15 días hábiles contados a partir del día siguiente de la recepción de la muestra) y será acordada previamente con el cliente; una vez emitidos, dicha entrega se realizará en las instalaciones del laboratorio en los horarios de lunes a viernes de 08:00 h a 12:00 h y de 13:30 h a 16:00 h o vía correo electrónico si así lo desea el cliente. En caso de que el cliente requiera devolución del ítem de ensayo, deberá acercarse al laboratorio a partir de la fecha de elaboración del informe de resultados sin exceder un 30 días, de lo contrario el laboratorio queda autorizado para hacer la disposición final.</p>
+            <p style="text-align: justify;">Esta cotización tiene una vigencia de 30 días calendario. La aceptación de la oferta implica que el cliente está de acuerdo con todas las condiciones aquí descritas, incluyendo que sus muestras se analicen por los métodos indicados. En caso de tener cualquier inconformidad la debe manifestar al laboratorio para elaborar una nueva cotización.</p>
+            <p style="text-align: justify;">La cantidad de muestra requerida es de aproximadamente 1 kg, la cual debe ser empacada en bolsa limpia, seca, bien sellada y rotulada. La recepción de las muestras para análisis fisicoquímico se hará de lunes a viernes de 08:00 h a 15:00 h. La entrega de resultados se hará en aproximadamente (15 días hábiles contados a partir del día siguiente de la recepción de la muestra) y será acordada previamente con el cliente; una vez emitidos, dicha entrega se realizará en las instalaciones del laboratorio en los horarios de lunes a viernes de 08:00 h a 12:00 h y de 13:30 h a 16:00 h o vía correo electrónico si así lo desea el cliente. En caso de que el cliente requiera devolución del ítem de ensayo, deberá acercarse al laboratorio a partir de la fecha de elaboración del informe de resultados sin exceder un 30 días, de lo contrario el laboratorio queda autorizado para hacer la disposición final.</p>
         </div>
 
         <!-- Condiciones de Confidencialidad -->
         <div class="section extra-info" style="transform: translate(0px, -30px);">
             <div class="title">Condiciones de Confidencialidad</div>
-            <p>Toda la información recibida del cliente por cualquiera de los canales disponibles (presencial, telefónico, correo electrónico, etc) o la generada en el laboratorio a partir de su solicitud, se considera confidencial. Sin embargo, pretende poner información del cliente al alcance del público, podrá hacerlo si se cumplen las siguientes condiciones:</p>
-            <p>1. Se debe contar con el consentimiento del cliente para que su información pueda ser compartida, o que el mismo, luego de recibirla la publique a su conveniencia. Cuando el laboratorio necesite utilizar información del cliente y ponerla al alcance del público se debe tener con antelación su aprobación por medio de un correo electrónico con la aceptación respectiva.</p>
-            <p>2. Si por disposición de un juez de la república, el LCB tiene que hacer pública la información correspondiente a los resultados de los ensayos de un cliente. Se deberá hacer dicha publicación y posteriormente notificar al cliente de la situación, a menos que en el mismo requerimiento legal, no sea posible informarle.</p>
-            <p>Nota: Una vez se llegue a un acuerdo entre las partes y se realice la prestación del servicio, la información sobre el cliente obtenida de fuentes distintas del cliente (por ejemplo, la que proviene de un denunciante o los organismos reglamentarios) se mantendrá confidencial entre el cliente y el laboratorio. El proveedor (fuente) de esta información es confidencial para el laboratorio y no se comparte con el cliente, a menos que la fuente lo autorice.</p>
+            <p style="text-align: justify;">Toda la información recibida del cliente por cualquiera de los canales disponibles (presencial, telefónico, correo electrónico, etc) o la generada en el laboratorio a partir de su solicitud, se considera confidencial. Sin embargo, pretende poner información del cliente al alcance del público, podrá hacerlo si se cumplen las siguientes condiciones:</p>
+            <p style="text-align: justify;">1. Se debe contar con el consentimiento del cliente para que su información pueda ser compartida, o que el mismo, luego de recibirla la publique a su conveniencia. Cuando el laboratorio necesite utilizar información del cliente y ponerla al alcance del público se debe tener con antelación su aprobación por medio de un correo electrónico con la aceptación respectiva.</p>
+            <p style="text-align: justify;">2. Si por disposición de un juez de la república, el LCB tiene que hacer pública la información correspondiente a los resultados de los ensayos de un cliente. Se deberá hacer dicha publicación y posteriormente notificar al cliente de la situación, a menos que en el mismo requerimiento legal, no sea posible informarle.</p>
+            <p style="text-align: justify;">Nota: Una vez se llegue a un acuerdo entre las partes y se realice la prestación del servicio, la información sobre el cliente obtenida de fuentes distintas del cliente (por ejemplo, la que proviene de un denunciante o los organismos reglamentarios) se mantendrá confidencial entre el cliente y el laboratorio. El proveedor (fuente) de esta información es confidencial para el laboratorio y no se comparte con el cliente, a menos que la fuente lo autorice.</p>
         </div>
 
         <!-- Otras Consideraciones -->
         <div class="section filler" style="transform: translate(0px, -30px);">
             <div class="title">Otras Consideraciones</div>
-            <p>1. El laboratorio de Ciencias Básicas sección fisicoquímica, no proporciona información sobre declaraciones de conformidad respecto a una especificación, norma o partes de ésta (requisito 7.8.6 NTC ISO/IEC 17025:2017) y no emite información sobre opiniones e interpretaciones (requisito 7.8.7 NTC ISO/IEC 17025:2017).</p>
-            <p>2. No realiza muestreo, por lo tanto es responsabilidad del cliente realizar o subcontratar esta actividad y suministrar toda la información necesaria de la muestra (Fecha y hora de muestreo, metodología empleada para la recolección de la muestra). Si el cliente no suministra dicha información u otra que pueda influir en la validez de los resultados, la muestra se recibirá bajo su responsabilidad y se dejará constancia del caso.</p>
-            <p>3. En SENA-SERVICIO NACIONAL DE APRENDIZAJE con sede en el laboratorio de ciencias básicas en el centro de formación AGROINDUSTRIAL regional Huila, contamos con acreditación ONAC, vigente a la fecha, con código de acreditación.</p>
-            <p>4. En ninguna circunstancia el cliente está autorizado para el uso del símbolo de.</p>
+            <p style="text-align: justify;">1. El laboratorio de Ciencias Básicas sección fisicoquímica, no proporciona información sobre declaraciones de conformidad respecto a una especificación, norma o partes de ésta (requisito 7.8.6 NTC ISO/IEC 17025:2017) y no emite información sobre opiniones e interpretaciones (requisito 7.8.7 NTC ISO/IEC 17025:2017).</p>
+            <p style="text-align: justify;">2. No realiza muestreo, por lo tanto es responsabilidad del cliente realizar o subcontratar esta actividad y suministrar toda la información necesaria de la muestra (Fecha y hora de muestreo, metodología empleada para la recolección de la muestra). Si el cliente no suministra dicha información u otra que pueda influir en la validez de los resultados, la muestra se recibirá bajo su responsabilidad y se dejará constancia del caso.</p>
+            <p style="text-align: justify;">3. En SENA-SERVICIO NACIONAL DE APRENDIZAJE con sede en el laboratorio de ciencias básicas en el centro de formación AGROINDUSTRIAL regional Huila, contamos con acreditación ONAC, vigente a la fecha, con código de acreditación.</p>
+            <p style="text-align: justify;">4. En ninguna circunstancia el cliente está autorizado para el uso del símbolo de.</p>
         </div>
 
         <!-- Responsables -->
         <div class="section info" style="transform: translate(0px, -30px);">
             <div class="title">Responsables</div>
-            <p><strong>Elaborado por:</strong> {{ $quote->user->name }} - Cargo: Analista de Cotizaciones</p>
-            <p><strong>Aprobado por:</strong> {{ $admin->name }} - Gerente General</p>
+            <p style="text-align: justify;"><strong>Elaborado por:</strong> {{ $quote->user->name }} - Cargo: Analista de Cotizaciones</p>
+            <p style="text-align: justify;"><strong>Aprobado por:</strong> {{ $admin->name }} - Gerente General</p>
         </div>
 
         <!-- Firmas -->
         <div class="section signature-section" style="transform: translate(0px, -30px);">
             <div class="title">Firmas</div>
-            <table class="signature-table">
+            <table class="signature-table" style="table-layout: fixed; width: 100%;">
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>C.C.</th>
-                        <th>Fecha</th>
-                        <th>Firma</th>
+                        <th style="width: 35%;">Nombre</th>
+                        <th style="width: 25%;">C.C.</th>
+                        <th style="width: 20%;">Fecha</th>
+                        <th style="width: 20%;">Firma</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="height: 30px;"></td>
-                        <td></td>
+                        <td style="height: 30px;">{{ optional($admin->person)->full_name ?? 'No disponible' }}</td>
+                        <td>{{ optional($admin->person)->document_number ?? 'No disponible' }}</td>
                         <td></td>
                         <td></td>
                     </tr>

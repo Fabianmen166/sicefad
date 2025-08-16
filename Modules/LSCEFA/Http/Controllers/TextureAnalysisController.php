@@ -206,7 +206,7 @@ class TextureAnalysisController extends Controller
             })
             ->get();
 
-        return view('lscefa::analyses.texture.batch_process', compact('processes'));
+        return view('lscefa::analyses.texture.batch_process', ['processes' => $processes->values()]);
     }
 
     public function batchStore(Request $request)

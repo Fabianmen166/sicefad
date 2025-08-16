@@ -27,6 +27,14 @@ use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
 
 use Modules\LSCEFA\Http\Controllers\FileDownloadController;
+use Modules\LSCEFA\Http\Controllers\SulfurAnalysisController;
+use Modules\LSCEFA\Http\Controllers\PhAnalysisController;
+use Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController;
+use Modules\LSCEFA\Http\Controllers\AnalyticalController;
+use Modules\LSCEFA\Http\Controllers\AcidezAnalysisController;
+use Modules\LSCEFA\Http\Controllers\QuoteSearchController;
+use Modules\LSCEFA\Http\Controllers\QuoteFileController;
+use Modules\LSCEFA\Http\Controllers\TextureAnalysisController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -327,3 +335,17 @@ Route::middleware(['lang'])->group(function(){
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     }); // Cierre de Route::prefix('lscefa')
 }); // Cierre de Route::middleware(['lang'])
+
+        // Rutas adicionales para servicios y recursos no incluidos
+        Route::middleware(['auth'])->group(function () {
+            // AnalyticalController (resource)
+            Route::resource('analytical', 'AnalyticalController');
+            // AcidezAnalysisController (resource)
+            Route::resource('acidez-analyses', 'AcidezAnalysisController');
+            // QuoteSearchController (solo búsqueda)
+            Route::get('quotes/search', [\Modules\LSCEFA\Http\Controllers\QuoteSearchController::class, 'search'])->name('lscefa.quotes.search');
+            // QuoteFileController (gestión de archivos de cotización)
+            Route::get('quotes/{quote}/files', [\Modules\LSCEFA\Http\Controllers\QuoteFileController::class, 'index'])->name('lscefa.quotes.files.index');
+            Route::post('quotes/{quote}/files', [\Modules\LSCEFA\Http\Controllers\QuoteFileController::class, 'store'])->name('lscefa.quotes.files.store');
+            Route::delete('quotes/{quote}/files/{file}', [\Modules\LSCEFA\Http\Controllers\QuoteFileController::class, 'destroy'])->name('lscefa.quotes.files.destroy');
+        });

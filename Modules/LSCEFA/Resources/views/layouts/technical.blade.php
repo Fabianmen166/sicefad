@@ -80,7 +80,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href=""
+                            <a href="{{ route('lscefa.technical.analyses.carbon.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.carbon.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Carbono Orgánico</p>
@@ -96,100 +96,60 @@
                         </li>
 
 
+                        
+
+
+
                         <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Conductividad</p>
+                                <p>Boro</p>
                             </a>
                         </li>
 
 
 
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.cationic.index') }}" 
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-layer-group"></i>
+                                <p>Textura</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Azufre</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Bases Cambiables</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.cationic.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Intercambio Catiónico</p>
                             </a>
                         </li>
-
-
-
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" 
+                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Fósforo</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Azufre</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Boro</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-layer-group"></i>
-                                <p>Textura</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Azufre</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Boro</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-layer-group"></i>
-                                <p>Textura</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Bases Cambiables</p>
                             </a>
                         </li>
 

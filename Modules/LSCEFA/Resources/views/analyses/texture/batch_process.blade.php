@@ -174,12 +174,12 @@
                                                                     <tr>
                                                                         <td>Duplicado A</td>
                                                                         <td><input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_codigo]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_arena]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_arcilla]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_limo]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_dpr_arena]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_dpr_arcilla]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_dpr_limo]"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_arena]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_arcilla]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_promedio_limo]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-arena" name="analyses[{{ $index }}][duplicado_a_dpr_arena]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-arcilla" name="analyses[{{ $index }}][duplicado_a_dpr_arcilla]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-limo" name="analyses[{{ $index }}][duplicado_a_dpr_limo]" readonly></td>
                                                                         <td>
                                                                             <select class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_a_aceptabilidad]">
                                                                                 <option value="">Seleccionar</option>
@@ -192,12 +192,12 @@
                                                                     <tr>
                                                                         <td>Duplicado B</td>
                                                                         <td><input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_codigo]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_arena]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_arcilla]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_limo]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_dpr_arena]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_dpr_arcilla]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_dpr_limo]"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_arena]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_arcilla]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_promedio_limo]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-arena" name="analyses[{{ $index }}][duplicado_b_dpr_arena]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-arcilla" name="analyses[{{ $index }}][duplicado_b_dpr_arcilla]" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm dpr-limo" name="analyses[{{ $index }}][duplicado_b_dpr_limo]" readonly></td>
                                                                         <td>
                                                                             <select class="form-control form-control-sm" name="analyses[{{ $index }}][duplicado_b_aceptabilidad]">
                                                                                 <option value="">Seleccionar</option>
@@ -292,7 +292,7 @@
                                                     <table class="table table-bordered table-sm" id="muestras_table_{{ $index }}">
                                                         <thead class="table-light">
                                                             <tr>
-                                                                <th rowspan="2">Código Interno</th>
+                                                                <th rowspan="2">Nombre de la muestra</th>
                                                                 <th rowspan="2">Peso (g)</th>
                                                                 <th colspan="6">Reporte de Resultados Análisis</th>
                                                                 <th rowspan="2">Humedad %</th>
@@ -327,43 +327,22 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody id="muestras_container_{{ $index }}">
+                                                            <!-- Blanco del proceso -->
                                                             <tr class="muestra-row">
                                                                 <td>
-                                                                    <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][codigo_interno]" placeholder="Código">
+                                                                    <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][codigo_interno]" value="Blanco del proceso" readonly>
                                                                 </td>
-                                                                <td>
-                                                                    <input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][0][peso]" placeholder="0.0000">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][lecturas_40s]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.1" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][temperatura_40s]" placeholder="0.0">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][lecturas_2h]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.1" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][temperatura_2h]" placeholder="0.0">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][lecturas_corregidas_40s]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][lecturas_corregidas_2h]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][humedad]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][0][porcentaje_arena]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][0][porcentaje_arcilla]" placeholder="0.00">
-                                                                </td>
-                                                                <td>
-                                                                    <input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][0][porcentaje_limo]" placeholder="0.00">
-                                                                </td>
+                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][0][peso]" placeholder="0.0000"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][0][lecturas_40s]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][0][temperatura_40s]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][0][lecturas_2h]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][0][temperatura_2h]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][0][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][0][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][0][humedad]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][0][porcentaje_arena]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][0][porcentaje_arcilla]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][0][porcentaje_limo]" placeholder="0.00" readonly></td>
                                                                 <td>
                                                                     <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][0][clase_textural]">
                                                                         <option value="">Seleccionar</option>
@@ -382,9 +361,85 @@
                                                                         <option value="Franco">Franco</option>
                                                                     </select>
                                                                 </td>
+                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
+                                                                <td></td>
+                                                            </tr>
+                                                            <!-- Duplicado A -->
+                                                            <tr class="muestra-row">
                                                                 <td>
-                                                                    <textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][observaciones]" rows="2" placeholder="Observaciones"></textarea>
+                                                                    <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][1][codigo_interno]" value="Duplicado A">
                                                                 </td>
+                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][1][peso]" placeholder="0.0000"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][1][lecturas_40s]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][1][temperatura_40s]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][1][lecturas_2h]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][1][temperatura_2h]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][1][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][1][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][1][humedad]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][1][porcentaje_arena]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][1][porcentaje_arcilla]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][1][porcentaje_limo]" placeholder="0.00" readonly></td>
+                                                                <td>
+                                                                    <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][1][clase_textural]">
+                                                                        <option value="">Seleccionar</option>
+                                                                        <option value="Arena">Arena</option>
+                                                                        <option value="Arena Limosa">Arena Limosa</option>
+                                                                        <option value="Arena Arcillosa">Arena Arcillosa</option>
+                                                                        <option value="Limo">Limo</option>
+                                                                        <option value="Limo Arenoso">Limo Arenoso</option>
+                                                                        <option value="Limo Arcilloso">Limo Arcilloso</option>
+                                                                        <option value="Arcilla">Arcilla</option>
+                                                                        <option value="Arcilla Arenosa">Arcilla Arenosa</option>
+                                                                        <option value="Arcilla Limosa">Arcilla Limosa</option>
+                                                                        <option value="Franco Arenoso">Franco Arenoso</option>
+                                                                        <option value="Franco Limoso">Franco Limoso</option>
+                                                                        <option value="Franco Arcilloso">Franco Arcilloso</option>
+                                                                        <option value="Franco">Franco</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][1][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
+                                                                <td>
+                                                                    <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                            <!-- Duplicado B -->
+                                                            <tr class="muestra-row">
+                                                                <td>
+                                                                    <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][2][codigo_interno]" value="Duplicado B">
+                                                                </td>
+                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][2][peso]" placeholder="0.0000"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][2][lecturas_40s]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][2][temperatura_40s]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][2][lecturas_2h]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][2][temperatura_2h]" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][2][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][2][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][2][humedad]" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][2][porcentaje_arena]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][2][porcentaje_arcilla]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][2][porcentaje_limo]" placeholder="0.00" readonly></td>
+                                                                <td>
+                                                                    <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][2][clase_textural]">
+                                                                        <option value="">Seleccionar</option>
+                                                                        <option value="Arena">Arena</option>
+                                                                        <option value="Arena Limosa">Arena Limosa</option>
+                                                                        <option value="Arena Arcillosa">Arena Arcillosa</option>
+                                                                        <option value="Limo">Limo</option>
+                                                                        <option value="Limo Arenoso">Limo Arenoso</option>
+                                                                        <option value="Limo Arcilloso">Limo Arcilloso</option>
+                                                                        <option value="Arcilla">Arcilla</option>
+                                                                        <option value="Arcilla Arenosa">Arcilla Arenosa</option>
+                                                                        <option value="Arcilla Limosa">Arcilla Limosa</option>
+                                                                        <option value="Franco Arenoso">Franco Arenoso</option>
+                                                                        <option value="Franco Limoso">Franco Limoso</option>
+                                                                        <option value="Franco Arcilloso">Franco Arcilloso</option>
+                                                                        <option value="Franco">Franco</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][2][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
                                                                 <td>
                                                                     <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
                                                                         <i class="fas fa-trash"></i>
@@ -395,35 +450,13 @@
                                                     </table>
                                                 </div>
                                                 
-                                                <!-- Barra de Navegación Horizontal para la Tabla -->
-                                                <div class="row mt-3">
-                                                    <div class="col-12">
-                                                        <div class="card">
-                                                            <div class="card-body p-0">
-                                                                <ul class="nav nav-pills nav-fill" id="tableNavigation_{{ $index }}" role="tablist">
-                                                                    <li class="nav-item" role="presentation">
-                                                                        <a class="nav-link active" id="data-tab-{{ $index }}" data-toggle="pill" href="#data-content-{{ $index }}" role="tab" aria-controls="data-content-{{ $index }}" aria-selected="true">
-                                                                            <i class="fas fa-table mr-2"></i>Datos de Muestras
-                                                                        </a>
-                                                                    </li>
-                                                                    <li class="nav-item" role="presentation">
-                                                                        <a class="nav-link" id="calculations-tab-{{ $index }}" data-toggle="pill" href="#calculations-content-{{ $index }}" role="tab" aria-controls="calculations-content-{{ $index }}" aria-selected="false">
-                                                                            <i class="fas fa-calculator mr-2"></i>Cálculos
-                                                                        </a>
-                                                                    </li>
-                                                                    <li class="nav-item" role="presentation">
-                                                                        <a class="nav-link" id="validation-tab-{{ $index }}" data-toggle="pill" href="#validation-content-{{ $index }}" role="tab" aria-controls="validation-content-{{ $index }}" aria-selected="false">
-                                                                            <i class="fas fa-check-circle mr-2"></i>Validación
-                                                                        </a>
-                                                                    </li>
-                                                                    <li class="nav-item" role="presentation">
-                                                                        <a class="nav-link" id="export-tab-{{ $index }}" data-toggle="pill" href="#export-content-{{ $index }}" role="tab" aria-controls="export-content-{{ $index }}" aria-selected="false">
-                                                                            <i class="fas fa-download mr-2"></i>Exportar
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
-                                                        </div>
+                                                <!-- Eliminar la barra de navegación inferior (div con class="row mt-3" y el div con class="card-body p-0" que contiene las tabs) -->
+                                                <!-- Mover el botón de "Agregar Fila" justo después de la tabla de muestras, antes de las instrucciones de uso: -->
+                                                <div class="row mt-2">
+                                                    <div class="col-12 text-right">
+                                                        <button type="button" class="btn btn-secondary" id="addMuestraBtn_{{ $index }}" data-process-index="{{ $index }}">
+                                                            <i class="fas fa-plus"></i> Agregar Fila
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 
@@ -435,13 +468,11 @@
                                                             <div class="col-md-6">
                                                                 <div class="form-group">
                                                                     <label><i class="fas fa-info-circle text-info"></i> Total de Muestras:</label>
-                                                                    <span class="badge badge-primary" id="totalMuestras_{{ $index }}">1</span>
+                                                                    <span class="badge badge-primary" id="totalMuestras_{{ $index }}">3</span>
                                                                 </div>
                                                             </div>
                                                             <div class="col-md-6 text-right">
-                                                                <button type="button" class="btn btn-secondary" id="addMuestraBtn_{{ $index }}" data-process-index="{{ $index }}">
-                                                                    <i class="fas fa-plus"></i> Agregar Muestra
-                                                                </button>
+                                                                <!-- The button was moved -->
                                                             </div>
                                                         </div>
                                                     </div>
@@ -889,173 +920,180 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        // Set default date to today for all date fields
-        $('input[type="date"]').val(new Date().toISOString().split('T')[0]);
-        
-        // Initialize variables for each process
-        let controlIndexes = {};
-        let muestraIndexes = {};
-        
-        // Initialize indexes for each process
-        @foreach($processes as $index => $process)
-            controlIndexes[{{ $index }}] = 1;
-            muestraIndexes[{{ $index }}] = 1;
-        @endforeach
-        
-        // Add new muestra for specific process
-        $(document).on('click', '[id^="addMuestraBtn_"]', function() {
-            const processIndex = $(this).data('process-index');
-            const muestraIndex = muestraIndexes[processIndex];
-            
-            const newMuestra = `
-                <tr class="muestra-row">
-                    <td>
-                        <input type="text" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][codigo_interno]" placeholder="Código">
-                    </td>
-                    <td>
-                        <input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[${processIndex}][items][${muestraIndex}][peso]" placeholder="0.0000">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_40s]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.1" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][temperatura_40s]" placeholder="0.0">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_2h]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.1" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][temperatura_2h]" placeholder="0.0">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_corregidas_40s]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_corregidas_2h]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][humedad]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_arena]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_arcilla]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_limo]" placeholder="0.00">
-                    </td>
-                    <td>
-                        <select class="form-control form-control-sm clase-textural" name="analyses[${processIndex}][items][${muestraIndex}][clase_textural]">
-                            <option value="">Seleccionar</option>
-                            <option value="Arena">Arena</option>
-                            <option value="Arena Limosa">Arena Limosa</option>
-                            <option value="Arena Arcillosa">Arena Arcillosa</option>
-                            <option value="Limo">Limo</option>
-                            <option value="Limo Arenoso">Limo Arenoso</option>
-                            <option value="Limo Arcilloso">Limo Arcilloso</option>
-                            <option value="Arcilla">Arcilla</option>
-                            <option value="Arcilla Arenosa">Arcilla Arenosa</option>
-                            <option value="Arcilla Limosa">Arcilla Limosa</option>
-                            <option value="Franco Arenoso">Franco Arenoso</option>
-                            <option value="Franco Limoso">Franco Limoso</option>
-                            <option value="Franco Arcilloso">Franco Arcilloso</option>
-                            <option value="Franco">Franco</option>
-                        </select>
-                    </td>
-                    <td>
-                        <textarea class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][observaciones]" rows="2" placeholder="Observaciones"></textarea>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            $(`#muestras_container_${processIndex}`).append(newMuestra);
-            muestraIndexes[processIndex]++;
-            setTimeout(() => updateSampleCount(processIndex), 100);
-        });
-        
-        // Remove muestra
-        $(document).on('click', '.remove-muestra', function() {
-            const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
-            if ($(`#muestras_container_${processIndex} tr`).length > 1) {
-                $(this).closest('tr').remove();
-                setTimeout(() => updateSampleCount(processIndex), 100);
-            } else {
-                alert('Debe mantener al menos una muestra.');
-            }
-        });
-        
-        // Tab navigation enhancement
-        $('.nav-tabs .nav-link').on('click', function(e) {
-            e.preventDefault();
-            const target = $(this).attr('href');
-            
-            // Remove active class from all tabs and content
-            $('.nav-tabs .nav-link').removeClass('active');
-            $('.tab-pane').removeClass('show active');
-            
-            // Add active class to clicked tab
-            $(this).addClass('active');
-            $(target).addClass('show active');
-            
-            // Update progress indicator
-            updateProgressIndicator();
-        });
-        
-        // Progress indicator function
-        function updateProgressIndicator() {
-            const activeTab = $('.nav-tabs .nav-link.active');
-            const tabIndex = $('.nav-tabs .nav-link').index(activeTab);
-            const totalTabs = $('.nav-tabs .nav-link').length;
-            const progress = ((tabIndex + 1) / totalTabs) * 100;
-            
-            // Add progress bar if it doesn't exist
-            if ($('.progress-indicator').length === 0) {
-                $('.nav-tabs').after(`
-                    <div class="progress-indicator mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>
-                        <small class="text-muted mt-1 d-block">Paso ${tabIndex + 1} de ${totalTabs}</small>
-                    </div>
-                `);
-            } else {
-                $('.progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
-                $('.progress-indicator small').text(`Paso ${tabIndex + 1} de ${totalTabs}`);
-            }
+// Tabla de factores de corrección por temperatura
+const factoresCorreccion = [
+    { tempMin: 14.5, tempMax: 15.4, factor: -1.1 },
+    { tempMin: 15.5, tempMax: 16.4, factor: -0.9 },
+    { tempMin: 16.5, tempMax: 17.4, factor: -0.7 },
+    { tempMin: 17.5, tempMax: 18.4, factor: -0.5 },
+    { tempMin: 18.5, tempMax: 19.4, factor: -0.3 },
+    { tempMin: 19.5, tempMax: 20.4, factor: 0 },
+    { tempMin: 20.5, tempMax: 21.4, factor: 0.2 },
+    { tempMin: 21.5, tempMax: 22.4, factor: 0.4 },
+    { tempMin: 22.5, tempMax: 23.4, factor: 0.7 },
+    { tempMin: 23.5, tempMax: 24.4, factor: 1 },
+    { tempMin: 24.5, tempMax: 25.4, factor: 1.2 },
+    { tempMin: 25.5, tempMax: 26.4, factor: 1.65 },
+    { tempMin: 26.5, tempMax: 27.4, factor: 2 },
+    { tempMin: 27.5, tempMax: 28.4, factor: 2.5 },
+    { tempMin: 28.5, tempMax: 29.4, factor: 3.05 },
+    { tempMin: 29.5, tempMax: 30, factor: 3.8 }
+];
+
+/**
+ * Obtiene el factor de corrección basado en la temperatura
+ */
+function getFactorCorreccion(temp) {
+    if (isNaN(temp)) return 0;
+    
+    for (let i = 0; i < factoresCorreccion.length; i++) {
+        const rango = factoresCorreccion[i];
+        if (temp >= rango.tempMin && temp <= rango.tempMax) {
+            return rango.factor;
         }
+    }
+    
+    // Si está fuera de los rangos definidos
+    if (temp < factoresCorreccion[0].tempMin) {
+        return factoresCorreccion[0].factor;
+    }
+    if (temp > factoresCorreccion[factoresCorreccion.length - 1].tempMax) {
+        return factoresCorreccion[factoresCorreccion.length - 1].factor;
+    }
+    
+    return 0;
+}
+
+/**
+ * Recalcula las lecturas corregidas por temperatura
+ */
+function recalcularLecturaCorregida(row) {
+    // Lecturas a 40 segundos
+    const lectura40 = parseFloat(row.find('.lectura-40s').val()) || 0;
+    const temp40 = parseFloat(row.find('.temp-40s').val()) || 0;
+    const factor40 = getFactorCorreccion(temp40);
+    const lecturaCorregida40 = lectura40 + factor40;
+    row.find('.lectura-corregida-40s').val(lecturaCorregida40.toFixed(2));
+    
+    // Lecturas a 2 horas
+    const lectura2h = parseFloat(row.find('.lectura-2h').val()) || 0;
+    const temp2h = parseFloat(row.find('.temp-2h').val()) || 0;
+    const factor2h = getFactorCorreccion(temp2h);
+    const lecturaCorregida2h = lectura2h + factor2h;
+    row.find('.lectura-corregida-2h').val(lecturaCorregida2h.toFixed(2));
+}
+
+/**
+ * Función principal para calcular TODOS los porcentajes de textura
+ * Esta es la función correcta y única que debe usarse
+ */
+function calcularPorcentajesTextura(row) {
+    // Obtener valores de entrada
+    const lecturaCorregida40s = parseFloat(row.find('.lectura-corregida-40s').val()) || 0;
+    const lecturaCorregida2h = parseFloat(row.find('.lectura-corregida-2h').val()) || 0;
+    const humedad = parseFloat(row.find('.humedad').val()) || 0;
+    const peso = parseFloat(row.find('.peso-muestra').val()) || 0;
+    
+    console.log('Valores de entrada:', {
+        lecturaCorregida40s, 
+        lecturaCorregida2h, 
+        humedad, 
+        peso,
+        row: row.index()
+    });
+    
+    let arena = 0, arcilla = 0, limo = 0;
+    
+    if (peso > 0) {
+        // FÓRMULAS CORREGIDAS (sin divisiones innecesarias por 100)
         
-        // Initialize progress indicator
-        updateProgressIndicator();
+        // Cálculo de Arena: 100 - ((lectura40s * (humedad + 100)) / peso)
+        arena = 100 - ((lecturaCorregida40s * (humedad + 100)) / peso);
         
-        // Table navigation functionality for each process
-        @foreach($processes as $index => $process)
-            $(`#tableNavigation_{{ $index }} .nav-link`).on('click', function(e) {
-                e.preventDefault();
-                const target = $(this).attr('href');
-                
-                // Remove active class from all tabs and content
-                $(`#tableNavigation_{{ $index }} .nav-link`).removeClass('active');
-                $(`#tableNavigationContent_{{ $index }} .tab-pane`).removeClass('show active');
-                
-                // Add active class to clicked tab
-                $(this).addClass('active');
-                $(target).addClass('show active');
-            });
-        @endforeach
+        // Cálculo de Arcilla: (lectura2h * (humedad + 100)) / peso
+        arcilla = (lecturaCorregida2h * (humedad + 100)) / peso;
         
-        // Update sample count for specific process
+        // Cálculo de Limo: 100 - (arena + arcilla)
+        limo = 100 - (arena + arcilla);
+    }
+    
+    // Validar que los valores sean números válidos y positivos
+    if (isNaN(arena) || !isFinite(arena)) arena = 0;
+    if (isNaN(arcilla) || !isFinite(arcilla)) arcilla = 0;
+    if (isNaN(limo) || !isFinite(limo)) limo = 0;
+    
+    arena = Math.max(0, Math.min(100, arena));
+    arcilla = Math.max(0, Math.min(100, arcilla));
+    limo = Math.max(0, Math.min(100, limo));
+    
+    console.log('Valores calculados:', {
+        arena: arena.toFixed(2),
+        arcilla: arcilla.toFixed(2),
+        limo: limo.toFixed(2),
+        total: (arena + arcilla + limo).toFixed(2)
+    });
+    
+    // Asignar valores a los campos y forzar eventos
+    row.find('.porcentaje-arena').val(arena.toFixed(2)).trigger('input');
+    row.find('.porcentaje-arcilla').val(arcilla.toFixed(2)).trigger('input');
+    row.find('.porcentaje-limo').val(limo.toFixed(2)).trigger('input');
+    // Forzar actualización de promedios y error
+    const processIndex = row.closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
+    if (processIndex !== undefined) {
+        const idx = processIndex.trim();
+        actualizarPromediosDuplicados(idx);
+        actualizarErrorArena(idx);
+    }
+}
+
+/**
+ * Determina la clase textural basada en porcentajes
+ */
+function determinarClaseTextural(arena, arcilla, limo) {
+    // USDA Soil Texture Classification
+    if (arena >= 85 && limo + arcilla <= 15) {
+        return 'Arena';
+    } else if (arena >= 70 && limo + arcilla <= 30) {
+        if (limo > arcilla) {
+            return 'Arena Limosa';
+        } else {
+            return 'Arena Arcillosa';
+        }
+    } else if (limo >= 80 && arena + arcilla <= 20) {
+        return 'Limo';
+    } else if (limo >= 50 && arena + arcilla <= 50) {
+        if (arena > arcilla) {
+            return 'Limo Arenoso';
+        } else {
+            return 'Limo Arcilloso';
+        }
+    } else if (arcilla >= 40 && arena + limo <= 60) {
+        if (arena > limo) {
+            return 'Arcilla Arenosa';
+        } else {
+            return 'Arcilla Limosa';
+        }
+    } else if (arcilla >= 35 && arena + limo <= 65) {
+        if (arena > limo) {
+            return 'Franco Arenoso';
+        } else if (limo > arena) {
+            return 'Franco Limoso';
+        } else {
+            return 'Franco Arcilloso';
+        }
+    } else {
+        return 'Franco';
+    }
+}
+
+/**
+ * Funciones auxiliares para cálculos y validaciones
+ */
         function updateSampleCount(processIndex) {
             const count = $(`#muestras_container_${processIndex} tr`).length;
             $(`#totalMuestras_${processIndex}`).text(count);
         }
         
-        // Calculate averages for specific process
         function calculateAverages(processIndex) {
             let totalArena = 0;
             let totalArcilla = 0;
@@ -1082,7 +1120,6 @@
             }
         }
         
-        // Validate all samples for specific process
         function validateAllSamples(processIndex) {
             let isValid = true;
             let errorCount = 0;
@@ -1123,8 +1160,167 @@
             return isValid;
         }
         
-        // Highlight errors for specific process
+function updateProgressIndicator() {
+    const activeTab = $('.nav-tabs .nav-link.active');
+    const tabIndex = $('.nav-tabs .nav-link').index(activeTab);
+    const totalTabs = $('.nav-tabs .nav-link').length;
+    const progress = ((tabIndex + 1) / totalTabs) * 100;
+    
+    // Add progress bar if it doesn't exist
+    if ($('.progress-indicator').length === 0) {
+        $('.nav-tabs').after(`
+            <div class="progress-indicator mt-2">
+                <div class="progress" style="height: 4px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <small class="text-muted mt-1 d-block">Paso ${tabIndex + 1} de ${totalTabs}</small>
+            </div>
+        `);
+    } else {
+        $('.progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
+        $('.progress-indicator small').text(`Paso ${tabIndex + 1} de ${totalTabs}`);
+    }
+}
+
+/**
+ * Inicialización y eventos del DOM
+ */
+$(document).ready(function() {
+    // Set default date to today for all date fields
+    $('input[type="date"]').val(new Date().toISOString().split('T')[0]);
+    
+    // Initialize variables for each process
+    let controlIndexes = {};
+    let muestraIndexes = {};
+    
+    // Initialize indexes for each process
         @foreach($processes as $index => $process)
+        controlIndexes[{{ $index }}] = 1;
+        muestraIndexes[{{ $index }}] = 3; // Start with 3 rows for each process
+    @endforeach
+    
+    // EVENTOS PRINCIPALES - Solo se registran UNA vez
+    
+    // 1. Evento para recalcular lecturas corregidas cuando cambien temperatura o lecturas
+    $(document).on('input change', '.lectura-40s, .temp-40s, .lectura-2h, .temp-2h', function() {
+        const row = $(this).closest('tr');
+        recalcularLecturaCorregida(row);
+        // Después de corregir lecturas, recalcular porcentajes
+        setTimeout(() => calcularPorcentajesTextura(row), 50);
+    });
+    
+    // 2. Evento para recalcular porcentajes cuando cambien peso o humedad
+    $(document).on('input change', '.peso-muestra, .humedad', function() {
+        const row = $(this).closest('tr');
+        calcularPorcentajesTextura(row);
+    });
+    
+    // 3. Evento para recalcular cuando cambien las lecturas corregidas directamente
+    $(document).on('input change', '.lectura-corregida-40s, .lectura-corregida-2h', function() {
+        const row = $(this).closest('tr');
+        calcularPorcentajesTextura(row);
+    });
+    
+    // 4. Evento para actualizar promedios cuando cambien los porcentajes
+    $(document).on('input change', '.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo', function() {
+        const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
+        calculateAverages(processIndex);
+    });
+    
+    // Add new muestra for specific process
+    $(document).on('click', '[id^="addMuestraBtn_"]', function() {
+        const processIndex = $(this).data('process-index');
+        const muestraIndex = muestraIndexes[processIndex];
+        
+        const newMuestra = `
+            <tr class="muestra-row">
+                <td>
+                    <input type="text" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][codigo_interno]" placeholder="Nombre de la muestra">
+                </td>
+                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[${processIndex}][items][${muestraIndex}][peso]" placeholder="0.0000"></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_40s]" placeholder="0.00"></td>
+                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[${processIndex}][items][${muestraIndex}][temperatura_40s]" placeholder="0.0"></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_2h]" placeholder="0.00"></td>
+                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[${processIndex}][items][${muestraIndex}][temperatura_2h]" placeholder="0.0"></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[${processIndex}][items][${muestraIndex}][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[${processIndex}][items][${muestraIndex}][humedad]" placeholder="0.00"></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_arena]" placeholder="0.00" readonly></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_arcilla]" placeholder="0.00" readonly></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[${processIndex}][items][${muestraIndex}][porcentaje_limo]" placeholder="0.00" readonly></td>
+                <td>
+                    <select class="form-control form-control-sm clase-textural" name="analyses[${processIndex}][items][${muestraIndex}][clase_textural]">
+                        <option value="">Seleccionar</option>
+                        <option value="Arena">Arena</option>
+                        <option value="Arena Limosa">Arena Limosa</option>
+                        <option value="Arena Arcillosa">Arena Arcillosa</option>
+                        <option value="Limo">Limo</option>
+                        <option value="Limo Arenoso">Limo Arenoso</option>
+                        <option value="Limo Arcilloso">Limo Arcilloso</option>
+                        <option value="Arcilla">Arcilla</option>
+                        <option value="Arcilla Arenosa">Arcilla Arenosa</option>
+                        <option value="Arcilla Limosa">Arcilla Limosa</option>
+                        <option value="Franco Arenoso">Franco Arenoso</option>
+                        <option value="Franco Limoso">Franco Limoso</option>
+                        <option value="Franco Arcilloso">Franco Arcilloso</option>
+                        <option value="Franco">Franco</option>
+                    </select>
+                </td>
+                <td><textarea class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        $(`#muestras_container_${processIndex}`).append(newMuestra);
+        muestraIndexes[processIndex]++;
+        setTimeout(() => updateSampleCount(processIndex), 100);
+    });
+    
+    // Remove muestra
+    $(document).on('click', '.remove-muestra', function() {
+        const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
+        if ($(`#muestras_container_${processIndex} tr`).length > 3) {
+            $(this).closest('tr').remove();
+            setTimeout(() => updateSampleCount(processIndex), 100);
+        } else {
+            alert('Debe mantener al menos 3 muestras.');
+        }
+    });
+    
+    // Tab navigation enhancement
+    $('.nav-tabs .nav-link').on('click', function(e) {
+        e.preventDefault();
+        const target = $(this).attr('href');
+        
+        $('.nav-tabs .nav-link').removeClass('active');
+        $('.tab-pane').removeClass('show active');
+        
+        $(this).addClass('active');
+        $(target).addClass('show active');
+        
+        updateProgressIndicator();
+    });
+    
+    // Initialize progress indicator
+    updateProgressIndicator();
+    
+    // Table navigation functionality for each process
+    @foreach($processes as $index => $process)
+        $(`#tableNavigation_{{ $index }} .nav-link`).on('click', function(e) {
+            e.preventDefault();
+            const target = $(this).attr('href');
+            
+            $(`#tableNavigation_{{ $index }} .nav-link`).removeClass('active');
+            $(`#tableNavigationContent_{{ $index }} .tab-pane`).removeClass('show active');
+            
+            $(this).addClass('active');
+            $(target).addClass('show active');
+        });
+        
+        // Highlight errors button for specific process
             $(`#highlightErrorsBtn_{{ $index }}`).on('click', function() {
                 $(`#muestras_container_{{ $index }} .muestra-row`).each(function() {
                     const row = $(this);
@@ -1144,85 +1340,17 @@
             // Validate all button for specific process
             $(`#validateAllBtn_{{ $index }}`).on('click', function() {
                 validateAllSamples({{ $index }});
-            });
-        @endforeach
-        
-        // Update counts and calculations when samples change
-        $(document).on('input', '.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo', function() {
-            const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
-            calculateAverages(processIndex);
         });
         
         // Initialize for each process
-        @foreach($processes as $index => $process)
             updateSampleCount({{ $index }});
             calculateAverages({{ $index }});
         @endforeach
-        
-        // Calculate percentages when weights change
-        $(document).on('input', '.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo', function() {
-            const row = $(this).closest('.muestra-row');
-            const porcentajeArena = parseFloat(row.find('.porcentaje-arena').val()) || 0;
-            const porcentajeArcilla = parseFloat(row.find('.porcentaje-arcilla').val()) || 0;
-            const porcentajeLimo = parseFloat(row.find('.porcentaje-limo').val()) || 0;
-            
-            const total = porcentajeArena + porcentajeArcilla + porcentajeLimo;
-            
-            // Validate that total is approximately 100%
-            if (total > 100.1 || total < 99.9) {
-                row.find('.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo').addClass('is-invalid');
-            } else {
-                row.find('.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo').removeClass('is-invalid');
-                
-                // Auto-determine textural class
-                const claseTextural = determinarClaseTextural(porcentajeArena, porcentajeArcilla, porcentajeLimo);
-                row.find('.clase-textural').val(claseTextural);
-            }
-        });
-        
-        // Function to determine textural class based on percentages
-        function determinarClaseTextural(arena, arcilla, limo) {
-            // USDA Soil Texture Classification
-            if (arena >= 85 && limo + arcilla <= 15) {
-                return 'Arena';
-            } else if (arena >= 70 && limo + arcilla <= 30) {
-                if (limo > arcilla) {
-                    return 'Arena Limosa';
-                } else {
-                    return 'Arena Arcillosa';
-                }
-            } else if (limo >= 80 && arena + arcilla <= 20) {
-                return 'Limo';
-            } else if (limo >= 50 && arena + arcilla <= 50) {
-                if (arena > arcilla) {
-                    return 'Limo Arenoso';
-                } else {
-                    return 'Limo Arcilloso';
-                }
-            } else if (arcilla >= 40 && arena + limo <= 60) {
-                if (arena > limo) {
-                    return 'Arcilla Arenosa';
-                } else {
-                    return 'Arcilla Limosa';
-                }
-            } else if (arcilla >= 35 && arena + limo <= 65) {
-                if (arena > limo) {
-                    return 'Franco Arenoso';
-                } else if (limo > arena) {
-                    return 'Franco Limoso';
-                } else {
-                    return 'Franco Arcilloso';
-                }
-            } else {
-                return 'Franco';
-            }
-        }
         
         // Form validation
         $('#textureBatchForm').on('submit', function(e) {
             var isValid = true;
             
-            // Check if all required fields are filled
             $('input[required]').each(function() {
                 if (!$(this).val()) {
                     isValid = false;
@@ -1238,9 +1366,133 @@
                 return false;
             }
             
-            // Show loading state
             $('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Guardando...');
         });
+    
+    // Calcular porcentajes iniciales para filas existentes
+    $('.muestra-row').each(function() {
+        calcularPorcentajesTextura($(this));
     });
+    });
+
+    // === PROMEDIOS DE DUPLICADOS EN PRECISIÓN ANALÍTICA ===
+    function actualizarPromediosDuplicados(processIndex) {
+        // Buscar filas de Duplicado A y Duplicado B en la tabla de muestras
+        const $muestras = $(`#muestras_container_${processIndex} .muestra-row`);
+        const $dupA = $muestras.eq(1); // Duplicado A es la segunda fila (índice 1)
+        const $dupB = $muestras.eq(2); // Duplicado B es la tercera fila (índice 2)
+        if ($dupA.length && $dupB.length) {
+            // Arena
+            const arenaA = parseFloat($dupA.find('.porcentaje-arena').val());
+            const arenaB = parseFloat($dupB.find('.porcentaje-arena').val());
+            const promedioArena = (isFinite(arenaA) && isFinite(arenaB)) ? ((arenaA + arenaB) / 2).toFixed(2) : '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arena]']`).val(promedioArena);
+            // Arcilla
+            const arcillaA = parseFloat($dupA.find('.porcentaje-arcilla').val());
+            const arcillaB = parseFloat($dupB.find('.porcentaje-arcilla').val());
+            const promedioArcilla = (isFinite(arcillaA) && isFinite(arcillaB)) ? ((arcillaA + arcillaB) / 2).toFixed(2) : '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arcilla]']`).val(promedioArcilla);
+            // Limo
+            const limoA = parseFloat($dupA.find('.porcentaje-limo').val());
+            const limoB = parseFloat($dupB.find('.porcentaje-limo').val());
+            const promedioLimo = (isFinite(limoA) && isFinite(limoB)) ? ((limoA + limoB) / 2).toFixed(2) : '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_limo]']`).val(promedioLimo);
+        }
+    }
+
+    // Llama a la función cada vez que cambian los porcentajes de duplicados
+    $(document).on('input change', '.porcentaje-arena, .porcentaje-arcilla, .porcentaje-limo', function() {
+        const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
+        actualizarPromediosDuplicados(processIndex);
+    });
+    // Inicializa al cargar
+    @foreach($processes as $index => $process)
+        actualizarPromediosDuplicados({{ $index }});
+    @endforeach
+
+    // === CÁLCULO DE ERROR DE ARENA ENTRE PRIMERA Y ÚLTIMA FILA ===
+    function actualizarErrorArena(processIndex) {
+        const $muestras = $(`#muestras_container_${processIndex} .muestra-row`);
+        let mensaje = '';
+        if ($muestras.length >= 2) {
+            const $primera = $muestras.first();
+            const $ultima = $muestras.last();
+            const arenaPrimera = parseFloat($primera.find('.porcentaje-arena').val());
+            const arenaUltima = parseFloat($ultima.find('.porcentaje-arena').val());
+            let error = '';
+            if (isFinite(arenaPrimera) && isFinite(arenaUltima) && arenaPrimera !== 0) {
+                error = (((arenaPrimera - arenaUltima) / arenaPrimera) * 100).toFixed(2);
+                mensaje = `Error de Arena entre primera y última fila: ${error}%`;
+            } else {
+                mensaje = '';
+            }
+            $(`input[name='analyses[${processIndex}][material_referencia_error_arena]']`).val(error);
+        }
+        $(`#errorArenaVisible_${processIndex}`).text(mensaje);
+    }
+    // Llama a la función cada vez que cambian los porcentajes de arena
+    $(document).on('input change', '.porcentaje-arena', function() {
+        const processIndex = $(this).closest('[id^="muestras_table_"]').attr('id').replace('muestras_table_', '');
+        actualizarErrorArena(processIndex);
+    });
+    // Inicializa al cargar
+    @foreach($processes as $index => $process)
+        actualizarErrorArena({{ $index }});
+    @endforeach
+
+    // Utilidad para parsear números
+    function parseNumberSafe(v) {
+      if (v === null || v === undefined) return NaN;
+      const s = String(v).trim().replace(/\s+/g, '').replace(',', '.');
+      const n = parseFloat(s);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    // Calcula %DPR entre dos valores
+    function calcularDPRvalor(aVal, bVal) {
+      const a = parseNumberSafe(aVal);
+      const b = parseNumberSafe(bVal);
+      if (!Number.isFinite(a) || !Number.isFinite(b)) return '';
+      const mean = (a + b) / 2;
+      if (Math.abs(mean) < 1e-9) return '';
+      const dpr = (Math.abs(a - b) / mean) * 100;
+      return Number.isFinite(dpr) ? dpr : '';
+    }
+
+    // Actualiza los DPR en la tabla de controles analíticos
+    function actualizarDPR(processIndex, thresholdPercent = 15) {
+      // Busca los inputs de promedios en controles analíticos
+      const $arenaA = $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arena]']`);
+      const $arenaB = $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arena]']`);
+      const $arcillaA = $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arcilla]']`);
+      const $arcillaB = $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arcilla]']`);
+      const $limoA = $(`input[name='analyses[${processIndex}][duplicado_a_promedio_limo]']`);
+      const $limoB = $(`input[name='analyses[${processIndex}][duplicado_b_promedio_limo]']`);
+      // Arena
+      const dpr_arena = calcularDPRvalor($arenaA.val(), $arenaB.val());
+      $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arena]']`).val(dpr_arena === '' ? '' : Number(dpr_arena).toFixed(2));
+      $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arena]']`).val(dpr_arena === '' ? '' : Number(dpr_arena).toFixed(2));
+      // Arcilla
+      const dpr_arcilla = calcularDPRvalor($arcillaA.val(), $arcillaB.val());
+      $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arcilla]']`).val(dpr_arcilla === '' ? '' : Number(dpr_arcilla).toFixed(2));
+      $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arcilla]']`).val(dpr_arcilla === '' ? '' : Number(dpr_arcilla).toFixed(2));
+      // Limo
+      const dpr_limo = calcularDPRvalor($limoA.val(), $limoB.val());
+      $(`input[name='analyses[${processIndex}][duplicado_a_dpr_limo]']`).val(dpr_limo === '' ? '' : Number(dpr_limo).toFixed(2));
+      $(`input[name='analyses[${processIndex}][duplicado_b_dpr_limo]']`).val(dpr_limo === '' ? '' : Number(dpr_limo).toFixed(2));
+    }
+
+    // Bind para recalcular DPR cuando cambian promedios
+    function bindDPRListeners(processIndex, thresholdPercent = 15) {
+      $(document).on('input change', `input[name='analyses[${processIndex}][duplicado_a_promedio_arena]'], input[name='analyses[${processIndex}][duplicado_b_promedio_arena]'], input[name='analyses[${processIndex}][duplicado_a_promedio_arcilla]'], input[name='analyses[${processIndex}][duplicado_b_promedio_arcilla]'], input[name='analyses[${processIndex}][duplicado_a_promedio_limo]'], input[name='analyses[${processIndex}][duplicado_b_promedio_limo]']`, function() {
+        actualizarDPR(processIndex, thresholdPercent);
+      });
+    }
+
+    // Inicializa listeners y cálculo DPR para cada proceso
+    @foreach($processes as $index => $process)
+      bindDPRListeners({{ $index }});
+      actualizarDPR({{ $index }});
+    @endforeach
 </script>
 @endpush
