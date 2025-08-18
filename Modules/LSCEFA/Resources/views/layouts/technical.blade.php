@@ -88,22 +88,19 @@
                         </li>
 
                         <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.acidity.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.acidity.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Acidez</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.micronutrients.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Micronutrientes</p>
                             </a>
                         </li>
-
-
-                        <li class="nav-item">
-                            <a href="" class="nav-link text-success">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Conductividad</p>
-                            </a>
-                        </li>
-
-
 
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.cationic.index') }}" 
@@ -113,8 +110,6 @@
                             </a>
                         </li>
 
-
-
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
@@ -123,8 +118,6 @@
                             </a>
                         </li>
 
-
-
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
@@ -132,8 +125,6 @@
                                 <p>Azufre</p>
                             </a>
                         </li>
-
-
 
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
@@ -143,8 +134,6 @@
                             </a>
                         </li>
 
-
-
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
@@ -152,38 +141,6 @@
                                 <p>Textura</p>
                             </a>
                         </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Azufre</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Boro</p>
-                            </a>
-                        </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-layer-group"></i>
-                                <p>Textura</p>
-                            </a>
-                        </li>
-
-
 
                         <li class="nav-item">
                             <a href="" 
@@ -197,22 +154,26 @@
                 </nav>
             </div>
         </aside>
+        
         <!-- Content Wrapper -->
-        <!-- Content Wrapper. Contains page content -->
-<div class="content-wrapper">
-    <!-- Content Header (Page header) -->
-    <div class="content-header" style="padding: 0.5rem 0;">
-        <div class="container-fluid">
-            <div class="row mb-1">
-                <div class="col-sm-12">
-                    <h1 class="m-0" style="font-size: 1.5rem;">@yield('title')</h1>
+        <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <div class="content-header">
+                <div class="container-fluid">
+                    <div class="row mb-1">
+                        <div class="col-sm-12">
+                            <h1 class="m-0">@yield('title')</h1>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-    <!-- Main content -->
-    <section class="content pt-2">
-        <div class="container-fluid">
-            @yield('content')
+            <!-- Main content -->
+            <section class="content">
+                <div class="container-fluid">
+                    @yield('content')
+                </div>
+            </section>
         </div>
 
         <footer class="main-footer">
@@ -220,6 +181,7 @@
             Todos los derechos reservados.
         </footer>
     </div>
+    
     <!-- REQUIRED SCRIPTS -->
     <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
@@ -234,8 +196,8 @@
         --sena-green: #39B54A;
         --sena-dark-green: #2E8B3E;
         --sena-light-green: #D1E7DD;
-        --sidebar-width: 250px;
-        --header-height: 60px;
+        --sidebar-width: 240px;
+        --header-height: 40px;
         --transition-speed: 0.3s;
     }
 
@@ -261,20 +223,41 @@
         background-color: #f8f9fa;
         min-height: 100vh;
         transition: margin var(--transition-speed) ease-in-out;
+        padding: 0; /* Eliminamos padding extra */
     }
 
-        .main-header {
-            background: white !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            height: 40px !important;
-            min-height: 40px !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
+    .main-header {
+        background: white !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        height: var(--header-height) !important;
+        min-height: var(--header-height) !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-left: var(--sidebar-width); /* Alineamos el header con el contenido */
+    }
+
+    /* Content Header más compacto */
+    .content-header {
+        padding: 0.5rem 1rem !important; /* Reducimos padding */
+        background-color: white;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 0;
+    }
+
+    .content-header h1 {
+        font-size: 1.25rem !important; /* Título más pequeño */
+        margin: 0 !important;
+        color: var(--sena-dark-green);
+    }
+
+    /* Main content más pegado */
+    .content {
+        padding: 0.75rem 1rem !important; /* Reducimos padding significativamente */
+    }
 
     .navbar-nav .nav-link {
         color: var(--sena-dark-green) !important;
         font-weight: 500;
-        padding: 0.5rem 1rem;
+        padding: 0.3rem 0.8rem; /* Reducimos padding del navbar */
         transition: all var(--transition-speed) ease;
     }
 
@@ -303,7 +286,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
-        padding: 15px;
+        padding: 12px; /* Reducimos padding */
         text-decoration: none;
         background: white;
         transition: all var(--transition-speed) ease;
@@ -313,26 +296,26 @@
     .brand-text {
         color: var(--sena-dark-green) !important;
         font-weight: 700 !important;
-        font-size: 1.2rem;
+        font-size: 1.1rem; /* Ligeramente más pequeño */
         letter-spacing: 0.5px;
     }
 
     .nav-sidebar .nav-item {
-        margin: 4px 8px;
+        margin: 2px 6px; /* Reducimos margen entre items */
     }
 
     .nav-sidebar .nav-item>.nav-link {
         color: var(--sena-green);
-        border-radius: 8px;
-        padding: 10px 15px;
-        font-size: 0.95rem;
+        border-radius: 6px; /* Radio más pequeño */
+        padding: 8px 12px; /* Reducimos padding */
+        font-size: 0.9rem; /* Texto ligeramente más pequeño */
         transition: all var(--transition-speed) ease;
     }
 
     .nav-sidebar .nav-item>.nav-link:hover {
         background-color: var(--sena-light-green);
         color: var(--sena-dark-green);
-        transform: translateX(5px);
+        transform: translateX(3px); /* Menos desplazamiento */
     }
 
     .nav-sidebar .nav-item>.nav-link.active {
@@ -342,16 +325,53 @@
     }
 
     .nav-sidebar .nav-item>.nav-link i {
-        margin-right: 10px;
-        width: 18px;
+        margin-right: 8px; /* Menos espacio entre icono y texto */
+        width: 16px;
         text-align: center;
+        font-size: 0.9rem;
     }
 
     .main-footer {
         background-color: white !important;
         border-top: 1px solid rgba(0, 0, 0, 0.1);
         color: #6c757d !important;
-        padding: 1rem;
+        padding: 0.75rem; /* Reducimos padding del footer */
         text-align: center;
+        margin-left: var(--sidebar-width);
+        font-size: 0.85rem;
+    }
+
+    /* Ajustes para las cards del formulario */
+    .card {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0.75rem 1rem; /* Padding más compacto */
+    }
+
+    .card-body {
+        padding: 1rem; /* Padding más compacto */
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        :root {
+            --sidebar-width: 200px;
+        }
+        
+        .brand-text {
+            font-size: 1rem !important;
+        }
+        
+        .nav-sidebar .nav-item>.nav-link {
+            font-size: 0.85rem;
+            padding: 6px 10px;
+        }
     }
 </style>

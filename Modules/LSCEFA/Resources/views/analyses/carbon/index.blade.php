@@ -5,14 +5,7 @@
 @section('content')
     <div class="content-wrapper">
         <!-- Encabezado -->
-        <section class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2 align-items-center">
-                    <div class="col-sm-6">
-                    </div>
-                </div>
-            </div>
-        </section>
+   
 
         <!-- Contenido Principal -->
         <section class="content">
