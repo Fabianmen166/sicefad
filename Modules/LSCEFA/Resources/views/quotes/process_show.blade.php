@@ -33,14 +33,24 @@
                     <strong>Fecha de Entrega:</strong> {{ $process->delivery_date }}<br>
                     <strong>Comprobante de Cotización:</strong>
                     @if($process->quote && $process->quote->file)
-                        <a href="{{ route('lscefa.comprobante_file.download', ['quote_id' => $process->quote->quote_id, 'filename' => $process->quote->file]) }}" class="btn btn-info btn-sm" target="_blank">Descargar Comprobante</a>
+                        <a href="{{ route('cefa.lscefa.download.comprobante', ['quote_id' => $process->quote->quote_id, 'filename' => basename($process->quote->file)]) }}" 
+                           class="btn btn-info btn-sm"
+                           target="_blank"
+                           download>
+                            <i class="fas fa-file-invoice"></i> Descargar Comprobante
+                        </a>
                     @else
                         N/A
                     @endif
                     <br>
                     <strong>Archivo de Comunicación:</strong>
                     @if($process->communication_file)
-                        <a href="{{ route('lscefa.communication_file.download', ['filename' => $process->communication_file]) }}" class="btn btn-info btn-sm" target="_blank">Descargar Archivo</a>
+                        <a href="{{ url('lscefa/download/communication') . '?filename=' . urlencode($process->communication_file) }}" 
+                           class="btn btn-info btn-sm"
+                           target="_blank"
+                           download>
+                            <i class="fas fa-file-alt"></i> Descargar Archivo
+                        </a>
                     @else
                         N/A
                     @endif
@@ -115,4 +125,41 @@
     </div>
     <a href="{{ route('lscefa.quality.processes.index') }}" class="btn btn-secondary mt-3">Volver al Listado de Procesos</a>
 </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+// Interceptar el envío del formulario para forzar la descarga
+function interceptFormSubmit(formId, event) {
+    event.preventDefault();
+    const form = document.getElementById(formId);
+    const url = form.action;
+    
+    // Crear un enlace oculto
+    const link = document.createElement('a');
+    link.href = url;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // Forzar la descarga
+    link.click();
+    
+    // Limpiar
+    document.body.removeChild(link);
+}
+
+// Asignar manejadores de eventos a los formularios
+document.addEventListener('DOMContentLoaded', function() {
+    const comprobanteForm = document.getElementById('downloadComprobanteForm');
+    const communicationForm = document.getElementById('downloadCommunicationForm');
+    
+    if (comprobanteForm) {
+        comprobanteForm.addEventListener('submit', (e) => interceptFormSubmit('downloadComprobanteForm', e));
+    }
+    
+    if (communicationForm) {
+        communicationForm.addEventListener('submit', (e) => interceptFormSubmit('downloadCommunicationForm', e));
+    }
+});
+</script>
+@endpush

@@ -45,6 +45,56 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_admin[] = $permission->id;
 
+        // Permiso para la gestión de usuarios
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.index'], [
+            'name' => 'Gestión de Usuarios',
+            'description' => 'Puede ver el listado de usuarios',
+            'description_english' => 'Can view the user list',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        // Permisos CRUD de Gestión de Usuarios (Admin)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.create'], [
+            'name' => 'Crear Usuario (Admin)',
+            'description' => 'Puede acceder al formulario de creación de usuarios',
+            'description_english' => 'Can access user creation form',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.store'], [
+            'name' => 'Registrar Usuario (Admin)',
+            'description' => 'Puede registrar un nuevo usuario',
+            'description_english' => 'Can store a new user',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.edit'], [
+            'name' => 'Editar Usuario (Admin)',
+            'description' => 'Puede acceder al formulario de edición de usuarios',
+            'description_english' => 'Can access user edit form',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.update'], [
+            'name' => 'Actualizar Usuario (Admin)',
+            'description' => 'Puede actualizar un usuario',
+            'description_english' => 'Can update a user',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.users.destroy'], [
+            'name' => 'Eliminar Usuario (Admin)',
+            'description' => 'Puede eliminar un usuario',
+            'description_english' => 'Can delete a user',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
         $rol_admin = Role::where('slug', 'lscefa.admin')->first();
         $rol_admin->permissions()->syncWithoutDetaching($permissions_admin);
 
@@ -1116,19 +1166,39 @@ $permisos_admin_quotes[] = $perm->id;
         $rol_admin->permissions()->syncWithoutDetaching($permisos_admin_quotes);
         $rol_quality->permissions()->syncWithoutDetaching($permisos_quality_quotes);
 
-       
-       
+        // Permisos para descarga de archivos
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.download.files'], [
+            'name' => 'Descargar archivos',
+            'description' => 'Permite descargar archivos del sistema (comprobantes y comunicaciones)',
+            'description_english' => 'Allows downloading files from the system (receipts and communications)',
+            'app_id' => $app->id
+        ]);
+        $permissions_quality[] = $permission->id;
+        $permissions_admin[] = $permission->id; // Los administradores también pueden descargar archivos
 
+        // Asignar permisos a los roles
+        $rol_admin->permissions()->syncWithoutDetaching($permissions_admin);
+        $rol_quality->permissions()->syncWithoutDetaching($permissions_quality);
 
-        
-        // Listado de unidades productivas disponibles (Gestor Unidades)
-       // $permission = Permission::updateOrCreate(['slug' => 'sica.unitmanager.units.productive_unit.index'], [ // Registro o actualización de permiso
-        //    'name' => 'Listado de unidades productivas disponibles (Gestor Unidades)',
-         //   'description' => 'Listado de unidades productivas disponibles',
-          //  'description_english' => 'List of available productive units',
-          //  'app_id' => $app->id
-       // ]);
-        //$permissions_unitmanager[] = $permission->id; // Almacenar permiso para rol 
+        // Permiso para descargar archivos de comunicación
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.communication_file.download'], [
+            'name' => 'Descargar archivo de comunicación (Quality)',
+            'description' => 'Puede descargar archivos de comunicación desde la gestión de calidad',
+            'description_english' => 'Can download communication files from quality management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
+
+        // Permiso para descargar comprobantes
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.comprobante_file.download'], [
+            'name' => 'Descargar comprobante de cotización (Quality)',
+            'description' => 'Puede descargar comprobantes de cotización desde la gestión de calidad',
+            'description_english' => 'Can download quote receipts from quality management',
+            'app_id' => $app->id
+        ]);
+        $permisos_quality_quotes[] = $perm->id;
+        $permisos_admin_quotes[] = $perm->id;
 
         // Permisos para análisis de pH (Personal Técnico)
         $permisos_technical_ph = [];
@@ -1193,26 +1263,6 @@ $permisos_admin_quotes[] = $perm->id;
 
         // Asignar permisos de pH al rol técnico
         $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_ph);
-
-        // Permiso para descargar archivos de comunicación
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.communication_file.download'], [
-            'name' => 'Descargar archivo de comunicación (Quality)',
-            'description' => 'Puede descargar archivos de comunicación desde la gestión de calidad',
-            'description_english' => 'Can download communication files from quality management',
-            'app_id' => $app->id
-        ]);
-        $permisos_quality_quotes[] = $perm->id;
-        $permisos_admin_quotes[] = $perm->id;
-
-        // Permiso para descargar comprobantes
-        $perm = Permission::updateOrCreate(['slug' => 'lscefa.quality.comprobante_file.download'], [
-            'name' => 'Descargar comprobante de cotización (Quality)',
-            'description' => 'Puede descargar comprobantes de cotización desde la gestión de calidad',
-            'description_english' => 'Can download quote receipts from quality management',
-            'app_id' => $app->id
-        ]);
-        $permisos_quality_quotes[] = $perm->id;
-        $permisos_admin_quotes[] = $perm->id;
 
         // Permisos para análisis de conductividad (Personal Técnico)
         $permisos_technical_conductivity = [];

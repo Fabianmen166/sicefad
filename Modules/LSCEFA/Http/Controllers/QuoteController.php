@@ -398,18 +398,70 @@ class QuoteController extends Controller
         if ($request->hasFile('archivo')) {
             $file = $request->file('archivo');
             $filename = 'quote_' . $quote->quote_id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('public/comprobantes/' . $quote->quote_id, $filename);
-            $quoteFile = new \Modules\LSCEFA\Models\QuoteFile([
-                'filename' => $filename,
-                'path' => $path,
-                'mime' => $file->getClientMimeType(),
-                'size' => $file->getSize(),
+            
+            // Ruta donde debería guardarse
+            $directory = storage_path('app/public/comprobantes');
+            $path = 'comprobantes/' . $filename;
+            $fullPath = storage_path('app/public/' . $path);
+            
+            \Log::info('=== INICIO DE SUBIDA DE ARCHIVO ===');
+            \Log::info('Ruta de destino:', [
+                'directorio' => $directory,
+                'ruta_completa' => $fullPath,
+                'directorio_padre' => dirname($fullPath),
+                'directorio_padre_existe' => file_exists(dirname($fullPath)) ? 'Sí' : 'No',
+                'permisos' => substr(sprintf('%o', fileperms(dirname($fullPath))), -4)
             ]);
-            $quote->files()->save($quoteFile);
-            // Redirigir nuevamente al formulario de comprobante
-            return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)->with('success', 'Comprobante subido correctamente.');
+            
+            // Crear el directorio si no existe
+            if (!file_exists($directory)) {
+                \Log::info('Creando directorio: ' . $directory);
+                mkdir($directory, 0755, true);
+            }
+            
+            // Mover el archivo manualmente
+            \Log::info('Intentando mover archivo a: ' . $fullPath);
+            
+            if ($file->move(dirname($fullPath), $filename)) {
+                \Log::info('Archivo movido exitosamente a: ' . $fullPath);
+                
+                // Verificar si el archivo existe después de moverlo
+                if (file_exists($fullPath)) {
+                    \Log::info('El archivo existe en la ubicación esperada');
+                } else {
+                    \Log::error('El archivo no se encuentra en la ubicación esperada');
+                    // Buscar el archivo en todo el directorio de almacenamiento
+                    $found = false;
+                    $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(storage_path('app')));
+                    foreach ($files as $file) {
+                        if ($file->isFile() && $file->getFilename() === $filename) {
+                            \Log::error('El archivo se encuentra en: ' . $file->getPathname());
+                            $found = true;
+                        }
+                    }
+                    if (!$found) {
+                        \Log::error('No se encontró el archivo en ningún lugar del directorio de almacenamiento');
+                    }
+                }
+                
+                $quoteFile = new \Modules\LSCEFA\Models\QuoteFile([
+                    'filename' => $filename,
+                    'path' => 'public/' . $path,
+                    'mime' => $file->getClientMimeType(),
+                    'size' => $file->getSize(),
+                ]);
+                $quote->files()->save($quoteFile);
+                
+                return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)
+                    ->with('success', 'Comprobante subido correctamente.');
+            } else {
+                \Log::error('Error al mover el archivo');
+                \Log::error('Error de PHP: ' . json_encode(error_get_last()));
+            }
         }
-        return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)->with('error', 'No se pudo subir el comprobante.');
+        
+        return redirect()->route('lscefa.quality.quotes.upload', $quote->quote_id)
+            ->with('error', 'No se pudo subir el comprobante.');
     }
 
     public function startProcess(Request $request, $quote_id)
@@ -426,8 +478,8 @@ class QuoteController extends Controller
         }
 
         $request->validate([
-            'archivo' => 'required|file|mimes:pdf,jpg,png|max:2048',
-            'comunicacion_cliente' => 'required|string|min:10',
+            'archivo' => 'nullable|file|mimes:pdf,jpg,png|max:40960',
+            'comunicacion_cliente' => 'required|string',
             'dias_procesar' => 'required|integer|min:1|max:365',
             'unit_count' => 'required|integer|min:1',
             'archivo_comunicacion' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:5120',
@@ -435,11 +487,9 @@ class QuoteController extends Controller
             'item_codes.*' => 'required|string|min:3',
             'services.*' => 'required|string',
         ], [
-            'archivo.required' => 'El comprobante es obligatorio.',
             'archivo.mimes' => 'El comprobante debe ser PDF o imagen.',
-            'archivo.max' => 'El comprobante no puede superar los 2MB.',
+            'archivo.max' => 'El comprobante no puede superar los 40MB.',
             'comunicacion_cliente.required' => 'La comunicación con el cliente es obligatoria.',
-            'comunicacion_cliente.min' => 'La comunicación con el cliente debe tener al menos 10 caracteres.',
             'archivo_comunicacion.mimes' => 'El archivo debe ser PDF, Word (.doc, .docx) o Excel (.xls, .xlsx).',
             'archivo_comunicacion.max' => 'El archivo no puede superar los 5MB.',
         ]);
@@ -593,45 +643,4 @@ class QuoteController extends Controller
         $process->delete();
         return redirect()->route('lscefa.quality.processes.index')->with('success', 'Proceso eliminado correctamente.');
     }
-
-    /**
-     * Descargar archivo de comunicación guardado en el módulo.
-     */
-    public function downloadCommunicationFile($filename)
-    {
-        $user = auth()->user();
-        if (!$user) {
-            abort(403, 'Debe iniciar sesión para descargar archivos.');
-        }
-        
-        $path = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $filename;
-        
-        if (!file_exists($path)) {
-            abort(404, 'Archivo no encontrado');
-        }
-        
-        return response()->download($path);
-    }
-
-    /**
-     * Descargar comprobante guardado en el módulo.
-     */
-    public function downloadComprobante($quote_id, $filename)
-    {
-        // Verificar autenticación
-        if (!auth()->check()) {
-            abort(403, 'Debe iniciar sesión para descargar archivos.');
-        }
-        
-        // Construir la ruta del archivo
-        $path = module_path('LSCEFA') . '/storage/app/comprobantes/' . $quote_id . '/' . $filename;
-        
-        // Verificar que el archivo exista
-        if (!file_exists($path)) {
-            abort(404, 'Archivo no encontrado');
-        }
-        
-        // Permitir la descarga a cualquier usuario autenticado
-        return response()->download($path);
-    }
-} 
+}

@@ -252,6 +252,7 @@
             <div class="sidebar">
                 <!-- Sidebar Menu -->
                 <nav class="mt-2">
+                    @php $user = auth()->user(); $isAdmin = $user && $user->roles()->where('slug','lscefa.admin')->exists(); @endphp
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false" style="gap: 8px;">
                         <!-- Cotizaciones -->
                         <li class="nav-item">
@@ -301,15 +302,14 @@
                         @endif
                         
                         <!-- Menú de Administración - Solo visible para administradores -->
-                       
-                            
+                        @if($isAdmin)
                             <li class="nav-item">
                                 <a href="{{ route('lscefa.admin.users.index') }}" class="nav-link {{ request()->routeIs('lscefa.admin.users.*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-users-cog"></i>
                                     <p>Gestión de Usuarios</p>
                                 </a>
                             </li>
-                      
+                        @endif
                     </ul>
                 </nav>
             </div>

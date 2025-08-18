@@ -23,6 +23,8 @@ class AcidezAnalysis extends Model
     'consumido_blanco',
     'porcentaje_humedad',
     'molaridad',
+    'valor_referencia',
+    'valor_obtenido',
     'consumido_muestra',
     'acidez',
     'observaciones',

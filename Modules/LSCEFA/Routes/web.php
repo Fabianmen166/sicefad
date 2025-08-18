@@ -23,10 +23,7 @@ use Modules\LSCEFA\Http\Controllers\TechnicalAnalysisController;
 use Modules\LSCEFA\Http\Controllers\HumidityAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ConductivityAnalysisController;
 use Modules\LSCEFA\Http\Controllers\AcidezAnalysisController;
-
-
 use Modules\LSCEFA\Http\Controllers\UserManagementController;
-
 use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 use Modules\LSCEFA\Http\Controllers\SulfurAnalysisController;
@@ -35,7 +32,11 @@ use Modules\LSCEFA\Http\Controllers\BoronAnalysisController;
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
 use Modules\LSCEFA\Http\Controllers\MicronutrientsAnalysisController;
 use Modules\LSCEFA\Http\Controllers\TextureAnalysisController;
-
+use Modules\LSCEFA\Http\Controllers\FileDownloadController;
+use Modules\LSCEFA\Http\Controllers\PhAnalysisController;
+use Modules\LSCEFA\Http\Controllers\AnalyticalController;
+use Modules\LSCEFA\Http\Controllers\QuoteSearchController;
+use Modules\LSCEFA\Http\Controllers\QuoteFileController;
 
 Route::middleware(['lang'])->group(function(){
     Route::prefix('lscefa')->group(function () {
@@ -166,19 +167,22 @@ Route::middleware(['lang'])->group(function(){
             Route::delete('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'destroyProcess'])->name('lscefa.quality.processes.destroy');
         });
 
-        Route::middleware(['auth'])->group(function () {
-            // Rutas de descarga de archivos
-            Route::get('communication-file/{filename}', [QuoteController::class, 'downloadCommunicationFile'])
-                ->name('lscefa.communication_file.download');
-                
-            Route::get('comprobante-file/{quote_id}/{filename}', [QuoteController::class, 'downloadComprobante'])
-                ->name('lscefa.comprobante_file.download');
-        });
+        // Rutas de descarga de archivos
+        Route::get('download/communication/{filename}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadCommunication'])
+            ->where('filename', '.*')
+            ->name('lscefa.download.communication');
+            
+        // Ruta para descargar comprobantes con parámetro opcional 'type'
+        Route::get('download/comprobante/{quote_id}/{filename}/{type?}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadComprobante'])
+            ->where('quote_id', '.*')  // Acepta cualquier carácter en quote_id
+            ->name('cefa.lscefa.download.comprobante');
 
-        // Ruta para subir archivos (mantener esta ruta como está si es necesaria para usuarios no autenticados)
-        Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
-            ->name('lscefa.quality.quotes.upload.form')
-            ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
+        Route::middleware(['auth'])->group(function () {
+            // Ruta para subir archivos (mantener esta ruta como está si es necesaria para usuarios no autenticados)
+            Route::get('lscefa/quotes/upload/{id}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'showUploadForm'])
+                ->name('lscefa.quality.quotes.upload.form')
+                ->middleware(['auth', 'can:lscefa.quality.quotes.upload']);
+        });
 
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             // Rutas para Analisis de humedad
@@ -219,6 +223,23 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'update'])->name('lscefa.technical.analyses.phosphorus.update');
             Route::delete('/technical/analyses/phosphorus/{id}', [PhosphorusAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.phosphorus.destroy');
             Route::get('/technical/analyses/phosphorus/{id}/report', [PhosphorusAnalysisController::class, 'report'])->name('lscefa.technical.analyses.phosphorus.report');
+
+            // Rutas para Análisis de Bases Cambiables
+            Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');
+            Route::get('/technical/analyses/exchangeable_bases/process/{processId}/{serviceId}', [ExchangeableBasesAnalysisController::class, 'process'])->name('lscefa.technical.analyses.exchangeable_bases.process');
+            Route::post('/technical/analyses/exchangeable_bases/store', [ExchangeableBasesAnalysisController::class, 'storeExchangeableBasesAnalysis'])->name('lscefa.technical.analyses.exchangeable_bases.store');
+            Route::get('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.exchangeable_bases.batch');
+            Route::post('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])
+                ->name('lscefa.technical.analyses.exchangeable_bases.batch.post')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch.post');
+            Route::post('/technical/analyses/exchangeable_bases/batch-store', [ExchangeableBasesAnalysisController::class, 'batchStore'])
+                ->name('lscefa.technical.analyses.exchangeable_bases.batch_store')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch_store');
+            Route::get('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'show'])->name('lscefa.technical.analyses.exchangeable_bases.show');
+            Route::get('/technical/analyses/exchangeable_bases/{id}/edit', [ExchangeableBasesAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.exchangeable_bases.edit');
+            Route::put('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'update'])->name('lscefa.technical.analyses.exchangeable_bases.update');
+            Route::delete('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.exchangeable_bases.destroy');
+            Route::get('/technical/analyses/exchangeable_bases/{id}/report', [ExchangeableBasesAnalysisController::class, 'report'])->name('lscefa.technical.analyses.exchangeable_bases.report');
 
             // Rutas para Análisis de Azufre
             Route::get('/technical/analyses/sulfur', [SulfurAnalysisController::class, 'index'])->name('lscefa.technical.analyses.sulfur.index');
@@ -290,7 +311,6 @@ Route::middleware(['lang'])->group(function(){
 
             // Rutas para Análisis de Textura
             Route::get('/technical/analyses/texture', [TextureAnalysisController::class, 'index'])->name('lscefa.technical.analyses.texture.index');
-            Route::get('/technical/analyses/texture/process/{processId}/{serviceId}', [TextureAnalysisController::class, 'process'])->name('lscefa.technical.analyses.texture.process');
             Route::post('/technical/analyses/texture/store', [TextureAnalysisController::class, 'storeTextureAnalysis'])->name('lscefa.technical.analyses.texture.store');
             Route::get('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.texture.batch');
             Route::post('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])
@@ -304,35 +324,18 @@ Route::middleware(['lang'])->group(function(){
             Route::delete('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.texture.destroy');
             Route::get('/technical/analyses/texture/{id}/report', [TextureAnalysisController::class, 'report'])->name('lscefa.technical.analyses.texture.report');
 
-            // Rutas para Análisis de Bases Cambiables
-            Route::get('/technical/analyses/exchangeable_bases', [ExchangeableBasesAnalysisController::class, 'index'])->name('lscefa.technical.analyses.exchangeable_bases.index');
-            Route::get('/technical/analyses/exchangeable_bases/process/{processId}/{serviceId}', [ExchangeableBasesAnalysisController::class, 'process'])->name('lscefa.technical.analyses.exchangeable_bases.process');
-            Route::post('/technical/analyses/exchangeable_bases/store', [ExchangeableBasesAnalysisController::class, 'storeExchangeableBasesAnalysis'])->name('lscefa.technical.analyses.exchangeable_bases.store');
-            Route::get('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.exchangeable_bases.batch');
-            Route::post('/technical/analyses/exchangeable_bases/batch', [ExchangeableBasesAnalysisController::class, 'batchProcess'])
-                ->name('lscefa.technical.analyses.exchangeable_bases.batch.post')
-                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch.post');
-            Route::post('/technical/analyses/exchangeable_bases/batch-store', [ExchangeableBasesAnalysisController::class, 'batchStore'])
-                ->name('lscefa.technical.analyses.exchangeable_bases.batch_store')
-                ->middleware('lscefa.permission:lscefa.technical.analyses.exchangeable_bases.batch_store');
-
-
-            Route::get('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'show'])->name('lscefa.technical.analyses.exchangeable_bases.show');
-            Route::get('/technical/analyses/exchangeable_bases/{id}/edit', [ExchangeableBasesAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.exchangeable_bases.edit');
-            Route::put('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'update'])->name('lscefa.technical.analyses.exchangeable_bases.update');
-            Route::delete('/technical/analyses/exchangeable_bases/{id}', [ExchangeableBasesAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.exchangeable_bases.destroy');
-            Route::get('/technical/analyses/exchangeable_bases/{id}/report', [ExchangeableBasesAnalysisController::class, 'report'])->name('lscefa.technical.analyses.exchangeable_bases.report');
-
             // Rutas para Análisis de Acidez
             Route::get('/technical/analyses/acidity', [AcidezAnalysisController::class, 'index'])->name('lscefa.technical.analyses.acidity.index');
-            Route::get('/process/{processId}', [AcidezAnalysisController::class, 'acidityAnalysis']) ->name('lscefa.technical.analyses.acidity.process');
-             Route::post('/store', [AcidezAnalysisController::class, 'storeAcidezAnalysis'])->name('lscefa.technical.analyses.acidity.store');
-             Route::post('/technical/analyses/acidity/batch-process', [AcidezAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.acidity.batchProcess');
-             Route::post('/technical/analyses/acidity/batch-store', [AcidezAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.acidity.batchStore');
-        
-            }); 
+            Route::get('/process/{processId}', [AcidezAnalysisController::class, 'acidityAnalysis'])->name('lscefa.technical.analyses.acidity.process');
+            Route::post('/store', [AcidezAnalysisController::class, 'storeAcidezAnalysis'])->name('lscefa.technical.analyses.acidity.store');
+            Route::post('/technical/analyses/acidity/batch-process', [AcidezAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.acidity.batchProcess');
+            Route::post('/technical/analyses/acidity/batch-store', [AcidezAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.acidity.batchStore');
+        });
 
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
-    });
-});
+    }); // Cierre de Route::prefix('lscefa')
+}); // Cierre de Route::middleware(['lang'])
+        
+
+

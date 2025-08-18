@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Modules\SICA\Entities\Role;
+use Modules\SICA\Entities\Person;
+use Modules\SICA\Entities\EPS;
+use Modules\SICA\Entities\PopulationGroup;
+use Modules\SICA\Entities\PensionEntity;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,8 +30,8 @@ class UserManagementController extends Controller
             \Log::info('Email: ' . $user->email);
             \Log::info('Roles: ' . json_encode($user->roles->pluck('slug')->toArray()));
             
-            // Verificar si el usuario tiene el rol de administrador
-            $hasRole = $user->hasRole('lscefa.admin');
+            // Verificar si el usuario tiene el rol de administrador (sin usar helpers inexistentes)
+            $hasRole = $user->roles()->where('slug', 'lscefa.admin')->exists();
             \Log::info('¿Tiene rol lscefa.admin?: ' . ($hasRole ? 'Sí' : 'No'));
             
             if (!$hasRole) {
@@ -55,7 +59,7 @@ class UserManagementController extends Controller
      */
     public function create()
     {
-        $this->authorize('lscefa.admin.users.create');
+        $this->ensureAdmin();
         
         $roles = Role::where('slug', 'like', 'lscefa.%')->get();
         return view('lscefa::user_management.create', compact('roles'));
@@ -63,29 +67,57 @@ class UserManagementController extends Controller
 
     /**
      * Almacena un nuevo usuario en la base de datos.
+     * Crea primero la Persona con los datos del formulario y la asigna al nuevo Usuario.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $this->authorize('lscefa.admin.users.create');
+        $this->ensureAdmin();
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            // Datos de Persona
+            'document_type' => 'required|string|in:Cédula de Ciudadanía,Tarjeta de Identidad,Cédula de Extranjería,Pasaporte,Documento Nacional de Identidad,Registro Civil,Número de Identificación Tributaria',
+            'document_number' => 'required|string|max:50|unique:people,document_number',
+            'first_name' => 'required|string|max:120',
+            'first_last_name' => 'required|string|max:120',
+            'second_last_name' => 'nullable|string|max:120',
+            // Datos de Usuario
+            'nickname' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|exists:roles,id'
         ]);
 
+        // Valores por defecto requeridos por la tabla people
+        $population_group = PopulationGroup::firstOrCreate(['name' => 'NINGUNA']);
+        $eps = EPS::firstOrCreate(['name' => 'NO REGISTRA']);
+        $pension_entity = PensionEntity::firstOrCreate(['name' => 'NO REGISTRA']);
+
+        // Crear Persona asociada
+        $person = Person::create([
+            'document_type' => $validated['document_type'],
+            'document_number' => $validated['document_number'],
+            'first_name' => $validated['first_name'],
+            'first_last_name' => $validated['first_last_name'],
+            'second_last_name' => $validated['second_last_name'] ?? null,
+            'eps_id' => $eps->id,
+            'population_group_id' => $population_group->id,
+            'pension_entity_id' => $pension_entity->id,
+        ]);
+
+        // Crear Usuario asociado a la Persona
         $user = User::create([
-            'name' => $validated['name'],
+            'person_id' => $person->id,
+            'nickname' => $validated['nickname'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'email_verified_at' => now(),
             'remember_token' => Str::random(10),
         ]);
 
+        // Asignar rol
         $role = Role::findOrFail($validated['role']);
         $user->roles()->sync([$role->id]);
 
@@ -101,13 +133,14 @@ class UserManagementController extends Controller
      */
     public function edit($id)
     {
-        $this->authorize('lscefa.admin.users.edit');
+        $this->ensureAdmin();
         
         $user = User::findOrFail($id);
         $roles = Role::where('slug', 'like', 'lscefa.%')->get();
         $userRole = $user->roles->first();
+        $people = Person::orderBy('first_name')->orderBy('first_last_name')->get();
         
-        return view('lscefa::user_management.edit', compact('user', 'roles', 'userRole'));
+        return view('lscefa::user_management.edit', compact('user', 'roles', 'userRole', 'people'));
     }
 
     /**
@@ -119,18 +152,18 @@ class UserManagementController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->authorize('lscefa.admin.users.edit');
+        $this->ensureAdmin();
         
         $user = User::findOrFail($id);
         
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'nickname' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|exists:roles,id'
         ]);
 
-        $user->name = $validated['name'];
+        $user->nickname = $validated['nickname'];
         $user->email = $validated['email'];
         
         if (!empty($validated['password'])) {
@@ -155,7 +188,7 @@ class UserManagementController extends Controller
      */
     public function destroy($id)
     {
-        $this->authorize('lscefa.admin.users.destroy');
+        $this->ensureAdmin();
         
         $user = User::findOrFail($id);
         
@@ -164,9 +197,17 @@ class UserManagementController extends Controller
             return back()->with('error', 'No puedes eliminar tu propio usuario.');
         }
         
-        $user->delete();
+        $user->forceDelete();
         
         return redirect()->route('lscefa.admin.users.index')
             ->with('success', 'Usuario eliminado exitosamente.');
+    }
+
+    private function ensureAdmin(): void
+    {
+        $user = auth()->user();
+        if (!$user || !$user->roles()->where('slug', 'lscefa.admin')->exists()) {
+            abort(403, 'No tienes permisos para administrar usuarios.');
+        }
     }
 }

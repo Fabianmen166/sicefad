@@ -38,8 +38,8 @@
                 <form action="{{ route('lscefa.quality.process.start', $quote->quote_id) }}" method="POST" id="process-form" enctype="multipart/form-data" onsubmit="return validateForm()">
                     @csrf
                     <div class="form-group">
-                        <label for="archivo">Seleccionar Comprobante <span class="text-danger">*</span>:</label>
-                        <input type="file" name="archivo" id="archivo" class="form-control" required 
+                        <label for="archivo">Seleccionar Comprobante (Opcional):</label>
+                        <input type="file" name="archivo" id="archivo" class="form-control"
                                accept="image/jpeg,image/png,application/pdf"
                                data-max-size="{{ $maxFileSize * 1024 * 1024 }}">
                         <small class="form-text text-muted">

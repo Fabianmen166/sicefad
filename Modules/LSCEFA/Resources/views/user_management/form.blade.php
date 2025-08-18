@@ -3,12 +3,38 @@
 @else
     {{ Form::open(['route' => 'lscefa.admin.users.store']) }}
 @endif
+@csrf
 
 <div class="card-body">
+    @if(isset($user))
+        <div class="form-group">
+            {{ Form::label('person_readonly', 'Persona asociada') }}
+            <input type="text" class="form-control" value="{{ optional($user->person)->full_name }} ({{ optional($user->person)->document_number }})" readonly>
+            {{-- Mantener person_id si fuera necesario en procesos posteriores --}}
+            @if(isset($user->person_id))
+                {{ Form::hidden('person_id', $user->person_id) }}
+            @endif
+        </div>
+    @else
+        <div class="form-group">
+            {{ Form::label('person_id', 'Persona asociada') }}
+            {{ Form::select('person_id', $people->pluck('full_name','id'), isset($user) ? $user->person_id : null, [
+                'class' => 'form-control' . ($errors->has('person_id') ? ' is-invalid' : ''),
+                'required' => 'required',
+                'placeholder' => 'Seleccione una persona'
+            ]) }}
+            @error('person_id')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+    @endif
+
     <div class="form-group">
-        {{ Form::label('name', 'Nombre Completo') }}
-        {{ Form::text('name', null, ['class' => 'form-control' . ($errors->has('name') ? ' is-invalid' : ''), 'required' => 'required']) }}
-        @error('name')
+        {{ Form::label('nickname', 'Nombre (nickname)') }}
+        {{ Form::text('nickname', null, ['class' => 'form-control' . ($errors->has('nickname') ? ' is-invalid' : ''), 'required' => 'required']) }}
+        @error('nickname')
             <span class="invalid-feedback" role="alert">
                 <strong>{{ $message }}</strong>
             </span>
@@ -27,7 +53,7 @@
 
     <div class="form-group">
         {{ Form::label('password', 'Contraseña') }}
-        {{ Form::password('password', ['class' => 'form-control' . ($errors->has('password') ? ' is-invalid' : ''), isset($user) ? null : 'required']) }}
+        {{ Form::password('password', ['class' => 'form-control' . ($errors->has('password') ? ' is-invalid' : '')]) }}
         @error('password')
             <span class="invalid-feedback" role="alert">
                 <strong>{{ $message }}</strong>
@@ -40,7 +66,7 @@
 
     <div class="form-group">
         {{ Form::label('password_confirmation', 'Confirmar Contraseña') }}
-        {{ Form::password('password_confirmation', ['class' => 'form-control', isset($user) ? null : 'required']) }}
+        {{ Form::password('password_confirmation', ['class' => 'form-control']) }}
     </div>
 
     <div class="form-group">
