@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateAcidezAnalysesTable extends Migration
+class CreateAcidezAnalysesTable_2025 extends Migration
 {
     /**
      * Run the migrations.

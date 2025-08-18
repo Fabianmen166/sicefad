@@ -309,7 +309,6 @@ Route::middleware(['lang'])->group(function(){
 
             // Rutas para Análisis de Textura
             Route::get('/technical/analyses/texture', [TextureAnalysisController::class, 'index'])->name('lscefa.technical.analyses.texture.index');
-            Route::get('/technical/analyses/texture/process/{processId}/{serviceId}', [TextureAnalysisController::class, 'process'])->name('lscefa.technical.analyses.texture.process');
             Route::post('/technical/analyses/texture/store', [TextureAnalysisController::class, 'storeTextureAnalysis'])->name('lscefa.technical.analyses.texture.store');
             Route::get('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])->name('lscefa.technical.analyses.texture.batch');
             Route::post('/technical/analyses/texture/batch', [TextureAnalysisController::class, 'batchProcess'])

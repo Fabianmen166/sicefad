@@ -31,9 +31,125 @@
                 </div>
             </div>
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <form action="{{ route('lscefa.technical.analyses.texture.batch_store') }}" method="POST" id="textureBatchForm">
                 @csrf
-                
+                <!-- Barra de Navegación Horizontal (SOLO UNA VEZ) -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link active" id="general-tab" data-toggle="tab" href="#general" role="tab" aria-controls="general" aria-selected="true">
+                                            <i class="fas fa-info-circle mr-2"></i>Información General
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link" id="controls-tab" data-toggle="tab" href="#controls" role="tab" aria-controls="controls" aria-selected="false">
+                                            <i class="fas fa-cogs mr-2"></i>Controles Analíticos
+                                        </a>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <a class="nav-link" id="samples-tab" data-toggle="tab" href="#samples" role="tab" aria-controls="samples" aria-selected="false">
+                                            <i class="fas fa-flask mr-2"></i>Análisis de Muestras
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin barra de navegación -->
+                <!-- Tarjeta Única de Información General del Análisis -->
+                <div class="row" id="infoGeneralCardRow">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    Información General del Análisis - Procesos
+                                    @foreach($processes as $process)
+                                        {{ $loop->first ? '' : ', ' }}{{ $process->process_id }}
+                                    @endforeach
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <!-- Campos generales -->
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="consecutivo_no">Consecutivo No.</label>
+                                            <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="fecha_analisis">Fecha del análisis</label>
+                                            <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="nombre_analista">Nombre del Analista</label>
+                                            <input type="text" class="form-control" id="nombre_analista" name="nombre_analista">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="metodologia_utilizada">Metodología Utilizada</label>
+                                            <input type="text" class="form-control" id="metodologia_utilizada" name="metodologia_utilizada">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="codigo_termometro">Código Termómetro</label>
+                                            <input type="text" class="form-control" id="codigo_termometro" name="codigo_termometro">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="codigo_hidrometro">Código Hidrómetro</label>
+                                            <input type="text" class="form-control" id="codigo_hidrometro" name="codigo_hidrometro">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fin tarjeta unificada -->
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    function toggleInfoGeneralCard() {
+                        var activeTab = document.querySelector('.nav-tabs .nav-link.active');
+                        var infoGeneralCardRow = document.getElementById('infoGeneralCardRow');
+                        if (activeTab && infoGeneralCardRow) {
+                            if (activeTab.getAttribute('href') === '#general') {
+                                infoGeneralCardRow.style.display = '';
+                            } else {
+                                infoGeneralCardRow.style.display = 'none';
+                            }
+                        }
+                    }
+                    // Inicial
+                    toggleInfoGeneralCard();
+                    // Al cambiar de pestaña
+                    document.querySelectorAll('.nav-tabs .nav-link').forEach(function(tab) {
+                        tab.addEventListener('click', function() {
+                            setTimeout(toggleInfoGeneralCard, 10);
+                        });
+                    });
+                });
+                </script>
                 @foreach($processes as $index => $process)
                     @php
                         $textureService = $process->serviceProcessDetails->filter(function($detail) {
@@ -41,96 +157,14 @@
                                    str_contains(strtolower($detail->service->descripcion), 'texture');
                         })->first();
                     @endphp
-                    
                     @if($textureService)
                         <input type="hidden" name="analyses[{{ $index }}][process_id]" value="{{ $process->process_id }}">
                         <input type="hidden" name="analyses[{{ $index }}][service_id]" value="{{ $textureService->service_id }}">
                         
-                        <!-- Barra de Navegación Horizontal -->
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body p-0">
-                                        <ul class="nav nav-tabs nav-fill" id="analysisTabs" role="tablist">
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link active" id="general-tab" data-toggle="tab" href="#general" role="tab" aria-controls="general" aria-selected="true">
-                                                    <i class="fas fa-info-circle mr-2"></i>Información General
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link" id="controls-tab" data-toggle="tab" href="#controls" role="tab" aria-controls="controls" aria-selected="false">
-                                                    <i class="fas fa-cogs mr-2"></i>Controles Analíticos
-                                                </a>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link" id="samples-tab" data-toggle="tab" href="#samples" role="tab" aria-controls="samples" aria-selected="false">
-                                                    <i class="fas fa-flask mr-2"></i>Análisis de Muestras
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Contenido de las Pestañas -->
                         <div class="tab-content" id="analysisTabsContent">
                             <!-- Pestaña Información General -->
-                            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
-                                <!-- Información General del Análisis -->
-                                <div class="row">
-                                    <div class="col-12">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h3 class="card-title">Información General del Análisis - Proceso {{ $process->process_id }}</h3>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="consecutivo_no_{{ $index }}">Consecutivo No. *</label>
-                                                            <input type="text" class="form-control" id="consecutivo_no_{{ $index }}" name="analyses[{{ $index }}][consecutivo_no]" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="fecha_analisis_{{ $index }}">Fecha del análisis *</label>
-                                                            <input type="date" class="form-control" id="fecha_analisis_{{ $index }}" name="analyses[{{ $index }}][fecha_analisis]" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="nombre_analista_{{ $index }}">Nombre del Analista *</label>
-                                                            <input type="text" class="form-control" id="nombre_analista_{{ $index }}" name="analyses[{{ $index }}][nombre_analista]" required>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="metodologia_utilizada_{{ $index }}">Metodología Utilizada *</label>
-                                                            <input type="text" class="form-control" id="metodologia_utilizada_{{ $index }}" name="analyses[{{ $index }}][metodologia_utilizada]" required>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="codigo_termometro_{{ $index }}">Código Interno termómetro</label>
-                                                            <input type="text" class="form-control" id="codigo_termometro_{{ $index }}" name="analyses[{{ $index }}][codigo_termometro]">
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="form-group">
-                                                            <label for="codigo_hidrometro_{{ $index }}">Código interno Hidrómetro</label>
-                                                            <input type="text" class="form-control" id="codigo_hidrometro_{{ $index }}" name="analyses[{{ $index }}][codigo_hidrometro]">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
+                            <!-- TARJETA ELIMINADA: Información General del Análisis por proceso -->
                             <!-- Pestaña Controles Analíticos -->
                             <div class="tab-pane fade" id="controls" role="tabpanel" aria-labelledby="controls-tab">
                                 <!-- Controles Analíticos -->
@@ -255,15 +289,11 @@
                                                                         <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_esperado_arena]" value="46"></td>
                                                                         <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_esperado_arcilla]" value="31"></td>
                                                                         <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_esperado_limo]" value="23"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_error_arena]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_error_arcilla]"></td>
-                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_error_limo]"></td>
+                                                                        <td colspan="3">
+                                                                            <input type="text" class="form-control form-control-sm" id="material_referencia_error_promedio_{{ $index }}" name="analyses[{{ $index }}][material_referencia_error_promedio]" readonly>
+                                                                        </td>
                                                                         <td>
-                                                                            <select class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_aceptabilidad]">
-                                                                                <option value="">Seleccionar</option>
-                                                                                <option value="Aceptable">Aceptable</option>
-                                                                                <option value="No aceptable">No aceptable</option>
-                                                                            </select>
+                                                                            <input type="text" class="form-control form-control-sm" id="material_referencia_aceptabilidad_{{ $index }}" name="analyses[{{ $index }}][material_referencia_aceptabilidad]" readonly>
                                                                         </td>
                                                                         <td><input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][material_referencia_observaciones]"></td>
                                                                     </tr>
@@ -285,13 +315,14 @@
                                     <div class="col-12">
                                         <div class="card">
                                             <div class="card-header">
-                                                <h3 class="card-title">Análisis de Muestras - Proceso {{ $process->process_id }}</h3>
+                                                <h3 class="card-title">Análisis de Muestras</h3>
                                             </div>
                                             <div class="card-body">
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered table-sm" id="muestras_table_{{ $index }}">
+                                                <div class="table-responsive" style="overflow-x: auto;">
+                                                    <table class="table table-bordered table-sm" id="muestras_table_{{ $index }}" style="min-width: 1800px;">
                                                         <thead class="table-light">
                                                             <tr>
+                                                                <th rowspan="2">ID Proceso</th>
                                                                 <th rowspan="2">Nombre de la muestra</th>
                                                                 <th rowspan="2">Peso (g)</th>
                                                                 <th colspan="6">Reporte de Resultados Análisis</th>
@@ -312,6 +343,7 @@
                                                             <tr>
                                                                 <th></th>
                                                                 <th></th>
+                                                                <th></th>
                                                                 <th>Lecturas</th>
                                                                 <th>°C</th>
                                                                 <th>Lectura</th>
@@ -329,6 +361,7 @@
                                                         <tbody id="muestras_container_{{ $index }}">
                                                             <!-- Blanco del proceso -->
                                                             <tr class="muestra-row">
+                                                                <td></td>
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][codigo_interno]" value="Blanco del proceso" readonly>
                                                                 </td>
@@ -366,6 +399,7 @@
                                                             </tr>
                                                             <!-- Duplicado A -->
                                                             <tr class="muestra-row">
+                                                                <td></td>
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][1][codigo_interno]" value="Duplicado A">
                                                                 </td>
@@ -406,48 +440,57 @@
                                                                 </td>
                                                             </tr>
                                                             <!-- Duplicado B -->
-                                                            <tr class="muestra-row">
-                                                                <td>
-                                                                    <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][2][codigo_interno]" value="Duplicado B">
-                                                                </td>
-                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][2][peso]" placeholder="0.0000"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][2][lecturas_40s]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][2][temperatura_40s]" placeholder="0.0"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][2][lecturas_2h]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][2][temperatura_2h]" placeholder="0.0"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][2][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][2][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][2][humedad]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][2][porcentaje_arena]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][2][porcentaje_arcilla]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][2][porcentaje_limo]" placeholder="0.00" readonly></td>
-                                                                <td>
-                                                                    <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][2][clase_textural]">
-                                                                        <option value="">Seleccionar</option>
-                                                                        <option value="Arena">Arena</option>
-                                                                        <option value="Arena Limosa">Arena Limosa</option>
-                                                                        <option value="Arena Arcillosa">Arena Arcillosa</option>
-                                                                        <option value="Limo">Limo</option>
-                                                                        <option value="Limo Arenoso">Limo Arenoso</option>
-                                                                        <option value="Limo Arcilloso">Limo Arcilloso</option>
-                                                                        <option value="Arcilla">Arcilla</option>
-                                                                        <option value="Arcilla Arenosa">Arcilla Arenosa</option>
-                                                                        <option value="Arcilla Limosa">Arcilla Limosa</option>
-                                                                        <option value="Franco Arenoso">Franco Arenoso</option>
-                                                                        <option value="Franco Limoso">Franco Limoso</option>
-                                                                        <option value="Franco Arcilloso">Franco Arcilloso</option>
-                                                                        <option value="Franco">Franco</option>
-                                                                    </select>
-                                                                </td>
-                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][2][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
-                                                                <td>
-                                                                    <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
-                                                                        <i class="fas fa-trash"></i>
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
+                                                            @php $processIds = $processes->pluck('process_id')->toArray(); @endphp
+                                                            @foreach($processes as $pIndex => $proc)
+                                                                @if($pIndex >= 2)
+                                                                <tr class="muestra-row">
+                                                                    <td>{{ $proc->process_id }}</td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][{{ $pIndex }}][codigo_interno]" value="Duplicado B">
+                                                                    </td>
+                                                                    <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][{{ $pIndex }}][peso]" placeholder="0.0000"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][{{ $pIndex }}][lecturas_40s]" placeholder="0.00"></td>
+                                                                    <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][{{ $pIndex }}][temperatura_40s]" placeholder="0.0"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][{{ $pIndex }}][lecturas_2h]" placeholder="0.00"></td>
+                                                                    <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][{{ $pIndex }}][temperatura_2h]" placeholder="0.0"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][{{ $pIndex }}][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][{{ $pIndex }}][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][{{ $pIndex }}][humedad]" placeholder="0.00"></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][{{ $pIndex }}][porcentaje_arena]" placeholder="0.00" readonly></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][{{ $pIndex }}][porcentaje_arcilla]" placeholder="0.00" readonly></td>
+                                                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][{{ $pIndex }}][porcentaje_limo]" placeholder="0.00" readonly></td>
+                                                                    <td>
+                                                                        <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][{{ $pIndex }}][clase_textural]">
+                                                                            <option value="">Seleccionar</option>
+                                                                            <option value="Arena">Arena</option>
+                                                                            <option value="Arena Limosa">Arena Limosa</option>
+                                                                            <option value="Arena Arcillosa">Arena Arcillosa</option>
+                                                                            <option value="Limo">Limo</option>
+                                                                            <option value="Limo Arenoso">Limo Arenoso</option>
+                                                                            <option value="Limo Arcilloso">Limo Arcilloso</option>
+                                                                            <option value="Arcilla">Arcilla</option>
+                                                                            <option value="Arcilla Arenosa">Arcilla Arenosa</option>
+                                                                            <option value="Arcilla Limosa">Arcilla Limosa</option>
+                                                                            <option value="Franco Arenoso">Franco Arenoso</option>
+                                                                            <option value="Franco Limoso">Franco Limoso</option>
+                                                                            <option value="Franco Arcilloso">Franco Arcilloso</option>
+                                                                            <option value="Franco">Franco</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][{{ $pIndex }}][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
+                                                                    <td>
+                                                                        <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                                @endif
+                                                            @endforeach
                                                         </tbody>
                                                     </table>
+                                                </div>
+                                                <div style="width: 100%; overflow-x: auto; margin-top: 4px;">
+                                                    <div style="height: 8px; background: linear-gradient(90deg, #e0e0e0 0%, #bdbdbd 100%); border-radius: 4px;"></div>
                                                 </div>
                                                 
                                                 <!-- Eliminar la barra de navegación inferior (div con class="row mt-3" y el div con class="card-body p-0" que contiene las tabs) -->
@@ -679,8 +722,11 @@
     }
     
     [id^="muestras_table_"] .form-control-sm {
-        font-size: 0.875rem;
-        padding: 0.25rem 0.5rem;
+        min-width: 120px;
+        width: 100%;
+        max-width: 200px;
+        font-size: 0.95rem;
+        padding: 0.35rem 0.7rem;
         height: auto;
     }
     
@@ -1232,8 +1278,21 @@ $(document).ready(function() {
         const processIndex = $(this).data('process-index');
         const muestraIndex = muestraIndexes[processIndex];
         
+        // En el script de agregar fila, modificar para que solo las primeras N filas tengan ID de proceso
+        const processIds = @json($processes->pluck('process_id'));
+        // Contar solo las filas de muestra con ID de proceso (excluyendo blanco y filas sin ID)
+        const muestraRows = $(`#muestras_container_${processIndex} .muestra-row td:first-child`).filter(function(){ return $(this).text().trim() !== ''; }).length;
+        if (muestraRows >= processIds.length) {
+            alert('No hay más muestras para procesar: ya se han asignado todos los procesos seleccionados.');
+            return;
+        }
+        let idCell = '';
+        if (processIds.length > 0) {
+            idCell = processIds[muestraRows];
+        }
         const newMuestra = `
             <tr class="muestra-row">
+                <td>${idCell}</td>
                 <td>
                     <input type="text" class="form-control form-control-sm" name="analyses[${processIndex}][items][${muestraIndex}][codigo_interno]" placeholder="Nombre de la muestra">
                 </td>
@@ -1377,26 +1436,84 @@ $(document).ready(function() {
 
     // === PROMEDIOS DE DUPLICADOS EN PRECISIÓN ANALÍTICA ===
     function actualizarPromediosDuplicados(processIndex) {
-        // Buscar filas de Duplicado A y Duplicado B en la tabla de muestras
+        // Buscar todas las filas de la tabla de muestras
         const $muestras = $(`#muestras_container_${processIndex} .muestra-row`);
-        const $dupA = $muestras.eq(1); // Duplicado A es la segunda fila (índice 1)
-        const $dupB = $muestras.eq(2); // Duplicado B es la tercera fila (índice 2)
-        if ($dupA.length && $dupB.length) {
+        const total = $muestras.length;
+        if (total >= 2) {
+            // La primera después de blanco del proceso (índice 1)
+            const $dupA = $muestras.eq(1);
+            // La última fila
+            const $dupB = $muestras.eq(total - 1);
+
+            // Código interno
+            const codigoA = $dupA.find('input[name*="[codigo_interno]"]').val() || '';
+            const codigoB = $dupB.find('input[name*="[codigo_interno]"]').val() || '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_codigo]']`).val(codigoA);
+            $(`input[name='analyses[${processIndex}][duplicado_b_codigo]']`).val(codigoB);
+
             // Arena
             const arenaA = parseFloat($dupA.find('.porcentaje-arena').val());
             const arenaB = parseFloat($dupB.find('.porcentaje-arena').val());
             const promedioArena = (isFinite(arenaA) && isFinite(arenaB)) ? ((arenaA + arenaB) / 2).toFixed(2) : '';
             $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arena]']`).val(promedioArena);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arena]']`).val(promedioArena);
             // Arcilla
             const arcillaA = parseFloat($dupA.find('.porcentaje-arcilla').val());
             const arcillaB = parseFloat($dupB.find('.porcentaje-arcilla').val());
             const promedioArcilla = (isFinite(arcillaA) && isFinite(arcillaB)) ? ((arcillaA + arcillaB) / 2).toFixed(2) : '';
             $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arcilla]']`).val(promedioArcilla);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arcilla]']`).val(promedioArcilla);
             // Limo
             const limoA = parseFloat($dupA.find('.porcentaje-limo').val());
             const limoB = parseFloat($dupB.find('.porcentaje-limo').val());
             const promedioLimo = (isFinite(limoA) && isFinite(limoB)) ? ((limoA + limoB) / 2).toFixed(2) : '';
             $(`input[name='analyses[${processIndex}][duplicado_a_promedio_limo]']`).val(promedioLimo);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_limo]']`).val(promedioLimo);
+
+            // Calcular DPR para cada parámetro
+            function calcDPR(a, b) {
+                if (!isFinite(a) || !isFinite(b)) return '';
+                const mean = (a + b) / 2;
+                if (Math.abs(mean) < 1e-9) return '';
+                return (Math.abs(a - b) / mean * 100).toFixed(2);
+            }
+            // Arena
+            const dprArena = calcDPR(arenaA, arenaB);
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arena]']`).val(dprArena);
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arena]']`).val(dprArena);
+            // Arcilla
+            const dprArcilla = calcDPR(arcillaA, arcillaB);
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arcilla]']`).val(dprArcilla);
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arcilla]']`).val(dprArcilla);
+            // Limo
+            const dprLimo = calcDPR(limoA, limoB);
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_limo]']`).val(dprLimo);
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_limo]']`).val(dprLimo);
+        } else if (total === 2) {
+            // Solo hay una muestra además de blanco, usarla para ambos duplicados
+            const $dup = $muestras.eq(1);
+            const codigo = $dup.find('input[name*="[codigo_interno]"]').val() || '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_codigo]']`).val(codigo);
+            $(`input[name='analyses[${processIndex}][duplicado_b_codigo]']`).val(codigo);
+            const arena = parseFloat($dup.find('.porcentaje-arena').val());
+            const arcilla = parseFloat($dup.find('.porcentaje-arcilla').val());
+            const limo = parseFloat($dup.find('.porcentaje-limo').val());
+            const promedioArena = isFinite(arena) ? arena.toFixed(2) : '';
+            const promedioArcilla = isFinite(arcilla) ? arcilla.toFixed(2) : '';
+            const promedioLimo = isFinite(limo) ? limo.toFixed(2) : '';
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arena]']`).val(promedioArena);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arena]']`).val(promedioArena);
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_arcilla]']`).val(promedioArcilla);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_arcilla]']`).val(promedioArcilla);
+            $(`input[name='analyses[${processIndex}][duplicado_a_promedio_limo]']`).val(promedioLimo);
+            $(`input[name='analyses[${processIndex}][duplicado_b_promedio_limo]']`).val(promedioLimo);
+            // DPR será 0 o vacío
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arena]']`).val('');
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arena]']`).val('');
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_arcilla]']`).val('');
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_arcilla]']`).val('');
+            $(`input[name='analyses[${processIndex}][duplicado_a_dpr_limo]']`).val('');
+            $(`input[name='analyses[${processIndex}][duplicado_b_dpr_limo]']`).val('');
         }
     }
 
@@ -1494,5 +1611,215 @@ $(document).ready(function() {
       bindDPRListeners({{ $index }});
       actualizarDPR({{ $index }});
     @endforeach
+
+    // En la tabla de exactitud, dejar solo un campo para %Error promedio (colspan=3)
+    function calcularErrorExactitudPromedio(processIndex) {
+        console.log('Calculando error exactitud para proceso:', processIndex);
+        
+        // Obtener valores obtenidos y esperados
+        var arenaObtenido = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_obtenido_arena]']`).val()) || 0;
+        var arcillaObtenido = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_obtenido_arcilla]']`).val()) || 0;
+        var limoObtenido = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_obtenido_limo]']`).val()) || 0;
+        
+        var arenaEsperado = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_esperado_arena]']`).val()) || 0;
+        var arcillaEsperado = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_esperado_arcilla]']`).val()) || 0;
+        var limoEsperado = parseFloat($(`input[name='analyses[${processIndex}][material_referencia_esperado_limo]']`).val()) || 0;
+        
+        console.log('Valores obtenidos:', { arenaObtenido, arcillaObtenido, limoObtenido });
+        console.log('Valores esperados:', { arenaEsperado, arcillaEsperado, limoEsperado });
+
+        // Función para calcular %Error absoluto
+        function calcError(obtenido, esperado) {
+            if (!isFinite(obtenido) || !isFinite(esperado) || esperado === 0) return null;
+            return Math.abs((obtenido - esperado) / esperado) * 100; // Convertir a porcentaje aquí
+        }
+        
+        var errorArena = calcError(arenaObtenido, arenaEsperado);
+        var errorArcilla = calcError(arcillaObtenido, arcillaEsperado);
+        var errorLimo = calcError(limoObtenido, limoEsperado);
+        
+        console.log('Errores calculados:', { errorArena, errorArcilla, errorLimo });
+        
+        // Calcular promedio (solo si hay al menos un valor válido)
+        let suma = 0, cuenta = 0;
+        [errorArena, errorArcilla, errorLimo].forEach(e => { 
+            if (typeof e === 'number' && isFinite(e)) { 
+                suma += e; 
+                cuenta++; 
+            } 
+        });
+        
+        var promedio = cuenta > 0 ? (suma / cuenta) : '';
+        console.log('Promedio calculado:', promedio, 'Cuenta:', cuenta);
+        
+        // Actualizar el campo con el promedio
+        const campo = $(`#material_referencia_error_promedio_${processIndex}`);
+        if (campo.length > 0) {
+            campo.val(promedio !== '' ? promedio.toFixed(2) + '%' : '');
+            console.log('Campo actualizado con:', promedio !== '' ? promedio.toFixed(2) + '%' : '');
+        } else {
+            console.error('Campo no encontrado:', `#material_referencia_error_promedio_${processIndex}`);
+        }
+
+        // En la tabla de exactitud, agregar una columna para 'Aceptabilidad' junto al campo de %Error promedio
+        const campoAceptabilidad = $(`#material_referencia_aceptabilidad_${processIndex}`);
+        if (campoAceptabilidad.length > 0) {
+            if (promedio !== '' && typeof promedio === 'number' && isFinite(promedio)) {
+                campoAceptabilidad.val(promedio <= 20 ? 'Aceptable' : 'No aceptable');
+            } else {
+                campoAceptabilidad.val('');
+            }
+        }
+    }
+
+    // Función mejorada para obtener el processIndex de manera más robusta
+    function getProcessIndexFromElement(element) {
+        // Primero intentar obtener desde el atributo name
+        const name = element.attr('name');
+        if (name) {
+            const match = name.match(/analyses\[(\d+)\]/);
+            if (match) {
+                return match[1];
+            }
+        }
+        
+        // Buscar en la tabla más cercana
+        const table = element.closest('[id^="muestras_table_"]');
+        if (table.length > 0) {
+            const tableId = table.attr('id');
+            return tableId.replace('muestras_table_', '');
+        }
+        
+        // Buscar en el tab-pane más cercano
+        const tabPane = element.closest('.tab-pane[id$="controls"]');
+        if (tabPane.length > 0) {
+            const tabId = tabPane.attr('id');
+            return tabId.replace('controls', '').replace('-', '');
+        }
+        
+        // Como último recurso, buscar en cualquier elemento con data-process-index
+        const processElement = element.closest('[data-process-index]');
+        if (processElement.length > 0) {
+            return processElement.data('process-index');
+        }
+        
+        return null;
+    }
+
+    // Event listener corregido para los campos de exactitud
+    $(document).on('input change', 
+        "input[name*='material_referencia_obtenido'], input[name*='material_referencia_esperado']", 
+        function() {
+            const processIndex = getProcessIndexFromElement($(this));
+            console.log('Evento disparado, processIndex encontrado:', processIndex);
+            
+            if (processIndex !== null) {
+                // Usar setTimeout para asegurar que el valor se haya actualizado
+                setTimeout(() => {
+                    calcularErrorExactitudPromedio(processIndex);
+                }, 100);
+            } else {
+                console.error('No se pudo determinar el processIndex para el elemento:', this);
+            }
+        }
+    );
+
+    // Inicialización al cargar la página
+    $(document).ready(function() {
+        // Ejecutar para cada proceso definido
+        @foreach($processes as $index => $process)
+            setTimeout(() => {
+                calcularErrorExactitudPromedio({{ $index }});
+            }, 500); // Dar tiempo para que se inicialicen todos los elementos
+        @endforeach
+        
+        // También ejecutar cuando cambien los valores por defecto
+        setTimeout(() => {
+            $("input[name*='material_referencia_esperado']").trigger('change');
+        }, 1000);
+    });
+
+    // Función adicional para debug - puedes llamarla desde la consola del navegador
+    function debugExactitud(processIndex) {
+        console.log('=== DEBUG EXACTITUD PROCESO', processIndex, '===');
+        
+        const inputs = [
+            'material_referencia_obtenido_arena',
+            'material_referencia_obtenido_arcilla', 
+            'material_referencia_obtenido_limo',
+            'material_referencia_esperado_arena',
+            'material_referencia_esperado_arcilla',
+            'material_referencia_esperado_limo'
+        ];
+        
+        inputs.forEach(inputName => {
+            const selector = `input[name='analyses[${processIndex}][${inputName}]']`;
+            const element = $(selector);
+            console.log(`${inputName}:`, {
+                selector: selector,
+                exists: element.length > 0,
+                value: element.val(),
+                parsedValue: parseFloat(element.val()) || 0
+            });
+        });
+        
+        const outputSelector = `#material_referencia_error_promedio_${processIndex}`;
+        const outputElement = $(outputSelector);
+        console.log('Campo de salida:', {
+            selector: outputSelector,
+            exists: outputElement.length > 0,
+            currentValue: outputElement.val()
+        });
+        
+        console.log('=== FIN DEBUG ===');
+    }
+
+    $(document).ready(function() {
+        function syncGeneralToProcesses(field) {
+            const value = $('#' + field).val();
+            $('[id^="' + field + '_"]').each(function() {
+                $(this).val(value);
+            });
+        }
+        // Lista de campos generales
+        const fields = [
+            'consecutivo_no',
+            'fecha_analisis',
+            'nombre_analista',
+            'metodologia_utilizada',
+            'codigo_termometro',
+            'codigo_hidrometro'
+        ];
+        // Agregar listeners a los campos generales
+        fields.forEach(function(field) {
+            $('#' + field).on('input change', function() {
+                syncGeneralToProcesses(field);
+            });
+        });
+        // Al cargar la página, sincronizar los valores generales a los procesos
+        fields.forEach(function(field) {
+            syncGeneralToProcesses(field);
+        });
+    });
+
+    $(document).ready(function() {
+        // Antes de enviar el formulario, copiar los valores generales a cada proceso
+        $('#textureBatchForm').on('submit', function() {
+            const fields = [
+                'consecutivo_no',
+                'fecha_analisis',
+                'nombre_analista',
+                'metodologia_utilizada',
+                'codigo_termometro',
+                'codigo_hidrometro'
+            ];
+            fields.forEach(function(field) {
+                const value = $('#' + field).val();
+                $('[name^="analyses"][name$="['+field+']"]').each(function() {
+                    $(this).val(value);
+                });
+            });
+        });
+    });
 </script>
 @endpush
