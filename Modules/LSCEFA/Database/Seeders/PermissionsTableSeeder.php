@@ -300,6 +300,62 @@ class PermissionsTableSeeder extends Seeder
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
+        // Permisos para Análisis Acidez
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.acidity.index'], [
+            'name' => 'Ver listado de Análisis de Acidez (Technical)',
+            'description' => 'Puede ver el listado de análisis de acidez (technical)',
+            'description_english' => 'Can view acidity analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.acidity.process'], [
+            'name' => 'Procesar Análisis de Acidez (Technical)',
+            'description' => 'Puede procesar los análisis de acidez (technical)',
+            'description_english' => 'Can process acidity analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.acidity.store'], [
+            'name' => 'Guardar Análisis de Acidez (Technical)',
+            'description' => 'Puede guardar los análisis de acidez (technical)',
+            'description_english' => 'Can store acidity analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        // permisos para lotes de acidez
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.acidity.batchProcess'], [
+            'name' => 'Procesar Análisis de Acidez (Technical)',
+            'description' => 'Puede procesar los análisis de acidez (technical)',
+            'description_english' => 'Can process acidity analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.acidity.batchStore'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Acidez (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de acidez (technical)',
+            'description_english' => 'Can save batch processing of acidity analyses (technical)',
+            'app_id' => $app->id
+        ]); 
+        $permissions_technical[] = $permision->id;
+        $rol_technical = Role::where('slug', 'lscefa.technical')->first();
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+
+
+
         $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.edit'], [
             'name' => 'Editar Análisis de Intercambio Catiónico (Technical)',
             'description' => 'Puede editar análisis de intercambio catiónico (technical)',

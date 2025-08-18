@@ -4,16 +4,6 @@
 
 @section('content')
     <div class="content-wrapper">
-        <!-- Encabezado -->
-        <section class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2 align-items-center">
-                    <div class="col-sm-6">
-                    </div>
-
-                </div>
-            </div>
-        </section>
 
         <!-- Contenido Principal -->
         <section class="content">
@@ -67,7 +57,7 @@
                                                 </td>
                                                 <td>{{ $proceso->analyses->count() }}</td>
                                                 <td>
-                                                    <a href="{{ route('lscefa.technical.analyses.humidity.process', ['processId' => $proceso->process_id, 'serviceId' => $proceso->serviceProcessDetails->first()->service_id]) }}"
+                                                    <a href="{{ route('lscefa.technical.analyses.humidity.process', ['processId' => $proceso->process_id]) }}"
                                                         class="btn btn-primary">
                                                         Procesar
                                                     </a>

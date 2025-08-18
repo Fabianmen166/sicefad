@@ -12,6 +12,7 @@ use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Entities\TextureAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Illuminate\Support\Facades\Auth;
+use Modules\LSCEFA\Entities\BatchTextureAnalysis;
 
 class TextureAnalysisController extends Controller
 {
@@ -206,56 +207,165 @@ class TextureAnalysisController extends Controller
             })
             ->get();
 
-        return view('lscefa::analyses.texture.batch_process', compact('processes'));
+        return view('lscefa::analyses.texture.batch_process', ['processes' => $processes->values()]);
     }
 
     public function batchStore(Request $request)
     {
+        Log::info('BatchStore called', ['request_data' => $request->all()]);
         $request->validate([
             'analyses' => 'required|array',
             'analyses.*.process_id' => 'required|exists:processes,process_id',
-            'analyses.*.service_id' => 'required|exists:services,service_id',
-            'analyses.*.consecutivo_no' => 'required|string',
-            'analyses.*.fecha_analisis' => 'required|date',
-            'analyses.*.equipo_utilizado' => 'nullable|string',
-            'analyses.*.intervalo_metodo' => 'nullable|string',
-            'analyses.*.analista' => 'nullable|string',
+            'analyses.*.service_id' => 'required|exists:services,services_id',
         ]);
+        Log::info('DEBUG: validación pasada');
 
         try {
             DB::beginTransaction();
+            $analysesInput = $request->input('analyses');
+            Log::info('DEBUG analysesInput type', ['type' => gettype($analysesInput)]);
+            Log::info('DEBUG analysesInput content', ['analysesInput' => $analysesInput]);
+            Log::info('DEBUG analyses count', ['count' => is_array($analysesInput) ? count($analysesInput) : 'not array']);
+            Log::info('DEBUG analyses content', ['analyses' => $analysesInput]);
+            $completedProcesses = [];
+            foreach ($analysesInput as $analysisData) {
+                try {
+                    Log::info('Processing analysisData', $analysisData);
+                    // Serializar muestras y controles como JSON
+                    $samples = isset($analysisData['items']) ? json_encode($analysisData['items']) : null;
+                    $controls = isset($analysisData['analytical_controls']) ? json_encode($analysisData['analytical_controls']) : null;
+                    $extra = isset($analysisData['extra_data']) ? json_encode($analysisData['extra_data']) : null;
 
-            foreach ($request->input('analyses') as $analysisData) {
-                $textureAnalysis = TextureAnalysis::create([
-                    'process_id' => $analysisData['process_id'],
-                    'service_id' => $analysisData['service_id'],
-                    'consecutivo_no' => $analysisData['consecutivo_no'],
-                    'fecha_analisis' => $analysisData['fecha_analisis'],
-                    'equipo_utilizado' => $analysisData['equipo_utilizado'] ?? null,
-                    'intervalo_metodo' => $analysisData['intervalo_metodo'] ?? null,
-                    'analista' => $analysisData['analista'] ?? null,
-                    'user_id' => Auth::id(),
-                ]);
-
+                    Log::info('Antes de BatchTextureAnalysis::create', ['data' => [
+                        'consecutive_no' => $request->consecutivo_no ?? null,
+                        'analysis_date' => $request->fecha_analisis ?? null,
+                        'analyst_name' => $request->nombre_analista ?? null,
+                        'methodology_used' => $request->metodologia_utilizada ?? null,
+                        'thermometer_code' => $request->codigo_termometro ?? null,
+                        'hydrometer_code' => $request->codigo_hidrometro ?? null,
+                        'equipment_used' => $analysisData['equipment_used'] ?? null,
+                        'method_interval' => $analysisData['method_interval'] ?? null,
+                        'user_id' => Auth::id(),
+                        'process_id' => $analysisData['process_id'],
+                        'service_id' => $analysisData['service_id'],
+                        'samples' => $samples,
+                        'analytical_controls' => $controls,
+                        'duplicate_a_code' => $analysisData['duplicate_a_code'] ?? null,
+                        'duplicate_a_avg_sand' => $analysisData['duplicate_a_avg_sand'] ?? null,
+                        'duplicate_a_avg_clay' => $analysisData['duplicate_a_avg_clay'] ?? null,
+                        'duplicate_a_avg_silt' => $analysisData['duplicate_a_avg_silt'] ?? null,
+                        'duplicate_a_dpr_sand' => $analysisData['duplicate_a_dpr_sand'] ?? null,
+                        'duplicate_a_dpr_clay' => $analysisData['duplicate_a_dpr_clay'] ?? null,
+                        'duplicate_a_dpr_silt' => $analysisData['duplicate_a_dpr_silt'] ?? null,
+                        'duplicate_a_acceptability' => $analysisData['duplicate_a_acceptability'] ?? null,
+                        'duplicate_a_observations' => $analysisData['duplicate_a_observations'] ?? null,
+                        'duplicate_b_code' => $analysisData['duplicate_b_code'] ?? null,
+                        'duplicate_b_avg_sand' => $analysisData['duplicate_b_avg_sand'] ?? null,
+                        'duplicate_b_avg_clay' => $analysisData['duplicate_b_avg_clay'] ?? null,
+                        'duplicate_b_avg_silt' => $analysisData['duplicate_b_avg_silt'] ?? null,
+                        'duplicate_b_dpr_sand' => $analysisData['duplicate_b_dpr_sand'] ?? null,
+                        'duplicate_b_dpr_clay' => $analysisData['duplicate_b_dpr_clay'] ?? null,
+                        'duplicate_b_dpr_silt' => $analysisData['duplicate_b_dpr_silt'] ?? null,
+                        'duplicate_b_acceptability' => $analysisData['duplicate_b_acceptability'] ?? null,
+                        'duplicate_b_observations' => $analysisData['duplicate_b_observations'] ?? null,
+                        'reference_material_expected_sand' => $analysisData['reference_material_expected_sand'] ?? null,
+                        'reference_material_expected_clay' => $analysisData['reference_material_expected_clay'] ?? null,
+                        'reference_material_expected_silt' => $analysisData['reference_material_expected_silt'] ?? null,
+                        'reference_material_obtained_sand' => $analysisData['reference_material_obtained_sand'] ?? null,
+                        'reference_material_obtained_clay' => $analysisData['reference_material_obtained_clay'] ?? null,
+                        'reference_material_obtained_silt' => $analysisData['reference_material_obtained_silt'] ?? null,
+                        'reference_material_error_percent' => $analysisData['reference_material_error_percent'] ?? null,
+                        'reference_material_acceptability' => $analysisData['reference_material_acceptability'] ?? null,
+                        'reference_material_observations' => $analysisData['reference_material_observations'] ?? null,
+                        'general_observations' => $analysisData['general_observations'] ?? null,
+                        'extra_data' => $extra,
+                    ]]);
+                    $batch = \Modules\LSCEFA\Entities\BatchTextureAnalysis::create([
+                        'consecutive_no' => $request->consecutivo_no ?? null,
+                        'analysis_date' => $request->fecha_analisis ?? null,
+                        'analyst_name' => $request->nombre_analista ?? null,
+                        'methodology_used' => $request->metodologia_utilizada ?? null,
+                        'thermometer_code' => $request->codigo_termometro ?? null,
+                        'hydrometer_code' => $request->codigo_hidrometro ?? null,
+                        'equipment_used' => $analysisData['equipment_used'] ?? null,
+                        'method_interval' => $analysisData['method_interval'] ?? null,
+                        'user_id' => Auth::id(),
+                        'process_id' => $analysisData['process_id'],
+                        'service_id' => $analysisData['service_id'],
+                        'samples' => $samples,
+                        'analytical_controls' => $controls,
+                        'duplicate_a_code' => $analysisData['duplicate_a_code'] ?? null,
+                        'duplicate_a_avg_sand' => $analysisData['duplicate_a_avg_sand'] ?? null,
+                        'duplicate_a_avg_clay' => $analysisData['duplicate_a_avg_clay'] ?? null,
+                        'duplicate_a_avg_silt' => $analysisData['duplicate_a_avg_silt'] ?? null,
+                        'duplicate_a_dpr_sand' => $analysisData['duplicate_a_dpr_sand'] ?? null,
+                        'duplicate_a_dpr_clay' => $analysisData['duplicate_a_dpr_clay'] ?? null,
+                        'duplicate_a_dpr_silt' => $analysisData['duplicate_a_dpr_silt'] ?? null,
+                        'duplicate_a_acceptability' => $analysisData['duplicate_a_acceptability'] ?? null,
+                        'duplicate_a_observations' => $analysisData['duplicate_a_observations'] ?? null,
+                        'duplicate_b_code' => $analysisData['duplicate_b_code'] ?? null,
+                        'duplicate_b_avg_sand' => $analysisData['duplicate_b_avg_sand'] ?? null,
+                        'duplicate_b_avg_clay' => $analysisData['duplicate_b_avg_clay'] ?? null,
+                        'duplicate_b_avg_silt' => $analysisData['duplicate_b_avg_silt'] ?? null,
+                        'duplicate_b_dpr_sand' => $analysisData['duplicate_b_dpr_sand'] ?? null,
+                        'duplicate_b_dpr_clay' => $analysisData['duplicate_b_dpr_clay'] ?? null,
+                        'duplicate_b_dpr_silt' => $analysisData['duplicate_b_dpr_silt'] ?? null,
+                        'duplicate_b_acceptability' => $analysisData['duplicate_b_acceptability'] ?? null,
+                        'duplicate_b_observations' => $analysisData['duplicate_b_observations'] ?? null,
+                        'reference_material_expected_sand' => $analysisData['reference_material_expected_sand'] ?? null,
+                        'reference_material_expected_clay' => $analysisData['reference_material_expected_clay'] ?? null,
+                        'reference_material_expected_silt' => $analysisData['reference_material_expected_silt'] ?? null,
+                        'reference_material_obtained_sand' => $analysisData['reference_material_obtained_sand'] ?? null,
+                        'reference_material_obtained_clay' => $analysisData['reference_material_obtained_clay'] ?? null,
+                        'reference_material_obtained_silt' => $analysisData['reference_material_obtained_silt'] ?? null,
+                        'reference_material_error_percent' => $analysisData['reference_material_error_percent'] ?? null,
+                        'reference_material_acceptability' => $analysisData['reference_material_acceptability'] ?? null,
+                        'reference_material_observations' => $analysisData['reference_material_observations'] ?? null,
+                        'general_observations' => $analysisData['general_observations'] ?? null,
+                        'extra_data' => $extra,
+                    ]);
+                    Log::info('Despues de BatchTextureAnalysis::create', ['id' => $batch->id, 'process_id' => $batch->process_id]);
+                    Log::info('BatchTextureAnalysis created', ['id' => $batch->id, 'process_id' => $batch->process_id]);
+                } catch (\Exception $e) {
+                    Log::error('Error creating BatchTextureAnalysis', [
+                        'error' => $e->getMessage(),
+                        'data' => $analysisData
+                    ]);
+                }
                 // Update service process detail status
-                ServiceProcessDetail::where('process_id', $analysisData['process_id'])
+                $spd = ServiceProcessDetail::where('process_id', $analysisData['process_id'])
                     ->where('service_id', $analysisData['service_id'])
-                    ->update(['status' => 'completed']);
+                    ->first();
+                if ($spd) {
+                    $spd->update(['status' => 'completed']);
+                    $completedProcesses[] = $analysisData['process_id'];
+                }
+            }
+
+            // Marcar proceso como completed si todos los detalles están completed
+            foreach (array_unique($completedProcesses) as $processId) {
+                $pendingDetails = ServiceProcessDetail::where('process_id', $processId)
+                    ->where('status', 'pending')
+                    ->count();
+                if ($pendingDetails == 0) {
+                    $process = \Modules\LSCEFA\Models\Process::where('process_id', $processId)->first();
+                    if ($process) {
+                        $process->status = 'completed';
+                        $process->save();
+                        Log::info('Process marked as completed', ['process_id' => $processId]);
+                    }
+                }
             }
 
             DB::commit();
 
             return redirect()->route('lscefa.technical.analyses.texture.index')
-                ->with('success', 'Análisis de textura procesados exitosamente en lote');
+                ->with('success', 'Batch texture analyses saved successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al procesar análisis de textura en lote', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return back()->withInput()->with('error', 'Error al procesar los análisis: ' . $e->getMessage());
+            Log::error('Error in batchStore', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return back()->withInput()->with('error', 'Error saving batch texture analyses: ' . $e->getMessage());
         }
     }
 

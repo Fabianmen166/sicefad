@@ -45,8 +45,6 @@ class CreateAnalyticalControlsTable extends Migration
             $table->enum('estado', ['Aceptable', 'No Aceptable'])->nullable();
             $table->text('observaciones')->nullable();
 
-<<<<<<< HEAD:Modules/LSCEFA/Database/Migrations/2025_07_21_213543_Create_analytical_controls_table.php
-=======
             // 3. Recuperación de Estándar (Spike Recovery)
             $table->string('recuperacion_identificacion')->nullable();
             $table->decimal('recuperacion_valor_teorico', 8, 2)->nullable();
@@ -77,7 +75,6 @@ class CreateAnalyticalControlsTable extends Migration
             $table->decimal('curva_valor_leido', 8, 4)->nullable();
             $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
             
->>>>>>> 7a7ae2b920dcc950781170fd70e44d8958898fa7:Modules/LSCEFA/Database/Migrations/2024_03_22_000010_create_analytical_controls_table.php
             $table->timestamps();
         });
     }

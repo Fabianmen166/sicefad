@@ -17,7 +17,7 @@ class CarbonoAnalysisController extends Controller
     /**
      * Lista de procesos pendientes para análisis de carbono.
      */
-    public function index()
+       public function index()
     {
         try {
             Log::info('Usuario accede a index de análisis de carbono orgánico', [
@@ -25,75 +25,75 @@ class CarbonoAnalysisController extends Controller
                 'role' => optional(Auth::user())->role ?? 'N/A'
             ]);
 
-            // 🔍 Buscar el ID del servicio de CARBONO ORGÁNICO por su descripción
-            $carbonService = Service::where('descripcion', 'like', '%carbono%')->first();
+            // Buscar el servicio de carbono
+            $carbonService = Service::where('descripcion', 'like', '%carbono%')
+                                  ->orWhere('descripcion', 'like', '%carbon%')
+                                  ->orWhere('descripcion', 'like', '%orgánico%')
+                                  ->first();
 
-            if (!$carbonService) {
-                return back()->with('error', 'No se encontró el servicio de carbono orgánico en la base de datos.');
+            // Inicializar variables
+            $processes = collect();
+            $carbonAnalyses = collect();
+            $serviceMessage = null;
+
+            if ($carbonService) {
+                $processes = Process::with(['carbonoAnalyses', 'serviceProcessDetails'])
+                    ->whereHas('serviceProcessDetails', function($query) use ($carbonService) {
+                        $query->where('service_id', $carbonService->services_id)
+                              ->where('status', 'pending');
+                    })
+                    ->orderBy('reception_date', 'desc')
+                    ->get();
+
+                $carbonAnalyses = CarbonoAnalysis::with('process.serviceProcessDetails')
+                    ->whereHas('process.serviceProcessDetails', function($query) use ($carbonService) {
+                        $query->where('service_id', $carbonService->services_id)
+                              ->where('status', 'pending');
+                    })
+                    ->get();
+            } else {
+                $serviceMessage = 'No hay ningún servicio de carbono orgánico configurado en el sistema';
+                Log::warning('Servicio de carbono no encontrado');
             }
 
-            // 🔍 Procesos que tienen el servicio de carbono pendiente
-            $processes = Process::whereHas('serviceProcessDetails', function ($query) use ($carbonService) {
-                    $query->where('service_id', $carbonService->services_id)
-                          ->where('status', 'pending');
-                })
-                ->with('analyses') // Relación con CarbonAnalysis
-                ->get();
-
-            // 🔍 Análisis de carbono relacionados a procesos con servicio pendiente
-            $carbonAnalyses = CarbonoAnalysis::with('process.serviceProcessDetails')
-        ->whereHas('process.serviceProcessDetails', function ($query) use ($carbonService) {
-            $query->where('service_id', $carbonService->services_id)
-                  ->where('status', 'pending');
-        })
-        ->get();
-
-            return view('lscefa::analyses.carbon.index', compact('carbonAnalyses', 'processes'));
+            return view('lscefa::analyses.carbon.index', [
+                'processes' => $processes,
+                'carbonAnalyses' => $carbonAnalyses,
+                'serviceMessage' => $serviceMessage
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Error al cargar el índice de análisis de carbono orgánico: ' . $e->getMessage());
-            return back()->with('error', 'No se pudo cargar el listado.');
+            Log::error('Error en índice de carbono: '.$e->getMessage());
+            return back()->with('error', 'Error al cargar los análisis: '.$e->getMessage());
         }
     }
 
-    /**
-     * Formulario para registrar un análisis de carbono.
-     */
     public function carbonAnalysis($processId, $serviceId)
     {
         try {
-            // Buscar el proceso
-            $process = Process::with(['quote.customer', 'serviceProcessDetails'])->find($processId);
+            $process = Process::with(['quote.customer', 'serviceProcessDetails'])
+                            ->where('process_id', $processId)
+                            ->firstOrFail();
 
-            if (!$process) {
-                return back()->with('error', "No se encontró el proceso con ID {$processId}.");
-            }
-
-            // Buscar el servicio
-            $service = Service::find($serviceId);
-
-            if (!$service) {
-                return back()->with('error', "No se encontró el servicio con ID {$serviceId}.");
-            }
+            $service = Service::findOrFail($serviceId);
 
             // Validar que el proceso tenga la relación con el servicio
-            $serviceDetail = $process->serviceProcessDetails
-                ->where('service_id', $serviceId)
-                ->first();
-
-            if (!$serviceDetail) {
-                return back()->with('error', 'El proceso no tiene asociado este servicio.');
+            if (!$process->serviceProcessDetails->where('service_id', $serviceId)->first()) {
+                throw new \Exception('El proceso no tiene asociado este servicio');
             }
 
-            // Crear un análisis vacío para la vista (evita errores con $carbonAnalysis)
             $carbonAnalysis = new CarbonoAnalysis();
 
-            // Cargar la vista del formulario
-            return view('lscefa::analyses.carbon.process', compact('process', 'service', 'serviceId', 'carbonAnalysis'));
+            return view('lscefa::analyses.carbon.process', compact(
+                'process',
+                'service',
+                'serviceId',
+                'carbonAnalysis'
+            ));
 
         } catch (\Exception $e) {
-            Log::error('Error al cargar el formulario de análisis: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado: ' . $e->getMessage());
+            Log::error('Error al cargar análisis de carbono: '.$e->getMessage());
+            return back()->with('error', 'No se pudo cargar el análisis: '.$e->getMessage());
         }
     }
 

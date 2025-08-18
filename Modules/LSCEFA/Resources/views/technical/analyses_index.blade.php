@@ -29,7 +29,7 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" class="btn btn-outline-warning btn-block">
+                            <a href="" class="btn btn-outline-warning btn-block">
                                 <i class="fas fa-flask me-2"></i>Bases Cambiables
                             </a>
                         </div>

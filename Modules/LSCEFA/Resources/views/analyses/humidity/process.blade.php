@@ -3,345 +3,347 @@
 @section('title', 'Procesar Análisis de Humedad')
 
 @section('content')
-    <div class="content-wrapper">
-        <!-- Content Header -->
+<div class="content-wrapper">
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid"></div>
+    </section>
 
-        <!-- Para mensajes de Campos no ingresados -->
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Se encontraron los siguientes errores:</strong>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>Se encontraron los siguientes errores:</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <!-- Main Content -->
-        <form action="{{ route('lscefa.technical.analyses.humidity.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="process_id" value="{{ $process->process_id }}">
-            <input type="hidden" name="service_id" value="{{ $service->services_id }}">
-            <section class="content">
-                <div class="container-fluid">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            {{ session('success') }}
+    <!-- Main Content -->
+    <form action="{{ route('lscefa.technical.analyses.humidity.store') }}" method="POST" id="humidity-form">
+        @csrf
+        <input type="hidden" name="process_id" value="{{ $process->process_id }}">
+       
+
+        <section class="content">
+            <div class="container-fluid">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                <!-- INFORMACIÓN GENERAL -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">Información General</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <!-- Proceso (solo lectura) -->
+                            <div class="form-group col-md-3">
+                                <label for="proceso">Procesos Involucrados</label>
+                                <input type="text" class="form-control" id="proceso"
+                                    value="{{ $process->process_id }}" readonly>
+                            </div>
+                            <!-- Servicio (solo lectura) -->
+                            <div class="form-group col-md-3">
+                                <label for="servicio">Servicios Involucrados</label>
+                                <input type="text" class="form-control" id="servicio"
+                                    value="{{ $service->descripcion ?? 'Humedad' }}" readonly>
+                            </div>
+                            <!-- Consecutivo -->
+                            <div class="form-group col-md-3">
+                                <label for="consecutivo_no">Consecutivo No.</label>
+                                <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no"
+                                    value="{{ old('consecutivo_no') }}" required>
+                            </div>
                         </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            {{ session('error') }}
+                        <div class="form-row mt-2">
+                            <!-- Fecha del análisis -->
+                            <div class="form-group col-md-3">
+                                <label for="fecha_analisis">Fecha del Análisis</label>
+                                <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis"
+                                    value="{{ old('fecha_analisis', date('Y-m-d')) }}" required>
+                            </div>
+                            <!--fecha fin del analis -->
+                            <div class="form-group col-md-3">
+                                <label for="fecha_fin_analisis">Fecha fin del Análisis</label>
+                                <input type="date" class="form-control" id="fecha_fin_analisis"
+                                    name="fecha_fin_analisis" value="{{ old('fecha_fin_analisis') }}">
+                            </div>
+                            <!-- Analista (solo lectura) -->
+                            <div class="form-group col-md-3">
+                                <label for="analista">Analista</label>
+                                <input type="text" class="form-control" id="analista"
+                                    value="{{ Auth::user()->name ?? 'N/A' }}" readonly>
+                            </div>
                         </div>
-                    @endif
+                    </div>
 
-                    <!-- INFORMACIÓN GENERAL -->
-                    <div class="card">
+                    <!-- DETALLES DEL EQUIPO -->
+                    <div class="card mt-3">
                         <div class="card-header">
-                            <h3 class="card-title mb-0">Información General</h3>
+                            <h5 class="mb-0">Detalles del Equipo</h5>
                         </div>
                         <div class="card-body">
-                            <div class="form-row">
-                                <!-- Proceso (solo lectura) -->
-                                <div class="form-group col-md-3">
-                                    <label for="proceso">Procesos Involucrados</label>
-                                    <input type="text" class="form-control" id="proceso"
-                                        value="{{ $process->process_id }}" readonly>
+                            <div class="row">
+                                <!-- Hora ingreso al horno -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="hora_ingreso_horno">Hora ingreso al horno</label>
+                                    <input type="time" class="form-control" name="hora_ingreso_horno"
+                                        id="hora_ingreso_horno" value="{{ old('hora_ingreso_horno') }}" required>
                                 </div>
-                                <!-- Servicio (solo lectura) -->
-                                <div class="form-group col-md-3">
-                                    <label for="servicio">Servicios Involucrados</label>
-                                    <input type="text" class="form-control" id="servicio"
-                                        value="{{ $humidityAnalysis->service->descripcion ?? 'Humedad' }}" readonly>
+                                <!-- Hora salida del horno -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="hora_salida_horno">Hora salida del horno</label>
+                                    <input type="time" class="form-control" name="hora_salida_horno"
+                                        id="hora_salida_horno" value="{{ old('hora_salida_horno') }}" required>
                                 </div>
-                                <!-- Consecutivo -->
-                                <div class="form-group col-md-3">
-                                    <label for="consecutivo_no">Consecutivo No.</label>
-                                    <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no"
-                                        value="{{ old('consecutivo_no') }}">
+                                <!-- Temperatura del horno -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="temperatura_horno">Temperatura del horno (°C)</label>
+                                    <input type="number" step="0.1" class="form-control" name="temperatura_horno"
+                                        id="temperatura_horno" value="{{ old('temperatura_horno') }}" required>
                                 </div>
-                            </div>
-                            <div class="form-row mt-2">
-                                <!-- Fecha del análisis -->
-                                <div class="form-group col-md-3">
-                                    <label for="fecha_analisis">Fecha del Análisis</label>
-                                    <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis"
-                                        value="{{ old('fecha_analisis') }}">
-                                </div>
-                                <!--fecha fin del analis -->
-                                <div class="form-group col-md-3">
-                                    <label for="fecha_fin_analisis">Fecha fin del Análisis</label>
-                                    <input type="date" class="form-control" id="fecha_fin_analisis"
-                                        name="fecha_fin_analisis" value="{{ old('fecha_fin_analisis') }}">
-                                </div>
-                                <!-- Analista (solo lectura) -->
-                                <div class="form-group col-md-3">
-                                    <label for="analista">Analista</label>
-                                    <input type="text" class="form-control" id="analista"
-                                        value="{{ Auth::user()->name ?? 'N/A' }}" readonly>
+                                <!-- Resolución instrumental -->
+                                <div class="col-md-3 mb-3">
+                                    <label for="resolucion_instrumental">Resolución instrumental</label>
+                                    <input type="text" class="form-control" name="resolucion_instrumental"
+                                        id="resolucion_instrumental" value="{{ old('resolucion_instrumental') }}">
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- DETALLES DEL EQUIPO -->
-                        <div class="card mt-3">
-                            <div class="card-header">
-                                <h5 class="mb-0">Detalles del Equipo</h5>
+                            <div class="row">
+                                <!-- Nombre del método -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="nombre_metodo">Nombre del método</label>
+                                    <input type="text" class="form-control" name="nombre_metodo"
+                                        id="nombre_metodo" value="{{ old('nombre_metodo', 'NTC 5403:2021') }}" required>
+                                </div>
+                                <!-- Equipo utilizado -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="equipo_utilizado">Equipo Utilizado</label>
+                                    <input type="text" class="form-control" name="equipo_utilizado"
+                                        id="equipo_utilizado" value="{{ old('equipo_utilizado', 'Horno') }}" required>
+                                </div>
+                                <!-- Unidades de reporte del equipo -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="unidades_reporte_equipo">Unidades de Reporte del Equipo</label>
+                                    <input type="text" class="form-control" name="unidades_reporte_equipo"
+                                        id="unidades_reporte_equipo" value="{{ old('unidades_reporte_equipo', 'g/100g') }}" required>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <!-- Hora ingreso al horno -->
-                                    <div class="col-md-3 mb-3">
-                                        <label for="hora_ingreso_horno">Hora ingreso al horno</label>
-                                        <input type="time" class="form-control" name="hora_ingreso_horno"
-                                            id="hora_ingreso_horno" value="{{ old('hora_ingreso_horno') }}">
-                                    </div>
-                                    <!-- Hora salida del horno -->
-                                    <div class="col-md-3 mb-3">
-                                        <label for="hora_salida_horno">Hora salida del horno</label>
-                                        <input type="time" class="form-control" name="hora_salida_horno"
-                                            id="hora_salida_horno" value="{{ old('hora_salida_horno') }}">
-                                    </div>
-                                    <!-- Temperatura del horno -->
-                                    <div class="col-md-3 mb-3">
-                                        <label for="temperatura_horno">Temperatura del horno (°C)</label>
-                                        <input type="number" step="any" class="form-control" name="temperatura_horno"
-                                            id="temperatura_horno" value="{{ old('temperatura_horno') }}">
-                                    </div>
-                                    <!-- Resolución instrumental -->
-                                    <div class="col-md-3 mb-3">
-                                        <label for="resolucion_instrumental">Resolución instrumental</label>
-                                        <input type="text" class="form-control" name="resolucion_instrumental"
-                                            id="resolucion_instrumental" value="{{ old('resolucion_instrumental') }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <!-- Nombre del método -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="nombre_metodo">Nombre del método</label>
-                                        <input type="text" class="form-control" name="nombre_metodo"
-                                            id="nombre_metodo" value="{{ old('nombre_metodo') }}">
-                                    </div>
-                                    <!-- Equipo utilizado -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="equipo_utilizado">Equipo Utilizado</label>
-                                        <input type="text" class="form-control" name="equipo_utilizado"
-                                            id="equipo_utilizado" value="{{ old('equipo_utilizado') }}">
-                                    </div>
-                                    <!-- Unidades de reporte del equipo -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="unidades_reporte_equipo">Unidades de Reporte del Equipo</label>
-                                        <input type="text" class="form-control" name="unidades_reporte_equipo"
-                                            id="unidades_reporte_equipo" value="{{ old('unidades_reporte_equipo') }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <!-- Intervalo del método -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="intervalo_metodo">Intervalo del método</label>
-                                        <input type="text" class="form-control" name="intervalo_metodo"
-                                            id="intervalo_metodo" value="{{ old('intervalo_metodo') }}">
-                                    </div>
+                            <div class="row">
+                                <!-- Intervalo del método -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="intervalo_metodo">Intervalo del método</label>
+                                    <input type="text" class="form-control" name="intervalo_metodo"
+                                        id="intervalo_metodo" value="{{ old('intervalo_metodo', '0.1 - 15%') }}" required>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- CONTROLES DE CALIDAD -->
-                        <div class="card mt-3">
-                            <div class="card-header py-2">
-                                <h6 class="mb-0">Controles de Calidad Analíticos</h6>
+                    <!-- CONTROLES DE CALIDAD -->
+                    <div class="card mt-3">
+                        <div class="card-header py-2">
+                            <h6 class="mb-0">Controles de Calidad Analíticos</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <!-- Muestra Fortificada -->
+                            <div class="border p-2 mb-2">
+                                <h6 class="mb-2">Muestra Fortificada</h6>
+                                <div class="row g-1">
+                                    <div class="col-3">
+                                        <label class="small">Masa de suelo (g)</label>
+                                        <input type="number" step="0.0001" id="masa_suelo"
+                                            name="controles_analiticos[masa_suelo]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.masa_suelo') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Masa de agua adicionada (g)</label>
+                                        <input type="number" step="0.0001" id="masa_agua"
+                                            name="controles_analiticos[masa_agua]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.masa_agua') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Masa de suelo seco (g)</label>
+                                        <input type="text" id="masa_suelo_seco"
+                                            name="controles_analiticos[masa_suelo_seco]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">% Humedad fortificada teórica</label>
+                                        <input type="text" id="humedad_fortificada_teorica"
+                                            name="controles_analiticos[humedad_fortificada_teorica]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Identificacion de la Muestra</label>
+                                        <input type="text" id="identificacion_mf"
+                                            name="controles_analiticos[identificacion_mf]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_mf') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">% Humedad obtenida en la muestra</label>
+                                        <input type="number" step="0.0001" id="humedad_obtenida"
+                                            name="controles_analiticos[humedad_obtenida]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.humedad_obtenida') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">% Humedad muestra fortificada</label>
+                                        <input type="number" step="0.0001" id="humedad_fortificada"
+                                            name="controles_analiticos[humedad_fortificada]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.humedad_fortificada') }}" readonly>
+                                    </div>
+                                    <div class="col-2">
+                                        <label class="small">%REC</label>
+                                        <input type="text" id="recuperacion"
+                                            name="controles_analiticos[recuperacion]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                    <div class="col-1">
+                                        <label class="small">Aceptable</label>
+                                        <input type="text" id="aceptable_fortificada"
+                                            name="controles_analiticos[aceptable_fortificada]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body p-2">
-                                <!-- Muestra Fortificada -->
-                                <div class="border p-2 mb-2">
-                                    <h6 class="mb-2">Muestra Fortificada</h6>
-                                    <div class="row g-1">
-                                        <div class="col-3">
-                                            <label class="small">Masa de suelo (g)</label>
-                                            <input type="number" step="any" id="masa_suelo"
-                                                name="controles_analiticos[masa_suelo]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.masa_suelo') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Masa de agua adicionada (g)</label>
-                                            <input type="number" step="any" id="masa_agua"
-                                                name="controles_analiticos[masa_agua]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.masa_agua') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Masa de suelo seco (g)</label>
-                                            <input type="text" id="masa_suelo_seco"
-                                                name="controles_analiticos[masa_suelo_seco]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">% Humedad fortificada teórica</label>
-                                            <input type="text" id="humedad_fortificada_teorica"
-                                                name="controles_analiticos[humedad_fortificada_teorica]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Identificacion de la Muestra</label>
-                                            <input type="text" id="identificacion_mf"
-                                                name="controles_analiticos[identificacion_mf]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_mf') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">% Humedad obtenida en la muestra</label>
-                                            <input type="number" step="any" id="humedad_obtenida"
-                                                name="controles_analiticos[humedad_obtenida]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.humedad_obtenida') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">% Humedad muestra fortificada</label>
-                                            <input type="number" step="any" id="humedad_fortificada"
-                                                name="controles_analiticos[humedad_fortificada]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.humedad_fortificada') }}" readonly>
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="small">%REC</label>
-                                            <input type="text" id="recuperacion"
-                                                name="controles_analiticos[recuperacion]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="small">Aceptable</label>
-                                            <input type="text" id="aceptable_fortificada"
-                                                name="controles_analiticos[aceptable_fortificada]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                            <!-- Muestra Referencia -->
+                            <div class="border p-2 mb-2">
+                                <h6 class="mb-2">Muestra Referencia</h6>
+                                <div class="row g-1">
+                                    <div class="col-3">
+                                        <label class="small">Identificacion de Muestra</label>
+                                        <input type="text" id="identificacion_mr"
+                                            name="controles_analiticos[identificacion_mr]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_mr') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Valor Referencia % Humedad</label>
+                                        <input type="number" step="0.0001" id="valor_referencia"
+                                            name="controles_analiticos[valor_referencia]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.valor_referencia') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Valor Obtenido % Humedad</label>
+                                        <input type="number" step="0.0001" id="valor_obtenido"
+                                            name="controles_analiticos[valor_obtenido]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.valor_obtenido') }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <label class="small">%REC</label>
+                                        <input type="text" id="recuperacion_referencia"
+                                            name="controles_analiticos[recuperacion_referencia]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                    <div class="col-1">
+                                        <label class="small">Aceptable</label>
+                                        <input type="text" id="aceptable_referencia"
+                                            name="controles_analiticos[aceptable_referencia]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
-                                <!-- Muestra Referencia -->
-                                <div class="border p-2 mb-2">
-                                    <h6 class="mb-2">Muestra Referencia</h6>
-                                    <div class="row g-1">
-                                        <div class="col-3">
-                                            <label class="small">Identificacion de Muestra</label>
-                                            <input type="text" id="identificacion_mr"
-                                                name="controles_analiticos[identificacion_mr]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_mr') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Valor Referencia % Humedad</label>
-                                            <input type="number" step="any" id="valor_referencia"
-                                                name="controles_analiticos[valor_referencia]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.valor_referencia') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Valor Obtenido % Humedad</label>
-                                            <input type="number" step="any" id="valor_obtenido"
-                                                name="controles_analiticos[valor_obtenido]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.valor_obtenido') }}">
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="small">%REC</label>
-                                            <input type="text" id="recuperacion_referencia"
-                                                name="controles_analiticos[recuperacion_referencia]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="small">Aceptable</label>
-                                            <input type="text" id="aceptable_referencia"
-                                                name="controles_analiticos[aceptable_referencia]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                            </div>
+                            <!-- Duplicado Muestra -->
+                            <div class="border p-2 mb-2">
+                                <h6 class="mb-2">Duplicado Muestra</h6>
+                                <div class="row g-1">
+                                    <div class="col-3">
+                                        <label class="small">Identificacion de Muestra</label>
+                                        <input type="text" id="identificacion_dm"
+                                            name="controles_analiticos[identificacion_dm]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_dm') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">% Humedad Réplica 1</label>
+                                        <input type="number" step="0.0001" id="humedad_replica_1"
+                                            name="controles_analiticos[humedad_replica_1]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.humedad_replica_1') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">% Humedad Réplica 2</label>
+                                        <input type="number" step="0.0001" id="humedad_replica_2"
+                                            name="controles_analiticos[humedad_replica_2]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.humedad_replica_2') }}">
+                                    </div>
+                                    <div class="col-2">
+                                        <label class="small">% DPR</label>
+                                        <input type="text" id="dpr" name="controles_analiticos[dpr]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                    <div class="col-1">
+                                        <label class="small">Aceptable</label>
+                                        <input type="text" id="aceptable_duplicado"
+                                            name="controles_analiticos[aceptable_duplicado]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
-                                <!-- Duplicado Muestra -->
-                                <div class="border p-2 mb-2">
-                                    <h6 class="mb-2">Duplicado Muestra</h6>
-                                    <div class="row g-1">
-                                        <div class="col-3">
-                                            <label class="small">Identificacion de Muestra</label>
-                                            <input type="text" id="identificacion_dm"
-                                                name="controles_analiticos[identificacion_dm]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_dm') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">% Humedad Réplica 1</label>
-                                            <input type="number" step="any" id="humedad_replica_1"
-                                                name="controles_analiticos[humedad_replica_1]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.humedad_replica_1') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">% Humedad Réplica 2</label>
-                                            <input type="number" step="any" id="humedad_replica_2"
-                                                name="controles_analiticos[humedad_replica_2]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.humedad_replica_2') }}">
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="small">% DPR</label>
-                                            <input type="text" id="dpr" name="controles_analiticos[dpr]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="small">Aceptable</label>
-                                            <input type="text" id="aceptable_duplicado"
-                                                name="controles_analiticos[aceptable_duplicado]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                            </div>
+                            <!-- Blanco del método -->
+                            <div class="border p-2 mb-2">
+                                <h6 class="mb-2">Blanco del método</h6>
+                                <div class="row g-1">
+                                    <div class="col-3">
+                                        <label class="small">Identificación</label>
+                                        <input type="text" id="identificacion_bm"
+                                            name="controles_analiticos[identificacion_bm]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_bm') }}">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Resultado</label>
+                                        <input type="number" step="0.0001" id="resultado_blanco"
+                                            name="controles_analiticos[resultado_blanco]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.resultado_blanco') }}"
+                                            oninput="evaluarAceptabilidadBlanco()">
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="small">Límite de Cuantificación del Método (LCM)</label>
+                                        <input type="number" step="0.0001" id="lcm"
+                                            name="controles_analiticos[lcm]" class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.lcm') }}"
+                                            oninput="evaluarAceptabilidadBlanco()">
+                                    </div>
+                                    <div class="col-2">
+                                        <label class="small">Rango del Método</label>
+                                        <input type="text" name="controles_analiticos[rango_metodo]"
+                                            id="rango_metodo" class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.rango_metodo') }}">
+                                    </div>
+                                    <div class="col-1">
+                                        <label class="small">Aceptable</label>
+                                        <input type="text" id="aceptable_blanco"
+                                            name="controles_analiticos[aceptable_blanco]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
-                                <!-- Blanco del método -->
-                                <div class="border p-2 mb-2">
-                                    <h6 class="mb-2">Blanco del método</h6>
-                                    <div class="row g-1">
-                                        <div class="col-3">
-                                            <label class="small">Identificación</label>
-                                            <input type="text" id="identificacion_bm"
-                                                name="controles_analiticos[identificacion_bm]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_bm') }}">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Resultado</label>
-                                            <input type="number" step="any" id="resultado_blanco"
-                                                name="controles_analiticos[resultado_blanco]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.resultado_blanco') }}"
-                                                oninput="evaluarAceptabilidadBlanco()">
-                                        </div>
-                                        <div class="col-3">
-                                            <label class="small">Límite de Cuantificación del Método (LCM)</label>
-                                            <input type="number" step="any" id="lcm"
-                                                name="controles_analiticos[lcm]" class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.lcm') }}"
-                                                oninput="evaluarAceptabilidadBlanco()">
-                                        </div>
-                                        <div class="col-2">
-                                            <label class="small">Rango del Método</label>
-                                            <input type="text" name="controles_analiticos[rango_metodo]"
-                                                id="rango_metodo" class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.rango_metodo') }}">
-                                        </div>
-                                        <div class="col-1">
-                                            <label class="small">Aceptable</label>
-                                            <input type="text" id="aceptable_blanco"
-                                                name="controles_analiticos[aceptable_blanco]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <label class="small">Observaciones</label>
-                                    <textarea name="controles_calidad[observaciones]" id="observaciones" rows="2"
-                                        class="form-control form-control-sm">{{ old('controles_calidad.observaciones') }}</textarea>
-                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label class="small">Observaciones</label>
+                                <textarea name="controles_analiticos[observaciones]" id="observaciones" rows="2"
+                                    class="form-control form-control-sm">{{ old('controles_analiticos.observaciones') }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -356,42 +358,47 @@
                                 <thead>
                                     <tr>
                                         <th>Código interno</th>
-                                        <th>Peso Cápsula, Pc (g)</th>
+                                        <th>Peso Cápsula (g)</th>
                                         <th>Peso Muestra (g)</th>
-                                        <th>Peso Capsula + Muestra Pmh (g)</th>
-                                        <th>Peso Capsula + Muestra Pms (g)</th>
-                                        <th>% Humedad, pW (g/100g)</th>
+                                        <th>Peso Cápsula + Muestra húmeda (g)</th>
+                                        <th>Peso Cápsula + Muestra seca (g)</th>
+                                        <th>% Humedad (g/100g)</th>
                                         <th>Observaciones</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
+                                <tbody id="muestras-body">
+                                    <!-- Fila inicial -->
+                                    <tr class="muestra-fila">
                                         <td>
-                                            <input type="text" id="codigo_interno" name="codigo_interno"
-                                                class="form-control" required value="Arena(Blanco)"
-                                                onfocus="if(this.value === 'Arena(Blanco)') this.value = ''"
-                                                onblur="if(this.value === '') this.value = 'Arena(Blanco)'">
+                                            <input type="text" name="rows[0][codigo_interno]" class="form-control" required>
                                         </td>
-                                        <td><input type="number" step="0.0001" id="peso_capsula" name="peso_capsula"
-                                                class="form-control pc" required></td>
-                                        <td><input type="number" step="0.0001" id="peso_muestra" name="peso_muestra"
-                                                class="form-control muestra"></td>
-                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_humedad"
-                                                name="peso_capsula_muestra_humedad" class="form-control pmh" readonly>
+                                        <td>
+                                            <input type="number" step="0.01" name="rows[0][peso_capsula]" class="form-control pc" required>
                                         </td>
-                                        <td><input type="number" step="0.0001" id="peso_capsula_muestra_seca"
-                                                name="peso_capsula_muestra_seca" class="form-control pms"></td>
-                                        <td><input type="text" id='porcentaje_humedad' name="porcentaje_humedad" class="form-control humedad"
-                                                readonly></td>
-                                        <td><input type="text" name="observaciones" class="form-control"></td>
+                                        <td>
+                                            <input type="number" step="0.01" name="rows[0][peso_muestra]" class="form-control muestra">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="rows[0][peso_capsula_muestra_humedad]" class="form-control pmh">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" name="rows[0][peso_capsula_muestra_seca]" class="form-control pms">
+                                        </td>
+                                        <td>
+                                            <input type="text" name="rows[0][porcentaje_humedad]" class="form-control humedad" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="rows[0][observaciones]" class="form-control">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm quitar-fila">×</button>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="d-flex justify-content-end gap-2">
-                                <button type="button" class="btn btn-primary" onclick="agregarFila()">+ Agregar
-                                    fila</button>
-                                <button type="button" class="btn btn-danger" onclick="quitarFila()">- Quitar
-                                    fila</button>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button type="button" class="btn btn-primary" id="agregar-fila">+ Agregar fila</button>
                             </div>
                         </div>
                     </div>
@@ -400,14 +407,15 @@
                     <div class="card">
                         <div class="card-footer">
                             <button type="submit" class="btn btn-primary">Guardar Análisis de Humedad</button>
-                            <a href="" class="btn btn-secondary">Cancelar</a>
+                            <a href="{{ route('lscefa.technical.analyses.humidity.index') }}" class="btn btn-secondary">Cancelar</a>
                         </div>
                     </div>
-                    <script src="{{ asset('js/controles_analiticos.js') }}"></script>
-            </section>
-        </form>
-    </div>
- @endsection
+                </div>
+            </div>
+        </section>
+    </form>
+</div>
+@endsection
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -533,30 +541,105 @@
 
         }
 
-        function agregarFila() {
-            const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
-            const newRow = table.rows[0].cloneNode(true);
-
-            newRow.querySelectorAll('input').forEach(input => {
-                input.value = '';
-            });
-
-            table.appendChild(newRow);
-        }
-
-        function quitarFila() {
-            const table = document.getElementById("tablaMuestras").getElementsByTagName('tbody')[0];
-            if (table.rows.length > 1) {
-                table.deleteRow(table.rows.length - 1);
-            }
-        }
-
-        document.addEventListener('input', function(e) {
-            if (e.target.closest('tr') &&
-                (e.target.classList.contains('pc') ||
-                    e.target.classList.contains('muestra') ||
-                    e.target.classList.contains('pms'))) {
-                calcularValores(e.target.closest('tr'));
+          </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Contador para índices de filas
+        let rowCount = 1;
+        
+        // Agregar nueva fila
+        document.getElementById('agregar-fila').addEventListener('click', function() {
+            const tbody = document.getElementById('muestras-body');
+            const newRow = document.createElement('tr');
+            newRow.className = 'muestra-fila';
+            
+            newRow.innerHTML = `
+                <td>
+                    <input type="text" name="rows[${rowCount}][codigo_interno]" class="form-control" required>
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="rows[${rowCount}][peso_capsula]" class="form-control pc" required>
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="rows[${rowCount}][peso_muestra]" class="form-control muestra">
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="rows[${rowCount}][peso_capsula_muestra_humedad]" class="form-control pmh">
+                </td>
+                <td>
+                    <input type="number" step="0.01" name="rows[${rowCount}][peso_capsula_muestra_seca]" class="form-control pms">
+                </td>
+                <td>
+                    <input type="text" name="rows[${rowCount}][porcentaje_humedad]" class="form-control humedad" readonly>
+                </td>
+                <td>
+                    <input type="text" name="rows[${rowCount}][observaciones]" class="form-control">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm quitar-fila">×</button>
+                </td>
+            `;
+            
+            tbody.appendChild(newRow);
+            rowCount++;
+            
+            // Agregar event listeners a los nuevos inputs
+            agregarEventListenersFila(newRow);
+        });
+        
+        // Eliminar fila
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('quitar-fila')) {
+                const fila = e.target.closest('tr');
+                if (document.querySelectorAll('.muestra-fila').length > 1) {
+                    fila.remove();
+                    // Actualizar los índices de las filas restantes
+                    actualizarIndicesFilas();
+                } else {
+                    alert('Debe haber al menos una fila de muestra');
+                }
             }
         });
-    </script>
+        
+        // Función para actualizar los índices de las filas después de eliminar
+        function actualizarIndicesFilas() {
+            const filas = document.querySelectorAll('.muestra-fila');
+            let nuevoIndice = 0;
+            
+            filas.forEach((fila, index) => {
+                fila.querySelectorAll('input').forEach(input => {
+                    // Actualizar el nombre del campo con el nuevo índice
+                    input.name = input.name.replace(/rows\[\d+\]/, `rows[${index}]`);
+                });
+                nuevoIndice = index;
+            });
+            
+            // Actualizar el contador para la próxima fila nueva
+            rowCount = nuevoIndice + 1;
+        }
+        
+        // Agregar event listeners a la fila inicial
+        document.querySelectorAll('.muestra-fila').forEach(fila => {
+            agregarEventListenersFila(fila);
+        });
+        
+        // Función para agregar event listeners a una fila específica
+        function agregarEventListenersFila(fila) {
+            const inputsCalculo = fila.querySelectorAll('.pc, .muestra, .pmh, .pms');
+            
+            inputsCalculo.forEach(input => {
+                input.addEventListener('input', function() {
+                    calcularValores(fila);
+                });
+            });
+        }
+        
+        // Configurar el envío del formulario para asegurar que todas las filas se envíen
+        const form = document.getElementById('humidity-form');
+        form.addEventListener('submit', function(e) {
+            // No es necesario hacer nada adicional, los datos de las filas ya se enviarán
+            // porque los inputs tienen los nombres correctos (rows[0][...], rows[1][...], etc.)
+            console.log('Enviando datos de todas las filas...');
+        });
+    });
+</script>
