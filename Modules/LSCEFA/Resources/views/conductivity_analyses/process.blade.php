@@ -40,6 +40,9 @@
 
             <form action="{{ route('lscefa.conductivity_analysis.store') }}" method="POST" autocomplete="off" id="conductivityForm">
                 @csrf
+                @foreach($pendingAnalyses as $index => $analysis)
+                    <input type="hidden" name="analyses[{{ $index }}][analysis_id]" value="{{ $analysis->id }}">
+                @endforeach
                 <input type="hidden" name="fecha_analisis" value="{{ now()->format('Y-m-d') }}">
 
                 <!-- Información General -->
@@ -328,7 +331,10 @@
                                         @endphp
                                         @if ($analysis)
                                             <tr>
-                                                <td><input type="text" name="items_ensayo[{{$index}}][codigo_item]" class="form-control" value="{{ old('items_ensayo.' . $index . '.codigo_item', $item['codigo_item'] ?? '') }}" readonly></td>
+                                                <td>
+                                                    <input type="hidden" name="items_ensayo[{{$index}}][identificacion]" value="{{ $item['identificacion'] ?? 'Muestra ' . ($index + 1) }}">
+                                                    <input type="text" name="items_ensayo[{{$index}}][codigo_item]" class="form-control" value="{{ old('items_ensayo.' . $index . '.codigo_item', $item['codigo_item'] ?? '') }}" readonly>
+                                                </td>
                                                 <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][peso]" class="form-control @error('items_ensayo.' . $index . '.peso') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.peso', $item['peso'] ?? '') }}" required>
                                                     @error('items_ensayo.' . $index . '.peso')
                                                         <span class="invalid-feedback">{{ $message }}</span>

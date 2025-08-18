@@ -175,6 +175,24 @@ class PhAnalysisController extends Controller
                 }
             }
 
+            // Debug: verificar si la muestra de referencia quedó en controles_analiticos
+            try {
+                $hasRef = false;
+                foreach ($controles as $ctrl) {
+                    if (is_array($ctrl) && ($ctrl['tipo'] ?? '') === 'muestra_referencia') {
+                        $hasRef = true;
+                        break;
+                    }
+                }
+                \Log::info('storePhAnalysis - resumen de controles_analiticos', [
+                    'total_controles' => count($controles),
+                    'incluye_muestra_referencia' => $hasRef ? 'sí' : 'no',
+                    'index_3_tipo' => isset($controles[3]['tipo']) ? $controles[3]['tipo'] : null,
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('storePhAnalysis - no se pudo registrar log de controles: ' . $e->getMessage());
+            }
+
             Log::info('PhAnalysisController@processAll loaded data:', [
                 'pending_analyses_count' => $pendingAnalyses->count(),
                 'pending_items_count' => count($pendingItems),
@@ -296,6 +314,50 @@ class PhAnalysisController extends Controller
         // Filtrar controles vacíos antes de guardar
         $controles = $controlesCompletos->values()->all();
 
+        // Incorporar la muestra de referencia dentro de controles_analiticos (para Veracidad)
+        $muestraRefInput = $request->input('muestra_referencia', []);
+        if (is_array($muestraRefInput) && !empty($muestraRefInput)) {
+            // Normalizar campos y calcular métricas si es posible
+            $valorLeidoRef = isset($muestraRefInput['valor_leido']) && $muestraRefInput['valor_leido'] !== '' ? (float) $muestraRefInput['valor_leido'] : null;
+            $valorEsperadoRef = isset($muestraRefInput['valor_esperado']) && $muestraRefInput['valor_esperado'] !== '' ? (float) $muestraRefInput['valor_esperado'] : null;
+
+            $errorRef = null;
+            $aceptabilidadRef = null;
+            if ($valorLeidoRef !== null && $valorEsperadoRef !== null && $valorEsperadoRef != 0) {
+                $errorRef = abs(($valorLeidoRef - $valorEsperadoRef) / $valorEsperadoRef) * 100;
+                $aceptabilidadRef = ($errorRef >= 0 && $errorRef <= 20) ? 'Aceptable' : 'No aceptable';
+            }
+
+            $muestraRef = [
+                'tipo' => 'muestra_referencia',
+                'identificacion' => $muestraRefInput['identificacion'] ?? 'Muestra de referencia o MRC',
+                'lote' => $muestraRefInput['lote'] ?? null,
+                'peso' => $muestraRefInput['peso'] ?? null,
+                'volumen_agua' => $muestraRefInput['volumen_agua'] ?? null,
+                'temperatura' => $muestraRefInput['temperatura'] ?? null,
+                'valor_leido' => $muestraRefInput['valor_leido'] ?? null,
+                'valor_esperado' => $muestraRefInput['valor_esperado'] ?? null,
+                'error' => $errorRef,
+                'aceptabilidad' => $aceptabilidadRef,
+                'observaciones' => $muestraRefInput['observaciones'] ?? null,
+            ];
+
+            // Insertar en el índice 3 para mantener compatibilidad con vistas existentes
+            $insertIndex = 3;
+            if ($insertIndex >= 0) {
+                array_splice($controles, $insertIndex, 0, [$muestraRef]);
+            } else {
+                $controles[] = $muestraRef;
+            }
+
+            // Log de verificación de inserción
+            Log::info('storePhAnalysis - muestra_referencia preparada e insertada en controles_analiticos', [
+                'insert_index' => $insertIndex,
+                'muestra_referencia' => $muestraRef,
+                'total_controles_post_insert' => count($controles),
+            ]);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -307,6 +369,26 @@ class PhAnalysisController extends Controller
                     $control['error'] = ($valorEsperado != 0) ? abs(($valorLeido - $valorEsperado) / $valorEsperado) * 100 : 0;
                     $control['aceptabilidad'] = ($control['error'] >= 0 && $control['error'] <= 20) ? 'Aceptable' : 'No aceptable';
                 }
+            }
+
+            // Log resumen de controles antes de guardar
+            try {
+                $hasRef = false;
+                $refIdx = null;
+                foreach ($controles as $idx => $ctrl) {
+                    if (is_array($ctrl) && (($ctrl['tipo'] ?? null) === 'muestra_referencia')) {
+                        $hasRef = true;
+                        $refIdx = $idx;
+                        break;
+                    }
+                }
+                Log::info('storePhAnalysis - resumen antes de persistir', [
+                    'controles_count' => count($controles),
+                    'has_muestra_referencia' => $hasRef ? 'sí' : 'no',
+                    'muestra_referencia_index' => $refIdx,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('storePhAnalysis - error al generar resumen de controles: ' . $e->getMessage());
             }
 
             // Procesar precisión analítica
@@ -366,6 +448,11 @@ class PhAnalysisController extends Controller
             }
 
             DB::commit();
+
+            // Log post-guardado
+            Log::info('storePhAnalysis - análisis de pH guardados OK', [
+                'analyses_saved' => count($analyses),
+            ]);
 
             return redirect()->route('lscefa.technical.analyses.index')
                             ->with('success', 'Análisis de pH guardados exitosamente.');

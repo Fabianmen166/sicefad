@@ -32,7 +32,17 @@
                     <br>
                     <strong>Fecha de Entrega:</strong> {{ $process->delivery_date }}<br>
                     <strong>Comprobante de Cotización:</strong>
-                    @if($process->quote && $process->quote->file)
+                    @php
+                        $compExists = false;
+                        if ($process->quote && !empty($process->quote->file)) {
+                            $compName = basename($process->quote->file);
+                            $qId = $process->quote->quote_id ?? '';
+                            $c1 = module_path('LSCEFA') . '/storage/app/comprobantes/' . $qId . '/' . $compName;
+                            $c2 = storage_path('app/comprobantes/' . $qId . '/' . $compName);
+                            $compExists = file_exists($c1) || file_exists($c2);
+                        }
+                    @endphp
+                    @if($compExists)
                         <a href="{{ route('cefa.lscefa.download.comprobante', ['quote_id' => $process->quote->quote_id, 'filename' => basename($process->quote->file)]) }}" 
                            class="btn btn-info btn-sm"
                            target="_blank"
@@ -44,13 +54,39 @@
                     @endif
                     <br>
                     <strong>Archivo de Comunicación:</strong>
-                    @if($process->communication_file)
-                        <a href="{{ url('lscefa/download/communication') . '?filename=' . urlencode($process->communication_file) }}" 
+                    @php
+                        $commFile = trim($process->communication_file ?? '');
+                        $commExists = false;
+                        if ($commFile !== '') {
+                            $qid = $process->quote->quote_id ?? '';
+                            $candidate1 = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $commFile;
+                            $candidate2 = storage_path('app/comunicaciones/' . $commFile);
+                            $candidate3 = $qid ? module_path('LSCEFA') . '/storage/app/comunicaciones/' . $qid . '/' . $commFile : null;
+                            $candidate4 = $qid ? storage_path('app/comunicaciones/' . $qid . '/' . $commFile) : null;
+                            $commExists = (isset($candidate1) && file_exists($candidate1))
+                                || (isset($candidate2) && file_exists($candidate2))
+                                || (isset($candidate3) && file_exists($candidate3))
+                                || (isset($candidate4) && file_exists($candidate4));
+                        }
+                    @endphp
+                    @if($commExists)
+                        {{-- Comunicación igual que comprobante: usar {quote_id}/{filename}/{type?} --}}
+                        @if(!empty($process->quote->quote_id))
+                        <a href="{{ route('cefa.lscefa.download.communication', ['quote_id' => $process->quote->quote_id, 'filename' => $process->communication_file]) }}" 
                            class="btn btn-info btn-sm"
                            target="_blank"
                            download>
                             <i class="fas fa-file-alt"></i> Descargar Archivo
                         </a>
+                        @else
+                        {{-- Fallback legado si no hay quote_id --}}
+                        <a href="{{ route('lscefa.download.communication', ['filename' => $process->communication_file]) }}" 
+                           class="btn btn-info btn-sm"
+                           target="_blank"
+                           download>
+                            <i class="fas fa-file-alt"></i> Descargar Archivo
+                        </a>
+                        @endif
                     @else
                         N/A
                     @endif

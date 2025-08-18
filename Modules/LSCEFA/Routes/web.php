@@ -155,11 +155,49 @@ Route::middleware(['lang'])->group(function(){
             Route::get('processes', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'allProcessesIndex'])->name('lscefa.quality.processes.index');
             Route::get('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'processShow'])->name('lscefa.quality.processes.show');
             Route::delete('processes/{process}', [\Modules\LSCEFA\Http\Controllers\QuoteController::class, 'destroyProcess'])->name('lscefa.quality.processes.destroy');
+
+            // Sección de Revisión de reportes técnicos
+            Route::prefix('reviews')->name('lscefa.quality.reviews.')->group(function () {
+                // Lista de análisis pendientes de revisión
+                Route::get('/', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'index'])
+                    ->name('index');
+                
+                // Ver detalle de un análisis específico
+                Route::get('/{id}', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'show'])
+                    ->name('show');
+                
+                // Aprobar un análisis
+                Route::post('/{id}/accept', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'accept'])
+                    ->name('accept')
+                    ->middleware('lscefa.permission:lscefa.quality.reviews.accept');
+                
+                // Rechazar un análisis
+                Route::post('/{id}/reject', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'reject'])
+                    ->name('reject')
+                    ->middleware('lscefa.permission:lscefa.quality.reviews.reject');
+                
+                // Rutas para procesos (mantenidas por compatibilidad)
+                Route::get('/process/{process}', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'showProcess'])
+                    ->name('process');
+                Route::post('/process/{process}/accept', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'acceptProcess'])
+                    ->name('process.accept');
+                Route::post('/process/{process}/reject', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'rejectProcess'])
+                    ->name('process.reject');
+            });
         }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.admin,lscefa.quality'])
 
         // Rutas de descarga de archivos
+        // MÁS ESPECÍFICA PRIMERO: comunicación por quote_id
+        Route::get('download/communication/{quote_id}/{filename}/{type?}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadCommunication'])
+            ->where(['quote_id' => '.*', 'filename' => '.*'])
+            ->name('cefa.lscefa.download.communication');
+        // Backward compatibility (by_quote antiguo)
+        Route::get('download/communication/{quote_id}/{filename}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadCommunication'])
+            ->where(['quote_id' => '.*', 'filename' => '.*'])
+            ->name('lscefa.download.communication.by_quote');
+        // Legado: solo filename sin barras
         Route::get('download/communication/{filename}', [\Modules\LSCEFA\Http\Controllers\FileDownloadController::class, 'downloadCommunication'])
-            ->where('filename', '.*')
+            ->where('filename', '[^\/]+')
             ->name('lscefa.download.communication');
             
         // Ruta para descargar comprobantes con parámetro opcional 'type'

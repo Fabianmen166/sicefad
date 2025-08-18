@@ -127,100 +127,157 @@ class FileDownloadController extends Controller
         }
     }
 
-    public function downloadCommunication($filename = null)
+    public function downloadCommunication(\Illuminate\Http\Request $request, $quote_id = null, $filename = null, $type = null)
     {
         try {
             $logPath = storage_path('logs/download_debug.log');
-            $log = '=== PETICIÓN RECIBIDA EN downloadCommunication ===' . PHP_EOL;
+            // Normalizar parámetros desde la ruta
+            $routeQuoteId = $request->route('quote_id');
+            $routeFilename = $request->route('filename');
+            $quote_id = $routeQuoteId ?? $quote_id;
+            $filename = $routeFilename ?? $filename ?? $request->query('filename');
+
+            $log = '=== PETICIÓN RECIBIDA EN downloadCommunication (alineado) ===' . PHP_EOL;
             $log .= 'Hora: ' . now() . PHP_EOL;
-            $log .= 'Filename param (path variable): ' . ($filename ?? 'NULL') . PHP_EOL;
-            // Permitir también filename por query string como fallback
-            if ($filename === null) {
-                $filename = request()->query('filename');
-            }
-            $log .= 'Filename efectivo: ' . ($filename ?? 'NULL') . PHP_EOL;
-            $log .= 'URL: ' . (request()->fullUrl() ?? '-') . PHP_EOL;
+            $log .= 'Parámetros: ' . json_encode([
+                'quote_id' => $quote_id,
+                'filename' => $filename,
+                'type' => $type,
+                'user_id' => \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::id() : 'guest',
+                'url_completa' => $request->fullUrl(),
+                'metodo' => $request->method(),
+                'ip' => $request->ip(),
+            ], JSON_PRETTY_PRINT) . PHP_EOL;
             file_put_contents($logPath, $log, FILE_APPEND);
 
             if (!$filename) {
                 abort(400, 'Falta el parámetro filename');
             }
 
-            // Candidatos de búsqueda para archivos de comunicación
-            $candidates = [
-                module_path('LSCEFA') . '/storage/app/comunicaciones/' . $filename,
-                storage_path('app/comunicaciones/' . $filename),
-            ];
+            // Candidatos de búsqueda (igual que comprobante pero en comunicaciones)
+            $candidates = [];
+            if (!empty($quote_id)) {
+                $candidates[] = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $quote_id . '/' . $filename;
+                $candidates[] = storage_path('app/comunicaciones/' . $quote_id . '/' . $filename);
+            }
+            // Legado (sin subcarpeta)
+            $candidates[] = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $filename;
+            $candidates[] = storage_path('app/comunicaciones/' . $filename);
 
             $path = null;
             foreach ($candidates as $candidate) {
-                if ($candidate && file_exists($candidate)) {
-                    $path = $candidate;
-                    break;
-                }
+                if ($candidate && file_exists($candidate)) { $path = $candidate; break; }
             }
 
+            // Búsqueda recursiva como último recurso
             if (!$path) {
-                // Intentar encontrar por el mismo nombre sin extensión (por si cambió la extensión)
-                $nameWithoutExt = pathinfo($filename, PATHINFO_FILENAME);
-                $tryExtensions = ['pdf','doc','docx','xls','xlsx','png','jpg','jpeg'];
-                foreach ([module_path('LSCEFA') . '/storage/app/comunicaciones', storage_path('app/comunicaciones')] as $baseDir) {
-                    foreach ($tryExtensions as $ext) {
-                        $candidate = rtrim($baseDir, '/\\') . DIRECTORY_SEPARATOR . $nameWithoutExt . '.' . $ext;
-                        if (file_exists($candidate)) { $path = $candidate; break 2; }
-                    }
-                }
-            }
-
-            if (!$path) {
-                // Búsqueda recursiva en ambos lugares
                 $bases = [
                     module_path('LSCEFA') . '/storage/app/comunicaciones',
                     storage_path('app/comunicaciones'),
                 ];
-
                 $searchFile = function ($dir) use ($filename, &$searchFile) {
                     if (!is_dir($dir)) return null;
                     $files = scandir($dir);
                     foreach ($files as $file) {
                         if ($file === '.' || $file === '..') continue;
                         $p = $dir . DIRECTORY_SEPARATOR . $file;
-                        if (is_dir($p)) {
-                            $r = $searchFile($p);
-                            if ($r) return $r;
-                        } elseif ($file === $filename) {
-                            return $p;
-                        }
+                        if (is_dir($p)) { $r = $searchFile($p); if ($r) return $r; }
+                        elseif ($file === $filename) { return $p; }
                     }
                     return null;
                 };
-
                 foreach ($bases as $base) {
                     $found = $searchFile($base);
                     if ($found) { $path = $found; break; }
                 }
-
                 if (!$path) {
-                    file_put_contents($logPath, 'Archivo de comunicación no encontrado: ' . $filename . PHP_EOL, FILE_APPEND);
-                    abort(404, 'El archivo de comunicación no se encontró en el sistema.');
+                    file_put_contents($logPath, 'Archivo de comunicación NO encontrado (alineado): ' . $filename . PHP_EOL, FILE_APPEND);
+                    abort(404, 'El archivo de comunicación no se encontró.');
                 }
             }
 
             $mimeType = @mime_content_type($path) ?: 'application/octet-stream';
-
-            file_put_contents($logPath, 'Sirviendo comunicación desde: ' . $path . ' con mime ' . $mimeType . PHP_EOL, FILE_APPEND);
-
+            file_put_contents($logPath, 'Sirviendo comunicación (alineado) desde: ' . $path . ' mime: ' . $mimeType . PHP_EOL, FILE_APPEND);
             $headers = [
                 'Content-Type' => $mimeType,
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
                 'Expires' => '0',
                 'Content-Transfer-Encoding' => 'binary',
             ];
-
             return response()->download($path, basename($path), $headers);
         } catch (\Exception $e) {
             $logPath = storage_path('logs/download_error.log');
-            file_put_contents($logPath, 'Error en downloadCommunication: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+            file_put_contents($logPath, 'Error en downloadCommunication (alineado): ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+            abort(500, 'Error al procesar la descarga.');
+        }
+    }
+
+    public function downloadCommunicationByQuote($quote_id, $filename)
+    {
+        try {
+            $logPath = storage_path('logs/download_debug.log');
+            $log = '=== PETICIÓN RECIBIDA EN downloadCommunicationByQuote ===' . PHP_EOL;
+            $log .= 'Hora: ' . now() . PHP_EOL;
+            $log .= 'quote_id: ' . $quote_id . ' filename: ' . $filename . PHP_EOL;
+            $log .= 'URL: ' . (request()->fullUrl() ?? '-') . PHP_EOL;
+            file_put_contents($logPath, $log, FILE_APPEND);
+
+            $candidates = [
+                // Nuevo esquema (dentro del módulo por quote)
+                module_path('LSCEFA') . '/storage/app/comunicaciones/' . $quote_id . '/' . $filename,
+                // Legado (sin subcarpeta)
+                module_path('LSCEFA') . '/storage/app/comunicaciones/' . $filename,
+                // Alternativas en storage de la app
+                storage_path('app/comunicaciones/' . $quote_id . '/' . $filename),
+                storage_path('app/comunicaciones/' . $filename),
+            ];
+
+            $path = null;
+            foreach ($candidates as $candidate) {
+                if ($candidate && file_exists($candidate)) { $path = $candidate; break; }
+            }
+
+            if (!$path) {
+                // Búsqueda recursiva en ambos esquemas
+                $bases = [
+                    module_path('LSCEFA') . '/storage/app/comunicaciones/' . $quote_id,
+                    module_path('LSCEFA') . '/storage/app/comunicaciones',
+                    storage_path('app/comunicaciones/' . $quote_id),
+                    storage_path('app/comunicaciones'),
+                ];
+                $searchFile = function ($dir) use ($filename, &$searchFile) {
+                    if (!is_dir($dir)) return null;
+                    $files = scandir($dir);
+                    foreach ($files as $file) {
+                        if ($file === '.' || $file === '..') continue;
+                        $p = $dir . DIRECTORY_SEPARATOR . $file;
+                        if (is_dir($p)) { $r = $searchFile($p); if ($r) return $r; }
+                        elseif ($file === $filename) { return $p; }
+                    }
+                    return null;
+                };
+                foreach ($bases as $base) {
+                    $found = $searchFile($base);
+                    if ($found) { $path = $found; break; }
+                }
+                if (!$path) {
+                    file_put_contents($logPath, 'Archivo de comunicación NO encontrado (byQuote): ' . $filename . PHP_EOL, FILE_APPEND);
+                    abort(404, 'El archivo de comunicación no se encontró.');
+                }
+            }
+
+            $mimeType = @mime_content_type($path) ?: 'application/octet-stream';
+            file_put_contents($logPath, 'Sirviendo comunicación (byQuote) desde: ' . $path . ' mime: ' . $mimeType . PHP_EOL, FILE_APPEND);
+            $headers = [
+                'Content-Type' => $mimeType,
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Expires' => '0',
+                'Content-Transfer-Encoding' => 'binary',
+            ];
+            return response()->download($path, basename($path), $headers);
+        } catch (\Exception $e) {
+            $logPath = storage_path('logs/download_error.log');
+            file_put_contents($logPath, 'Error en downloadCommunicationByQuote: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
             abort(500, 'Error al procesar la descarga.');
         }
     }

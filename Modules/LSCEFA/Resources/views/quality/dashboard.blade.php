@@ -110,6 +110,11 @@
                                 <i class="fas fa-tasks me-2"></i> Procesos
                             </a>
                             @endif
+                            @if(auth()->user() && (auth()->user()->havePermission('lscefa.quality.processes.index') || auth()->user()->havePermission('lscefa.admin.processes.index')))
+                            <a href="{{ route('lscefa.quality.reviews.index') }}" class="btn btn-outline-light fw-semibold">
+                                <i class="fas fa-clipboard-check me-2"></i> Revisiones
+                            </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -176,6 +181,11 @@
                         <a href="{{ route('lscefa.quality.quotes.index') }}" class="btn btn-outline-success">
                             <i class="fas fa-file-alt me-2"></i> Listado de cotizaciones
                         </a>
+                        @if(auth()->user() && (auth()->user()->havePermission('lscefa.quality.processes.index') || auth()->user()->havePermission('lscefa.admin.processes.index')))
+                        <a href="{{ route('lscefa.quality.reviews.index') }}" class="btn btn-outline-info">
+                            <i class="fas fa-clipboard-check me-2"></i> Revisiones pendientes
+                        </a>
+                        @endif
                         <div class="note mt-2"><i class="fas fa-shield-alt me-1"></i> Operación orientada a cumplimiento. Para auditoría y controles avanzados, solicite acceso a Calidad.</div>
                     </div>
                 </div>

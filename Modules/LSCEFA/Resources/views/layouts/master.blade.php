@@ -309,6 +309,12 @@
                                     <p>Gestión de Usuarios</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.quality.reviews.index') }}" class="nav-link {{ request()->routeIs('lscefa.quality.reviews.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-clipboard-check"></i>
+                                    <p>Revisiones</p>
+                                </a>
+                            </li>
                         @endif
                     </ul>
                 </nav>

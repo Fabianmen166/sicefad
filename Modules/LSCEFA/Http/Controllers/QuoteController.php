@@ -502,9 +502,9 @@ class QuoteController extends Controller
         try {
             DB::beginTransaction();
 
-            // Crear directorios si no existen
+            // Crear directorios si no existen (ambos por quote_id)
             $comprobantesPath = module_path('LSCEFA') . '/storage/app/comprobantes/' . $quote->quote_id;
-            $comunicacionesPath = module_path('LSCEFA') . '/storage/app/comunicaciones';
+            $comunicacionesPath = module_path('LSCEFA') . '/storage/app/comunicaciones/' . $quote->quote_id;
             
             if (!file_exists($comprobantesPath)) {
                 mkdir($comprobantesPath, 0777, true);
@@ -523,7 +523,7 @@ class QuoteController extends Controller
                 $quote->save();
             }
 
-            // Manejar el archivo de comunicación si se subió
+            // Manejar el archivo de comunicación si se subió (guardar dentro de comunicaciones/{quote_id})
             $communicationFile = null;
             if ($request->hasFile('archivo_comunicacion')) {
                 $file = $request->file('archivo_comunicacion');
