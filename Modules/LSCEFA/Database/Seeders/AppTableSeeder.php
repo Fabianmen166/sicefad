@@ -14,10 +14,6 @@ class AppTableSeeder extends Seeder
      */
     public function run()
     {
-
-     
-
-      
         $App = App::create([
             'name' => 'LSCEFA',
             'url' => '/lscefa/index',
@@ -25,8 +21,6 @@ class AppTableSeeder extends Seeder
             'icon' => 'fas fa-globe',
             'description' => 'Sistema de Control Para la Informacion de los procesos que se realizan en el Laboratorio',
             'description_english' => 'System for controlling the information of the processes carried out in the Laboratory',
-             
         ]);
-         
     }
-};
+}

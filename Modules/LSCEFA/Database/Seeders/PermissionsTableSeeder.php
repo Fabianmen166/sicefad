@@ -1406,9 +1406,78 @@ class PermissionsTableSeeder extends Seeder
         // Asignar permisos de conductividad al rol técnico
         $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_conductivity);
 
+        // Permisos para análisis de micronutrientes (Personal Técnico)
+        $permisos_technical_micronutrients = [];
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.index'], [
+            'name' => 'Ver gestión de análisis de micronutrientes',
+            'description' => 'Puede ver la gestión de análisis de micronutrientes',
+            'description_english' => 'Can view micronutrients analysis management',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_micronutrients[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.store'], [
+            'name' => 'Guardar análisis de micronutrientes',
+            'description' => 'Puede guardar análisis de micronutrientes',
+            'description_english' => 'Can store micronutrients analysis',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_micronutrients[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.batch'], [
+            'name' => 'Procesar lote de análisis de micronutrientes',
+            'description' => 'Puede procesar lotes de análisis de micronutrientes',
+            'description_english' => 'Can process batches of micronutrients analyses',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_micronutrients[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.batch_store'], [
+            'name' => 'Guardar lote de análisis de micronutrientes',
+            'description' => 'Puede guardar lotes de análisis de micronutrientes',
+            'description_english' => 'Can store batches of micronutrients analyses',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_micronutrients[] = $perm->id;
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.micronutrients.show'], [
+            'name' => 'Ver detalle de análisis de micronutrientes',
+            'description' => 'Puede ver el detalle de análisis de micronutrientes',
+            'description_english' => 'Can view micronutrients analysis detail',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_micronutrients[] = $perm->id;
+        $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_micronutrients);
+
         // Asignar todos los permisos al rol de administrador al final del método run()
         $adminRole = Role::where('slug', 'lscefa.admin')->first();
         $allPermissions = Permission::where('app_id', $app->id)->pluck('id')->toArray();
         $adminRole->permissions()->syncWithoutDetaching($allPermissions);
+
+        // Permiso para ver el listado de análisis de textura (Técnico y Calidad y Admin)
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.texture.index'], [
+            'name' => 'Ver listado de Análisis de Textura',
+            'description' => 'Puede ver el listado de análisis de textura',
+            'description_english' => 'Can view the list of texture analyses',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        // Permisos adicionales de textura SOLO para técnico
+        $texture_permissions = [
+            ['slug' => 'lscefa.technical.analyses.texture.store', 'name' => 'Guardar análisis de textura', 'description' => 'Puede guardar análisis de textura', 'description_english' => 'Can store texture analysis'],
+            ['slug' => 'lscefa.technical.analyses.texture.batch', 'name' => 'Procesar lote de análisis de textura', 'description' => 'Puede procesar lotes de análisis de textura', 'description_english' => 'Can process batches of texture analyses'],
+            ['slug' => 'lscefa.technical.analyses.texture.batch.post', 'name' => 'Procesar lote de análisis de textura (POST)', 'description' => 'Puede procesar lotes de análisis de textura (POST)', 'description_english' => 'Can process batches of texture analyses (POST)'],
+            ['slug' => 'lscefa.technical.analyses.texture.batch_store', 'name' => 'Guardar lote de análisis de textura', 'description' => 'Puede guardar lotes de análisis de textura', 'description_english' => 'Can store batches of texture analyses'],
+            ['slug' => 'lscefa.technical.analyses.texture.show', 'name' => 'Ver detalle de análisis de textura', 'description' => 'Puede ver el detalle de análisis de textura', 'description_english' => 'Can view texture analysis detail'],
+            ['slug' => 'lscefa.technical.analyses.texture.edit', 'name' => 'Editar análisis de textura', 'description' => 'Puede editar análisis de textura', 'description_english' => 'Can edit texture analysis'],
+            ['slug' => 'lscefa.technical.analyses.texture.update', 'name' => 'Actualizar análisis de textura', 'description' => 'Puede actualizar análisis de textura', 'description_english' => 'Can update texture analysis'],
+            ['slug' => 'lscefa.technical.analyses.texture.destroy', 'name' => 'Eliminar análisis de textura', 'description' => 'Puede eliminar análisis de textura', 'description_english' => 'Can delete texture analysis'],
+            ['slug' => 'lscefa.technical.analyses.texture.report', 'name' => 'Descargar reporte de textura', 'description' => 'Puede descargar reportes de análisis de textura', 'description_english' => 'Can download texture analysis reports'],
+        ];
+        foreach ($texture_permissions as $tp) {
+            $perm = Permission::updateOrCreate(['slug' => $tp['slug']], [
+                'name' => $tp['name'],
+                'description' => $tp['description'],
+                'description_english' => $tp['description_english'],
+                'app_id' => $app->id
+            ]);
+            $permissions_technical[] = $perm->id;
+        }
     }
 }

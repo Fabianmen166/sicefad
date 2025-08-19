@@ -13,7 +13,7 @@ use Modules\LSCEFA\Entities\MicronutrientsAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Illuminate\Support\Facades\Auth;
 
-class MicronutrientsAnalysisController extends Controller
+class MicronutrientsAnalysisController2 extends Controller
 {
     public function index()
     {

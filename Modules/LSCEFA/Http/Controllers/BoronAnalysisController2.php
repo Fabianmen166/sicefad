@@ -14,7 +14,7 @@ use Modules\LSCEFA\Entities\BoronAnalysisDetail;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Illuminate\Support\Facades\Auth;
 
-class BoronAnalysisController extends Controller
+class BoronAnalysisController2 extends Controller
 {
     public function index()
     {
