@@ -150,24 +150,24 @@ class ReviewController extends Controller
     // Ver detalle de un análisis para revisión
     public function show($id)
     {
-        // Primero intentamos encontrar el análisis en cualquiera de las tablas
+        // Primero intentamos encontrar el análisis considerando el tipo forzado por query string
         $analysis = null;
         $type = null;
-        
-        // Buscar en análisis de pH
-        $phAnalysis = PhAnalysis::with([
-            'analysis.process.quote', 
-            'analysis.service',
-            'analysis.process.customer',
-            'analysis.process.quote.customer',
-            'user'
-        ])->find($id);
-        
-        if ($phAnalysis) {
-            $analysis = $phAnalysis;
-            $type = 'ph';
-        } else {
-            // Buscar en análisis de conductividad
+        $forcedType = request('type');
+
+        if ($forcedType === 'ph') {
+            $phAnalysis = PhAnalysis::with([
+                'analysis.process.quote', 
+                'analysis.service',
+                'analysis.process.customer',
+                'analysis.process.quote.customer',
+                'user'
+            ])->find($id);
+            if ($phAnalysis) {
+                $analysis = $phAnalysis;
+                $type = 'ph';
+            }
+        } elseif ($forcedType === 'conductivity') {
             $conductivityAnalysis = ConductivityAnalysis::with([
                 'analysis.process.quote',
                 'analysis.service',
@@ -175,10 +175,93 @@ class ReviewController extends Controller
                 'analysis.process.quote.customer',
                 'user'
             ])->find($id);
-            
             if ($conductivityAnalysis) {
                 $analysis = $conductivityAnalysis;
                 $type = 'conductivity';
+            }
+        } elseif ($type === 'conductivity') {
+            // Normalizar estructuras para conductividad
+            if (isset($analysis->controles_analiticos)) {
+                if (is_string($analysis->controles_analiticos)) {
+                    $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
+                } elseif (is_array($analysis->controles_analiticos)) {
+                    $controles_analiticos = $analysis->controles_analiticos;
+                } elseif (is_object($analysis->controles_analiticos)) {
+                    $controles_analiticos = (array)$analysis->controles_analiticos;
+                }
+                // Asegurar array indexado y elementos como arrays
+                $controles_analiticos = array_values($controles_analiticos);
+                foreach ($controles_analiticos as $k => $ctrl) {
+                    if (is_object($ctrl)) { $controles_analiticos[$k] = (array)$ctrl; }
+                }
+            }
+
+            if (isset($analysis->precision_analitica)) {
+                if (is_string($analysis->precision_analitica)) {
+                    $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
+                } elseif (is_array($analysis->precision_analitica)) {
+                    $precision_analitica = $analysis->precision_analitica;
+                } elseif (is_object($analysis->precision_analitica)) {
+                    $precision_analitica = (array)$analysis->precision_analitica;
+                }
+            }
+
+            // Fallback: si no hay veracidad_analitica pero existe campo legado 'veracidad', usarlo
+            if ((empty($analysis->veracidad_analitica) || (is_array($analysis->veracidad_analitica) && count($analysis->veracidad_analitica) === 0))
+                && isset($analysis->veracidad)) {
+                $legacy = $analysis->veracidad;
+                if (is_string($legacy)) { $legacy = json_decode($legacy, true) ?? []; }
+                if (is_object($legacy)) { $legacy = (array)$legacy; }
+                $legacy = array_values($legacy);
+                foreach ($legacy as $k => $v) { if (is_object($v)) { $legacy[$k] = (array)$v; } }
+                $analysis->veracidad_analitica = $legacy;
+            }
+
+            if (isset($analysis->veracidad_analitica)) {
+                if (is_string($analysis->veracidad_analitica)) {
+                    $veracidad = json_decode($analysis->veracidad_analitica, true) ?? [];
+                } elseif (is_array($analysis->veracidad_analitica)) {
+                    $veracidad = $analysis->veracidad_analitica;
+                } elseif (is_object($analysis->veracidad_analitica)) {
+                    $veracidad = (array)$analysis->veracidad_analitica;
+                }
+                // Forzar índices numéricos y normalizar elementos
+                $veracidad = array_values($veracidad);
+                foreach ($veracidad as $k => $v) {
+                    if (is_object($v)) { $veracidad[$k] = (array)$v; }
+                }
+                $analysis->veracidad_analitica = $veracidad;
+            }
+        }
+
+        // Fallback: si no se pasó type o no se encontró en el tipo forzado, usar detección automática
+        if (!$analysis) {
+            // Buscar en análisis de pH
+            $phAnalysis = PhAnalysis::with([
+                'analysis.process.quote', 
+                'analysis.service',
+                'analysis.process.customer',
+                'analysis.process.quote.customer',
+                'user'
+            ])->find($id);
+            
+            if ($phAnalysis) {
+                $analysis = $phAnalysis;
+                $type = 'ph';
+            } else {
+                // Buscar en análisis de conductividad
+                $conductivityAnalysis = ConductivityAnalysis::with([
+                    'analysis.process.quote',
+                    'analysis.service',
+                    'analysis.process.customer',
+                    'analysis.process.quote.customer',
+                    'user'
+                ])->find($id);
+                
+                if ($conductivityAnalysis) {
+                    $analysis = $conductivityAnalysis;
+                    $type = 'conductivity';
+                }
             }
         }
         
@@ -216,31 +299,44 @@ class ReviewController extends Controller
         // Asegurarse de que los ítems de ensayo estén disponibles en la vista
         $items_ensayo = [];
         
-        // Verificar si los ítems de ensayo están en el formato esperado
+        // Función auxiliar para normalizar un item a estructura común
+        $normalizeItem = function($item) {
+            if (is_object($item)) { $item = (array)$item; }
+            if (!is_array($item)) { return null; }
+            return [
+                'identificacion' => $item['identificacion'] ?? 'N/A',
+                'peso' => $item['peso'] ?? 'N/A',
+                'volumen_agua' => $item['volumen_agua'] ?? 'N/A',
+                'temperatura' => $item['temperatura'] ?? 'N/A',
+                'valor_leido' => $item['valor_leido'] ?? 'N/A',
+                'observaciones' => $item['observaciones'] ?? ''
+            ];
+        };
+
+        // 1) Agregar los items del análisis actual (si existen)
         if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
-            // Si es un array de ítems, asegurarse de que cada ítem tenga los campos necesarios
             foreach ($analysis->items_ensayo as $item) {
-                if (is_array($item)) {
-                    $items_ensayo[] = [
-                        'identificacion' => $item['identificacion'] ?? 'N/A',
-                        'peso' => $item['peso'] ?? 'N/A',
-                        'volumen_agua' => $item['volumen_agua'] ?? 'N/A',
-                        'temperatura' => $item['temperatura'] ?? 'N/A',
-                        'valor_leido' => $item['valor_leido'] ?? 'N/A',
-                        'observaciones' => $item['observaciones'] ?? ''
-                    ];
-                } elseif (is_object($item)) {
-                    // Si es un objeto, convertirlo a array
-                    $itemArray = (array)$item;
-                    $items_ensayo[] = [
-                        'identificacion' => $itemArray['identificacion'] ?? 'N/A',
-                        'peso' => $itemArray['peso'] ?? 'N/A',
-                        'volumen_agua' => $itemArray['volumen_agua'] ?? 'N/A',
-                        'temperatura' => $itemArray['temperatura'] ?? 'N/A',
-                        'valor_leido' => $itemArray['valor_leido'] ?? 'N/A',
-                        'observaciones' => $itemArray['observaciones'] ?? ''
-                    ];
+                $norm = $normalizeItem($item);
+                if ($norm !== null) { $items_ensayo[] = $norm; }
+            }
+        }
+
+        // 2) Si es pH, agregar también los items de ensayo de todos los análisis con el mismo consecutivo
+        if ($type === 'ph' && !empty($analysis->consecutivo_no)) {
+            try {
+                $siblings = PhAnalysis::where('consecutivo_no', $analysis->consecutivo_no)
+                    ->where('id', '!=', $analysis->id)
+                    ->get();
+                foreach ($siblings as $sib) {
+                    if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
+                        foreach ($sib->items_ensayo as $item) {
+                            $norm = $normalizeItem($item);
+                            if ($norm !== null) { $items_ensayo[] = $norm; }
+                        }
+                    }
                 }
+            } catch (\Throwable $e) {
+                \Log::warning('No se pudieron cargar items_ensayo hermanos por consecutivo en ReviewController@show: ' . $e->getMessage());
             }
         }
         
@@ -345,7 +441,14 @@ class ReviewController extends Controller
                 ? count($analysis->controles_analiticos) 
                 : (is_object($analysis->controles_analiticos ?? null) 
                     ? count((array)$analysis->controles_analiticos) 
-                    : 'N/A')
+                    : 'N/A'),
+            'has_veracidad_analitica' => isset($analysis->veracidad_analitica) ? 'Yes' : 'No',
+            'veracidad_analitica_type' => gettype($analysis->veracidad_analitica ?? 'null'),
+            'veracidad_analitica_count' => is_array($analysis->veracidad_analitica ?? null)
+                ? count($analysis->veracidad_analitica)
+                : (is_object($analysis->veracidad_analitica ?? null)
+                    ? count((array)$analysis->veracidad_analitica)
+                    : 'N/A'),
         ]);
         
         // Calcular promedios y estadísticas si es necesario
@@ -488,7 +591,7 @@ class ReviewController extends Controller
             $analysis->review_observations = $validated['observations'];
         }
         $analysis->reviewed_by = auth()->id();
-        $analysis->reviewed_at = now();
+        $analysis->review_date = now();
         $analysis->save();
 
         // Verificar si todos los análisis del detalle han sido aprobados
@@ -544,7 +647,7 @@ class ReviewController extends Controller
         $analysis->review_status = 'rejected';
         $analysis->review_observations = $validated['observations'];
         $analysis->reviewed_by = auth()->id();
-        $analysis->reviewed_at = now();
+        $analysis->review_date = now();
         $analysis->save();
 
         // Marcar el detalle como rechazado
@@ -577,9 +680,7 @@ class ReviewController extends Controller
             ->where('status', 'completed')
             ->update([
                 'status' => 'approved',
-                'observations' => $validated['observations'] ?? null,
-                'reviewed_at' => now(),
-                'reviewed_by' => auth()->id()
+                'observations' => $validated['observations'] ?? null
             ]);
 
         return redirect()
@@ -607,9 +708,7 @@ class ReviewController extends Controller
             ->where('status', 'completed')
             ->update([
                 'status' => 'rejected',
-                'observations' => $validated['observations'],
-                'reviewed_at' => now(),
-                'reviewed_by' => auth()->id()
+                'observations' => $validated['observations']
             ]);
 
         return redirect()

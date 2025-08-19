@@ -40,11 +40,14 @@ class PhAnalysisController extends Controller
                 'services' => $phServices->toArray()
             ]);
 
-            // 2. Obtener análisis rechazados
+            // 2. Obtener análisis de pH rechazados que además hayan sido devueltos por revisión
             $rejectedAnalyses = \Modules\LSCEFA\Models\ServiceProcessDetail::with(['process', 'service'])
                 ->where('status', 'rejected')
                 ->whereHas('service', function($q) {
                     $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                })
+                ->whereHas('phAnalysis', function($q) {
+                    $q->where('review_status', 'returned');
                 })
                 ->get();
 
@@ -175,23 +178,7 @@ class PhAnalysisController extends Controller
                 }
             }
 
-            // Debug: verificar si la muestra de referencia quedó en controles_analiticos
-            try {
-                $hasRef = false;
-                foreach ($controles as $ctrl) {
-                    if (is_array($ctrl) && ($ctrl['tipo'] ?? '') === 'muestra_referencia') {
-                        $hasRef = true;
-                        break;
-                    }
-                }
-                \Log::info('storePhAnalysis - resumen de controles_analiticos', [
-                    'total_controles' => count($controles),
-                    'incluye_muestra_referencia' => $hasRef ? 'sí' : 'no',
-                    'index_3_tipo' => isset($controles[3]['tipo']) ? $controles[3]['tipo'] : null,
-                ]);
-            } catch (\Throwable $e) {
-                \Log::warning('storePhAnalysis - no se pudo registrar log de controles: ' . $e->getMessage());
-            }
+            // Nota: Se removió un bloque de debug que hacía referencia a $controles no definido en este método.
 
             Log::info('PhAnalysisController@processAll loaded data:', [
                 'pending_analyses_count' => $pendingAnalyses->count(),
@@ -232,23 +219,61 @@ class PhAnalysisController extends Controller
                 ->firstOrFail();
             $phAnalysis = PhAnalysis::where('analysis_id', $serviceProcessDetail->id)->first();
 
-            // Filtrar ítems pendientes (asumimos que los ítems están en items_ensayo y un ítem está pendiente si no tiene valor_leido)
+            // Definir variables utilizadas por la vista
+            $process = $serviceProcessDetail->process;
+            $service = $serviceProcessDetail->service;
+            $analysis = $serviceProcessDetail;
+
+            // Construir ítems pendientes para la vista (cada ítem DEBE incluir analysis_id)
             $pendingItems = [];
-            if ($phAnalysis && isset($phAnalysis->items_ensayo)) {
-                foreach ($phAnalysis->items_ensayo as $index => $item) {
-                    if (!isset($item['valor_leido']) || $item['valor_leido'] === '') {
-                        $pendingItems[$index] = $item;
+            $pendingAnalyses = collect([$serviceProcessDetail]);
+            if ($phAnalysis) {
+                // Si tiene consecutivo, traer todos los análisis de pH con el mismo consecutivo y unir sus items_ensayo
+                if (!empty($phAnalysis->consecutivo_no)) {
+                    $siblings = PhAnalysis::where('consecutivo_no', $phAnalysis->consecutivo_no)->get();
+                    // Cargar los ServiceProcessDetail correspondientes para que la vista incluya todos en $pendingAnalyses
+                    $siblingAnalysisIds = $siblings->pluck('analysis_id')->unique()->values();
+                    if ($siblingAnalysisIds->isNotEmpty()) {
+                        $pendingAnalyses = ServiceProcessDetail::with(['process','service','phAnalysis'])
+                            ->whereIn('id', $siblingAnalysisIds)
+                            ->get();
+                    }
+                    foreach ($siblings as $sib) {
+                        if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
+                            foreach ($sib->items_ensayo as $item) {
+                                // Mostrar todos los ítems del consecutivo y asegurar association al analysis_id correcto
+                                $pendingItems[] = $item + ['analysis_id' => $sib->analysis_id];
+                            }
+                        }
+                    }
+                } else if (isset($phAnalysis->items_ensayo) && is_array($phAnalysis->items_ensayo)) {
+                    // Sin consecutivo, usar solo los ítems del análisis actual
+                    foreach ($phAnalysis->items_ensayo as $item) {
+                        $pendingItems[] = $item + ['analysis_id' => $serviceProcessDetail->id];
                     }
                 }
             }
+            // Si no hay registros existentes, preparar al menos una fila por defecto
+            if (empty($pendingItems)) {
+                $pendingItems[] = [
+                    'identificacion' => $process->item_code ?? 'Muestra 1',
+                    'peso' => '',
+                    'volumen_agua' => '',
+                    'temperatura' => '',
+                    'valor_leido' => '',
+                    'observaciones' => '',
+                    'analysis_id' => $serviceProcessDetail->id,
+                ];
+            }
 
             Log::info('PhAnalysisController@phAnalysis loaded data:', [
-                'process_id' => $process->id ?? null,
-                'process_process_id' => $process->process_id,
-                'service_services_id' => $service->services_id,
-                'analysis_id' => $analysis->id,
+                'process_id' => isset($process) ? $process->id : null,
+                'process_process_id' => isset($process) ? $process->process_id : null,
+                'service_services_id' => isset($service) ? $service->services_id : null,
+                'analysis_id' => isset($analysis) ? $analysis->id : null,
                 'phAnalysis_exists' => !is_null($phAnalysis),
                 'pending_items_count' => count($pendingItems),
+                'pending_analyses_ids' => $pendingAnalyses->pluck('id')->all(),
             ]);
 
             return view('lscefa::ph_analyses.process', [
@@ -256,6 +281,7 @@ class PhAnalysisController extends Controller
                 'service' => $service,
                 'analysis' => $analysis,
                 'phAnalysis' => $phAnalysis,
+                'pendingAnalyses' => $pendingAnalyses,
                 'pendingItems' => $pendingItems,
                 'user' => Auth::user(),
             ]);
@@ -316,7 +342,19 @@ class PhAnalysisController extends Controller
 
         // Incorporar la muestra de referencia dentro de controles_analiticos (para Veracidad)
         $muestraRefInput = $request->input('muestra_referencia', []);
-        if (is_array($muestraRefInput) && !empty($muestraRefInput)) {
+        Log::info('storePhAnalysis - muestra_referencia input recibido', [ 'input' => $muestraRefInput ]);
+        // Insertar si cualquier campo relevante viene con valor
+        $camposRelevantes = ['lote','peso','volumen_agua','temperatura','valor_leido','valor_esperado','observaciones'];
+        $tieneAlguno = false;
+        if (is_array($muestraRefInput)) {
+            foreach ($camposRelevantes as $k) {
+                if (isset($muestraRefInput[$k]) && $muestraRefInput[$k] !== '' && $muestraRefInput[$k] !== null) {
+                    $tieneAlguno = true;
+                    break;
+                }
+            }
+        }
+        if (is_array($muestraRefInput) && $tieneAlguno) {
             // Normalizar campos y calcular métricas si es posible
             $valorLeidoRef = isset($muestraRefInput['valor_leido']) && $muestraRefInput['valor_leido'] !== '' ? (float) $muestraRefInput['valor_leido'] : null;
             $valorEsperadoRef = isset($muestraRefInput['valor_esperado']) && $muestraRefInput['valor_esperado'] !== '' ? (float) $muestraRefInput['valor_esperado'] : null;

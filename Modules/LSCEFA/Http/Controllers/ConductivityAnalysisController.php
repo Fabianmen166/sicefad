@@ -162,20 +162,88 @@ class ConductivityAnalysisController extends Controller
             ->firstOrFail();
         $conductivityAnalysis = ConductivityAnalysis::where('analysis_id', $analysis->id)->first();
         $pendingItems = [];
-        if ($conductivityAnalysis && isset($conductivityAnalysis->items_ensayo)) {
-            foreach ($conductivityAnalysis->items_ensayo as $index => $item) {
-                if (!isset($item['valor_leido']) || $item['valor_leido'] === '') {
-                    $pendingItems[$index] = $item;
+        // La vista espera $pendingAnalyses para construir inputs ocultos y filtrar filas por analysis_id
+        $pendingAnalyses = collect([$analysis]);
+
+        $consecutivoNo = null;
+        $nombreMetodo = null;
+        if ($conductivityAnalysis) {
+            if (!empty($conductivityAnalysis->consecutivo_no)) {
+                // Traer todos los análisis de conductividad con el mismo consecutivo
+                $siblings = ConductivityAnalysis::where('consecutivo_no', $conductivityAnalysis->consecutivo_no)->get();
+                $consecutivoNo = $conductivityAnalysis->consecutivo_no;
+                $nombreMetodo = $conductivityAnalysis->nombre_metodo ?? null;
+                $siblingAnalysisIds = $siblings->pluck('analysis_id')->unique()->values();
+                if ($siblingAnalysisIds->isNotEmpty()) {
+                    $pendingAnalyses = ServiceProcessDetail::with(['process','service','conductivityAnalysis'])
+                        ->whereIn('id', $siblingAnalysisIds)
+                        ->get();
+                }
+                // Unir todos los items_ensayo de los hermanos y asegurar analysis_id y codigo_item
+                foreach ($siblings as $sib) {
+                    $spd = $pendingAnalyses->firstWhere('id', $sib->analysis_id);
+                    $itemCode = $spd && $spd->process ? $spd->process->item_code : ($process->item_code ?? null);
+                    if ($nombreMetodo === null && !empty($sib->nombre_metodo)) {
+                        $nombreMetodo = $sib->nombre_metodo;
+                    }
+                    if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
+                        foreach ($sib->items_ensayo as $item) {
+                            $pendingItems[] = array_merge($item, [
+                                'analysis_id' => $sib->analysis_id,
+                                'codigo_item' => $itemCode,
+                            ]);
+                        }
+                    } else {
+                        // Si no tiene items, agregar una fila por defecto para ese análisis
+                        $pendingItems[] = [
+                            'identificacion' => 'Muestra',
+                            'peso' => '',
+                            'volumen_agua' => '',
+                            'temperatura' => '',
+                            'valor_leido' => '',
+                            'valor_leido_dsm' => '',
+                            'observaciones' => '',
+                            'analysis_id' => $sib->analysis_id,
+                            'codigo_item' => $itemCode,
+                        ];
+                    }
+                }
+            } else if (isset($conductivityAnalysis->items_ensayo) && is_array($conductivityAnalysis->items_ensayo)) {
+                // Sin consecutivo: usar los items del análisis actual
+                $consecutivoNo = $conductivityAnalysis->consecutivo_no ?? null;
+                $nombreMetodo = $conductivityAnalysis->nombre_metodo ?? null;
+                foreach ($conductivityAnalysis->items_ensayo as $item) {
+                    $pendingItems[] = array_merge($item, [
+                        'analysis_id' => $analysis->id,
+                        'codigo_item' => $process->item_code ?? null,
+                    ]);
                 }
             }
+        }
+        // Si no hay items construidos, agregar uno por defecto del análisis actual
+        if (empty($pendingItems)) {
+            $pendingItems[] = [
+                'identificacion' => 'Muestra',
+                'peso' => '',
+                'volumen_agua' => '',
+                'temperatura' => '',
+                'valor_leido' => '',
+                'valor_leido_dsm' => '',
+                'observaciones' => '',
+                'analysis_id' => $analysis->id,
+                'codigo_item' => $process->item_code ?? null,
+            ];
         }
         return view('lscefa::conductivity_analyses.process', [
             'process' => $process,
             'service' => $service,
             'analysis' => $analysis,
             'conductivityAnalysis' => $conductivityAnalysis,
+            'pendingAnalyses' => $pendingAnalyses,
             'pendingItems' => $pendingItems,
             'user' => Auth::user(),
+            'consecutivo_no' => $consecutivoNo,
+            'nombre_metodo' => $nombreMetodo,
         ]);
     }
 
@@ -205,6 +273,17 @@ class ConductivityAnalysisController extends Controller
             // Calcular precisión analítica
             $duplicadoA = floatval($request->duplicado_a_valor_leido ?? 0);
             $duplicadoB = floatval($request->duplicado_b_valor_leido ?? 0);
+            $dupAPeso = $request->duplicado_peso ?? null; // A
+            $dupAVol = $request->duplicado_volumen_agua ?? null; // A
+            $dupATemp = $request->duplicado_temperatura ?? null; // A
+            $dupBPeso = $request->duplicado_b_peso ?? null; // B
+            $dupBVol = $request->duplicado_b_volumen_agua ?? null; // B
+            $dupBTemp = $request->duplicado_b_temperatura ?? null; // B
+            $dupObs = $request->duplicado_observaciones ?? null;
+            // Mapear identificaciones si solo viene un campo común
+            $dupIdent = $request->duplicado_identificacion ?? null;
+            $dupAIdent = $request->duplicado_a_identificacion ?? $dupIdent;
+            $dupBIdent = $request->duplicado_b_identificacion ?? $dupIdent;
             $promedio = ($duplicadoA + $duplicadoB) / 2;
             $diferencia = abs($duplicadoA - $duplicadoB);
             
@@ -230,17 +309,57 @@ class ConductivityAnalysisController extends Controller
             // Preparar precisión analítica
             $precisionAnalitica = [
                 'duplicado_a' => [
-                    'identificacion' => $request->duplicado_a_identificacion ?? null,
+                    'identificacion' => $dupAIdent,
+                    'peso' => $dupAPeso,
+                    'volumen_agua' => $dupAVol,
+                    'temperatura' => $dupATemp,
                     'valor_leido' => $duplicadoA,
                 ],
                 'duplicado_b' => [
-                    'identificacion' => $request->duplicado_b_identificacion ?? null,
+                    'identificacion' => $dupBIdent,
+                    'peso' => $dupBPeso,
+                    'volumen_agua' => $dupBVol,
+                    'temperatura' => $dupBTemp,
                     'valor_leido' => $duplicadoB,
                 ],
                 'promedio' => $promedio,
                 'diferencia' => $diferencia,
-                'aceptable' => $precisionAceptable
+                'aceptable' => $precisionAceptable,
+                'observaciones' => $dupObs,
             ];
+
+            // Preparar veracidad (controles de calidad)
+            $veracidadInput = $request->input('veracidad', []);
+            \Log::info('Conductivity store: veracidad payload received', [
+                'veracidad' => $veracidadInput
+            ]);
+            $veracidadAnalitica = [];
+            foreach ([0,1] as $idx) {
+                $row = $veracidadInput[$idx] ?? [];
+                $esperado = isset($row['valor_esperado']) ? (float)$row['valor_esperado'] : null;
+                $leido = isset($row['valor_leido']) ? (float)$row['valor_leido'] : null;
+                $recuperacion = (is_numeric($esperado) && $esperado != 0 && is_numeric($leido))
+                    ? ($leido / $esperado) * 100
+                    : null;
+                $aceptable = null;
+                if (!is_null($recuperacion)) {
+                    $aceptable = ($recuperacion >= 70 && $recuperacion <= 130) ? 'Aceptable' : 'No aceptable';
+                }
+                $veracidadAnalitica[$idx] = [
+                    'identificacion' => $row['identificacion'] ?? null,
+                    'peso' => $row['peso'] ?? null,
+                    'volumen_agua' => $row['volumen_agua'] ?? null,
+                    'temperatura' => $row['temperatura'] ?? null,
+                    'valor_esperado' => $esperado,
+                    'valor_leido' => $leido,
+                    'recuperacion' => $recuperacion,
+                    'aceptable' => $aceptable,
+                    'observaciones' => $row['observaciones'] ?? null,
+                ];
+            }
+            \Log::info('Conductivity store: computed veracidad_analitica', [
+                'veracidad_analitica' => $veracidadAnalitica
+            ]);
 
             // Guardar análisis
             $itemsEnsayo = $request->items_ensayo;
@@ -254,15 +373,24 @@ class ConductivityAnalysisController extends Controller
                     ['analysis_id' => $analysisId],
                     [
                         'consecutivo_no' => $request->consecutivo_no,
+                        'nombre_metodo' => $request->nombre_metodo ?? null,
                         'fecha_analisis' => $request->fecha_analisis,
                         'user_id' => Auth::id(),
-                        'codigo_equipo' => $request->equipo_utilizado ?? 'N/A',
-                        'serial_conductimetro' => $request->resolucion_instrumental ?? 'N/A',
-                        'serial_sonda_temperatura' => $request->unidades_reporte ?? 'N/A',
+                        // Guardar en las columnas correctas
+                        'equipo_utilizado' => $request->equipo_utilizado ?? null,
+                        'resolucion_instrumental' => $request->resolucion_instrumental ?? null,
+                        'unidades_reporte' => $request->unidades_reporte ?? null,
+                        'intervalo_metodo' => $request->intervalo_metodo ?? null,
+                        // Compatibilidad hacia atrás por si alguna vista consume los otros campos
+                        'codigo_equipo' => $request->equipo_utilizado ?? ($request->codigo_equipo ?? null),
+                        'serial_conductimetro' => $request->resolucion_instrumental ?? ($request->serial_conductimetro ?? null),
+                        'serial_sonda_temperatura' => $request->unidades_reporte ?? ($request->serial_sonda_temperatura ?? null),
                         'controles_analiticos' => $controlesAnaliticos,
                         'precision_analitica' => $precisionAnalitica,
+                        'veracidad_analitica' => $veracidadAnalitica,
                         'items_ensayo' => $itemsEnsayo,
-                        'observaciones' => $request->observaciones,
+                        // Mapear observaciones del analista
+                        'observaciones' => $request->observaciones_analista ?? $request->observaciones ?? null,
                         'review_status' => 'pending',
                     ]
                 );

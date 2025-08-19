@@ -129,42 +129,91 @@
                 </div>
                 <div class="card-body p-0">
                     @php
+                        // 1) Aplanar los detalles rechazados
                         $returnedDetails = collect();
                         foreach ($returned as $processId => $details) {
                             foreach ($details as $spd) {
-                                $returnedDetails->push($spd);
+                                // Resolver el análisis asociado (pH o Conductividad)
+                                $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? null;
+                                if (!$analysis) { continue; }
+
+                                $type = $spd->phAnalysis ? 'ph' : ($spd->conductivityAnalysis ? 'conductivity' : null);
+                                $returnedDetails->push((object) [
+                                    'process_id' => $spd->process_id,
+                                    'service_id' => $spd->service_id,
+                                    'service_name' => $spd->service->descripcion ?? 'Servicio',
+                                    'type' => $type,
+                                    'consecutivo_no' => $analysis->consecutivo_no ?? null,
+                                    'review_date' => $analysis->review_date ?? $analysis->updated_at ?? $spd->updated_at ?? null,
+                                    'review_observations' => $analysis->review_observations ?? $spd->observations ?? null,
+                                ]);
                             }
                         }
+
+                        // 2) Agrupar por consecutivo_no con llave de respaldo si viene vacío
+                        $returnedWithKey = $returnedDetails->map(function($it){
+                            $key = !empty($it->consecutivo_no)
+                                ? $it->consecutivo_no
+                                : ('PROC-' . ($it->process_id ?? '0') . '-SRV-' . ($it->service_id ?? '0'));
+                            $it->consecutivo_key = $key;
+                            return $it;
+                        });
+
+                        $groupedByConsecutivo = $returnedWithKey
+                            ->groupBy('consecutivo_key')
+                            ->map(function($group){
+                                $services = $group->pluck('service_name')->unique()->values()->all();
+                                $first = $group->first();
+                                // Tomar la fecha de revisión más reciente del grupo
+                                $maxDate = $group->max(function($g){ return $g->review_date ? \Carbon\Carbon::parse($g->review_date) : null; });
+                                // Unir observaciones no vacías
+                                $observations = $group->pluck('review_observations')->filter()->unique()->values()->all();
+                                return (object) [
+                                    'consecutivo_no' => $first->consecutivo_no ?? null,
+                                    'services' => $services,
+                                    'review_date' => $maxDate,
+                                    'observations' => $observations,
+                                    // Guardar un item de referencia para armar la ruta de acción
+                                    'ref' => $first,
+                                ];
+                            });
                     @endphp
-                    @if ($returnedDetails->isEmpty())
+                    @if ($groupedByConsecutivo->isEmpty())
                         <div class="alert alert-info m-4">No hay análisis devueltos para mostrar.</div>
                     @else
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Proceso</th>
-                                        <th>Servicio</th>
-                                        <th>Fecha de Creación</th>
-                                        <th>Estado de Revisión</th>
-                                        <th>Acciones</th>
+                                        <th>Consecutivo</th>
+                                        <th>Servicio(s)</th>
+                                        <th>Fecha de revisión</th>
+                                        <th>Observaciones</th>
+                                        <th>Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($returnedDetails as $spd)
+                                    @foreach ($groupedByConsecutivo as $row)
+                                        @php
+                                            $serviceText = implode(', ', $row->services ?? []);
+                                            $obsText = empty($row->observations) ? '—' : implode(' | ', $row->observations);
+                                            $ref = $row->ref;
+                                            // Construir ruta de acción según tipo
+                                            $actionUrl = '#';
+                                            if ($ref && $ref->type === 'ph') {
+                                                $actionUrl = route('lscefa.ph_analysis.show', [$ref->process_id, $ref->service_id]);
+                                            } elseif ($ref && $ref->type === 'conductivity') {
+                                                $actionUrl = route('lscefa.conductivity_analysis.show', [$ref->process_id, $ref->service_id]);
+                                            }
+                                        @endphp
                                         <tr>
-                                            <td class="align-middle">{{ $spd->process_id }}</td>
-                                            <td class="align-middle">{{ $spd->service->descripcion ?? 'Servicio' }}</td>
-                                            <td class="align-middle">{{ $spd->created_at->format('d/m/Y H:i') }}</td>
-                                            <td class="align-middle">
-                                                <span class="badge bg-danger">Rechazado</span>
-                                            </td>
-                                            <td class="align-middle">
-                                                <a href="#" class="btn btn-warning btn-sm" title="Corregir">
-                                                    <i class="fas fa-edit"></i> Corregir
-                                                </a>
-                                                <a href="#" class="btn btn-info btn-sm" title="Descargar Reporte">
-                                                    <i class="fas fa-download"></i> Reporte
+                                            <td class="align-middle">{{ $row->consecutivo_no ?? '—' }}</td>
+                                            <td class="align-middle">{{ $serviceText ?: '—' }}</td>
+                                            <td class="align-middle">{{ $row->review_date ? \Carbon\Carbon::parse($row->review_date)->format('d/m/Y H:i') : '—' }}</td>
+                                            <td class="align-middle">{{ $obsText }}</td>
+                                            <td class="align-middle text-right">
+                                                <a href="{{ $actionUrl }}" class="btn btn-warning btn-sm" title="Revisar">
+                                                    <i class="fas fa-undo-alt"></i> Revisar
                                                 </a>
                                             </td>
                                         </tr>
@@ -175,6 +224,7 @@
                     @endif
                 </div>
             </div>
+
         </div>
     </div>
 </div>

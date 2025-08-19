@@ -55,13 +55,13 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Consecutivo No.</label>
-                                    <input type="text" name="consecutivo_no" class="form-control" required>
+                                    <input type="text" name="consecutivo_no" class="form-control" value="{{ old('consecutivo_no', $consecutivo_no ?? '') }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Nombre del Método</label>
-                                    <input type="text" name="nombre_metodo" class="form-control">
+                                    <input type="text" name="nombre_metodo" class="form-control" value="{{ old('nombre_metodo', $nombre_metodo ?? '') }}">
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -134,7 +134,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" class="form-control" value="Blanco del proceso" readonly></td>
+                                    <td><input type="text" class="form-control" name="blanco_identificacion" value="Blanco del proceso" readonly></td>
                                     <td><input type="number" step="0.01" name="blanco_valor_leido" id="blanco_valor_leido" class="form-control"></td>
                                     <td><span id="blanco_aceptable"></span></td>
                                     <td><textarea name="blanco_observaciones" class="form-control"></textarea></td>
@@ -352,14 +352,12 @@
                                                 </td>
                                                 <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][valor_leido]" class="form-control valor-leido @error('items_ensayo.' . $index . '.valor_leido') is-invalid @enderror" value="{{ old('items_ensayo.' . $index . '.valor_leido', $item['valor_leido'] ?? '') }}" oninput="updateDSCM(this)" required>
                                                     @error('items_ensayo.' . $index . '.valor_leido')
-                                                        <span classinvalid-feedback>{{ $message }}</span>
-                                                    @enderror
-                                                </td>
-                                                <td><input type="number" step="0.0001" name="items_ensayo[{{$index}}][valor_leido_dsm]" class="form-control valor-leido-dsm" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}" readonly>
-                                                    <input type="hidden" name="items_ensayo[{{$index}}][valor_leido_dsm]" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}">
-                                                    @error('items_ensayo.' . $index . '.valor_leido_dsm')
                                                         <span class="invalid-feedback">{{ $message }}</span>
                                                     @enderror
+                                                </td>
+                                                <td>
+                                                    <input type="number" step="0.0001" class="form-control valor-leido-dsm" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}" readonly>
+                                                    <input type="hidden" name="items_ensayo[{{$index}}][valor_leido_dsm]" value="{{ old('items_ensayo.' . $index . '.valor_leido_dsm', $item['valor_leido_dsm'] ?? '') }}">
                                                 </td>
                                                 <td><textarea name="items_ensayo[{{$index}}][observaciones]" class="form-control">{{ old('items_ensayo.' . $index . '.observaciones', $item['observaciones'] ?? '') }}</textarea></td>
                                             </tr>

@@ -68,7 +68,7 @@
                                                 <span class="badge bg-warning">Devuelto</span>
                                             </td>
                                             <td class="align-middle">
-                                                <a href="{{ route('lscefa.ph_analysis.ph_analysis', ['processId' => $analysis->process_id, 'serviceId' => $analysis->service_id]) }}" 
+                                                <a href="{{ route('lscefa.ph_analysis.show', ['processId' => $analysis->process_id, 'serviceId' => $analysis->service_id]) }}" 
                                                    class="btn btn-primary btn-sm"
                                                    title="Ver detalles">
                                                     <i class="fas fa-eye"></i> Ver

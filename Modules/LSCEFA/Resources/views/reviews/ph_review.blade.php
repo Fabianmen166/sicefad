@@ -588,7 +588,7 @@
                                                  id="rejectReason" 
                                                  name="observations" 
                                                  rows="4" 
-                                                 required>{{ old('observations') }}</textarea>
+                                                 required minlength="3">{{ old('observations') }}</textarea>
                                         @error('observations')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

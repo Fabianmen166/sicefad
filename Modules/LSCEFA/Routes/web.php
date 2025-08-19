@@ -195,7 +195,6 @@ Route::middleware(['lang'])->group(function(){
                     ->name('process.reject');
             });
         }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.admin,lscefa.quality'])
-        });
 
         // Rutas de descarga de archivos
         // MÁS ESPECÍFICA PRIMERO: comunicación por quote_id

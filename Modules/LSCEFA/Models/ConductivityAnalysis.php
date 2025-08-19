@@ -11,6 +11,7 @@ class ConductivityAnalysis extends Model
     protected $fillable = [
         'analysis_id',
         'consecutivo_no',
+        'nombre_metodo',
         'fecha_analisis',
         'user_id',
         'codigo_equipo',

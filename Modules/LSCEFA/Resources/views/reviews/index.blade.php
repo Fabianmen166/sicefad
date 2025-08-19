@@ -144,7 +144,7 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-right">
-                                <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}" 
+                                <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}?type={{ $analysis->type ?? '' }}" 
                                    class="btn btn-primary">
                                     <i class="fas fa-eye mr-1"></i> Revisar
                                 </a>

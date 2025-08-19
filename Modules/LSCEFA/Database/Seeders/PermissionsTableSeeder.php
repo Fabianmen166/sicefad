@@ -1339,7 +1339,24 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permisos_technical_ph[] = $perm->id;
 
-        // Asignar permisos de pH al rol técnico
+        // Permisos alineados con los nombres de ruta actuales para re-procesar análisis devueltos (pH)
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.show'], [
+            'name' => 'Ver formulario de análisis de pH (ruta show)',
+            'description' => 'Puede abrir el formulario del análisis de pH para re-procesar',
+            'description_english' => 'Can open pH analysis form (show) to reprocess',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.ph_analysis.download'], [
+            'name' => 'Descargar reporte de pH (ruta download)',
+            'description' => 'Puede descargar el reporte del análisis de pH',
+            'description_english' => 'Can download pH analysis report',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_ph[] = $perm->id;
+
+        // Asignar permisos de pH al rol técnico (refuerzo)
         $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_ph);
 
         // Permisos para análisis de conductividad (Personal Técnico)
@@ -1347,10 +1364,11 @@ class PermissionsTableSeeder extends Seeder
 
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.index'], [
             'name' => 'Ver gestión de análisis de conductividad',
-            'description' => 'Permite ver el listado y gestión de análisis de conductividad',
+            'description' => 'Puede ver la gestión de análisis de conductividad',
             'description_english' => 'Can view conductivity analysis management',
             'app_id' => $app->id
         ]);
+
         $permisos_technical_conductivity[] = $perm->id;
 
         $perm = Permission::updateOrCreate(['slug' => 'lscefa.conductivity_analysis.batch_conductivity_analysis'], [
