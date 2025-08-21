@@ -41,6 +41,9 @@
                                 <td>{{ $process->delivery_date }}</td>
                                 <td>
                                     <a href="{{ route('lscefa.quality.processes.show', $process->process_id) }}" class="btn btn-success btn-sm mb-1">Ver proceso</a>
+                                    @if(auth()->user() && method_exists(auth()->user(), 'havePermission') && auth()->user()->havePermission('lscefa.admin.process_history.show'))
+                                        <a href="{{ route('lscefa.admin.process_history.show', $process->process_id) }}" class="btn btn-primary btn-sm mb-1">Historial</a>
+                                    @endif
                                     <form action="{{ route('lscefa.quality.processes.destroy', $process->process_id) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('DELETE')

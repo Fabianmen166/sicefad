@@ -181,17 +181,19 @@
                                                     <tr>
                                                         <td rowspan="2" class="align-middle text-center"><strong>Curva de calibración</strong></td>
                                                         <td rowspan="2" class="align-middle"><input type="number" class="form-control" value="0.995" readonly></td>
-                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_valor_leido"></td>
-                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_error_porcentaje" readonly></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_valor_leido" name="curva_valor_leido"></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_error_porcentaje" name="curva_error_porcentaje" readonly></td>
+
                                                         <td colspan="2" rowspan="2"></td>
                                                         <td class="text-center"><strong>Duplicado A</strong></td>
-                                                        <td><input type="number" step="any" class="form-control" id="duplicado_a"></td>
-                                                        <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" readonly></td>
-                                                        <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" readonly></td>
+                                                        <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a"></td>
+                                                        <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" readonly></td>
+                                                        <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" readonly></td>
                                                     </tr>
                                                     <tr>
                                                         <td class="text-center"><strong>Duplicado B</strong></td>
-                                                        <td><input type="number" step="any" class="form-control" id="duplicado_b"></td>
+                                                        <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b"></td>
+
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -264,185 +266,15 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        let reporteRowIndex = 0;
-        $('#add_reporte_row').click(function() {
-            reporteRowIndex++;
-            let newRow = `
-                <tr>
-                    <td><input type="text" class="form-control" name="reporte_resultados[${reporteRowIndex}][codigo_interno]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][peso_muestra]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][pW]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][Ve]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][LBP]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][factor_dilucion]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][lectura_abs]"></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][fosforo_disponible_mgL]" readonly></td>
-                    <td><input type="number" step="any" class="form-control" name="reporte_resultados[${reporteRowIndex}][fosforo_disponible_mgKg]" readonly></td>
-                    <td><input type="text" class="form-control" name="reporte_resultados[${reporteRowIndex}][observaciones_reporte]"></td>
-                    <td><button type="button" class="btn btn-danger btn-sm remove-row">-</button></td>
-                </tr>
-            `;
-            $('#reporte_resultados_table tbody').append(newRow);
-        });
+        // Limpieza: se eliminan referencias a tablas no presentes en la vista (reporte_resultados_table, controles_calidad_table)
 
         $(document).on('click', '.remove-row', function() {
             $(this).closest('tr').remove();
         });
 
-        let controlRowIndex = 0;
-        $('#add_control_row').click(function() {
-            controlRowIndex++;
-            let newRow = `
-                <tr>
-                    <td><input type="text" class="form-control" name="controles_calidad[${controlRowIndex}][identificacion]"></td>
-                    <td><input type="number" step="any" class="form-control" name="controles_calidad[${controlRowIndex}][valor_esperado]"></td>
-                    <td><input type="number" step="any" class="form-control" name="controles_calidad[${controlRowIndex}][valor_leido]"></td>
-                    <td><input type="number" step="any" class="form-control" name="controles_calidad[${controlRowIndex}][porcentaje_error]" readonly></td>
-                    <td><input type="number" step="any" class="form-control" name="controles_calidad[${controlRowIndex}][porcentaje_recuperacion]" readonly></td>
-                    <td><input type="number" step="any" class="form-control" name="controles_calidad[${controlRowIndex}][porcentaje_dpr]" readonly></td>
-                    <td><input type="text" class="form-control" name="controles_calidad[${controlRowIndex}][aceptabilidad]" readonly></td>
-                    <td><button type="button" class="btn btn-danger btn-sm remove-row">-</button></td>
-                </tr>
-            `;
-            $('#controles_calidad_table tbody').append(newRow);
-        });
+        // Fin limpieza
 
-        // Función para recopilar los datos de la tabla y convertirlos a JSON
-        function getTableDataAsJson(tableId) {
-            let data = [];
-            $(`#${tableId} tbody tr`).each(function() {
-                let row = {};
-                $(this).find('input, select, textarea').each(function() {
-                    let name = $(this).attr('name');
-                    let matches = name.match(/^(.*?)\\[(\\d+)\\]\\[(.*)\\]$/);
-                    if (matches) {
-                        let fieldName = matches[3];
-                        row[fieldName] = $(this).val();
-                    }
-                });
-                data.push(row);
-            });
-            return JSON.stringify(data);
-        }
-
-        // Calcular Fósforo disponible (mg/L) y Fósforo disponible (mg/Kg - ppm)
-        function calculatePhosphorus() {
-            const regresionStr = $('#regresion').val();
-            const coeficientesStr = $('#coeficientes_calculados').val();
-            let m = 0;
-            let b = 0;
-
-            console.log('Coeficientes String:', coeficientesStr);
-
-            if (coeficientesStr) {
-                const coefMatches = coeficientesStr.match(/m=(-?\d*\.?\d+), b=(-?\d*\.?\d+)/);
-                if (coefMatches && coefMatches.length === 3) {
-                    m = parseFloat(coefMatches[1]);
-                    b = parseFloat(coefMatches[2]);
-                    console.log('m extraído:', m, 'b extraído:', b);
-                } else {
-                    console.warn("Formato de 'Coeficiente calculados' inválido. Asegúrese de usar 'm=X, b=Y'.");
-                    console.log('Coeficientes Match:', coefMatches);
-                }
-            } else {
-                console.warn("'Coeficiente calculados' está vacío.");
-            }
-
-            $('#reporte_resultados_table tbody tr').each(function() {
-                const lecturaAbsInput = $(this).find('input[name$="[lectura_abs]"]');
-                const pesoMuestraInput = $(this).find('input[name$="[peso_muestra]"]');
-                const factorDilucionInput = $(this).find('input[name$="[factor_dilucion]"]');
-                const VeInput = $(this).find('input[name$="[Ve]"]');
-
-                const lecturaAbs = parseFloat(lecturaAbsInput.val().replace(',', '.')) || 0;
-                const pesoMuestra = parseFloat(pesoMuestraInput.val().replace(',', '.')) || 0;
-                const factorDilucion = parseFloat(factorDilucionInput.val().replace(',', '.')) || 0;
-                const Ve = parseFloat(VeInput.val().replace(',', '.')) || 0;
-
-                console.log('Fila de Reporte - lecturaAbs:', lecturaAbs, 'pesoMuestra:', pesoMuestra, 'factorDilucion:', factorDilucion, 'Ve:', Ve);
-
-                // Calcular Fósforo disponible (mg/L) -> x = (y - b) / m
-                let fosforoMgL = 0;
-                if (m !== 0) {
-                    fosforoMgL = (lecturaAbs - b) / m;
-                } else if (lecturaAbs === b) {
-                    fosforoMgL = 0; 
-                } else {
-                    fosforoMgL = NaN; 
-                }
-                console.log('Fósforo disponible (mg/L) calculado:', fosforoMgL);
-                console.log('Intentando setear fosforo_disponible_mgL con:', fosforoMgL.toFixed(4));
-                $(this).find('input[name$="[fosforo_disponible_mgL]"]').val(isNaN(fosforoMgL) ? 'Error' : fosforoMgL.toFixed(4));
-                console.log('Valor seteado en fosforo_disponible_mgL:', $(this).find('input[name$="[fosforo_disponible_mgL]"]').val());
-
-                // Calcular Fósforo disponible (mg/Kg - ppm) -> (Fósforo disponible (mg/L) * Ve (mL) * factor de dilución) / Peso muestra (g)
-                let fosforoMgKg = 0;
-                if (!isNaN(fosforoMgL) && pesoMuestra !== 0) {
-                    fosforoMgKg = (fosforoMgL * Ve * factorDilucion) / pesoMuestra;
-                } else {
-                    fosforoMgKg = NaN; 
-                }
-                console.log('Fósforo disponible (mg/Kg - ppm) calculado:', fosforoMgKg);
-                console.log('Intentando setear fosforo_disponible_mgKg con:', fosforoMgKg.toFixed(4));
-                $(this).find('input[name$="[fosforo_disponible_mgKg]"]').val(isNaN(fosforoMgKg) ? 'Error' : fosforoMgKg.toFixed(4));
-                console.log('Valor seteado en fosforo_disponible_mgKg:', $(this).find('input[name$="[fosforo_disponible_mgKg]"]').val());
-            });
-        }
-
-        // Calcular % de error
-        function calculateErrorPercentage() {
-            $('#controles_calidad_table tbody tr').each(function() {
-                const valorEsperadoInput = $(this).find('input[name$="[valor_esperado]"]');
-                const valorLeidoInput = $(this).find('input[name$="[valor_leido]"]');
-
-                const valorEsperado = parseFloat(valorEsperadoInput.val().replace(',', '.')) || 0;
-                const valorLeido = parseFloat(valorLeidoInput.val().replace(',', '.')) || 0;
-                let porcentajeError = 0;
-                if (valorEsperado !== 0) {
-                    porcentajeError = ((valorLeido - valorEsperado) / valorEsperado) * 100;
-                }
-                console.log('Intentando setear porcentaje_error con:', porcentajeError.toFixed(2));
-                $(this).find('input[name$="[porcentaje_error]"]').val(porcentajeError.toFixed(2));
-                console.log('Valor seteado en porcentaje_error:', $(this).find('input[name$="[porcentaje_error]"]').val());
-            });
-        }
-
-        // Monitorear cambios en los campos relevantes para el cálculo
-        $(document).on('input', '#reporte_resultados_table input, #regresion, #coeficientes_calculados', calculatePhosphorus);
-        $(document).on('input', '#controles_calidad_table input', calculateErrorPercentage);
-
-        // Inicializar cálculos al cargar la página si hay valores previos
-        calculatePhosphorus();
-        calculateErrorPercentage();
-
-        // Eliminar scripts de controles de calidad y gráfica
-        // Agregar scripts para agregar/eliminar filas de ítems de ensayo
-        let itemRowIndex = 0;
-        $('#add_item_row').click(function() {
-            itemRowIndex++;
-            let newRow = `
-                <tr>
-                    <td><input type="text" class="form-control" name="items[${itemRowIndex}][codigo_interno]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][peso_muestra]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][pw]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][v_extractante]" value="50"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][lectura_blanco]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][factor_dilucion]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][fosforo_disponible_mg_l]"></td>
-                    <td><input type="number" step="any" class="form-control" name="items[${itemRowIndex}][fosforo_disponible_mg_kg]" readonly></td>
-                    <td><input type="text" class="form-control" name="items[${itemRowIndex}][observaciones_item]"></td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm remove-row">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-            $('#items_ensayo_table tbody').append(newRow);
-        });
-        $(document).on('click', '.remove-row', function() {
-            $(this).closest('tr').remove();
-        });
+        // Cálculo sobre Ítems de Ensayo se maneja con calcularFosforoEnsayo más abajo
 
         // Script para agregar/eliminar filas de controles analíticos
         let controlAnaliticoRowIndex = 0;

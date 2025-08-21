@@ -7,6 +7,8 @@ use Illuminate\Routing\Controller;
 use Modules\LSCEFA\Models\Process;
 use Illuminate\Support\Facades\Auth;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
+use Illuminate\Support\Facades\Schema;
+use Modules\LSCEFA\Entities\PhosphorusAnalysis;
 
 class TechnicalAnalysisController extends Controller
 {
@@ -54,14 +56,43 @@ class TechnicalAnalysisController extends Controller
             })
             ->get();
 
+        // Incluir análisis de Fósforo devueltos/rechazados (tabla independiente)
+        $phosphorusReturned = collect();
+        try {
+            if (Schema::hasColumn('phosphorus_analyses', 'review_status')) {
+                $phosphorusReturned = PhosphorusAnalysis::with(['service'])
+                    ->whereIn('review_status', ['returned', 'rejected'])
+                    ->get();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudieron cargar análisis de fósforo devueltos: ' . $e->getMessage());
+        }
+
         \Log::info('TechnicalAnalysis@index metrics', [
             'processes_page_count' => $processes->count(),
-            'returned_total' => $returnedQuery->count(),
+            'returned_total_ph_cond' => $returnedQuery->count(),
+            'returned_total_phosphorus' => $phosphorusReturned->count(),
         ]);
 
         foreach ($returnedQuery as $spd) {
             $returned[$spd->process_id] = $returned[$spd->process_id] ?? [];
             $returned[$spd->process_id][] = $spd;
+        }
+
+        // Agregar fósforo al arreglo de devueltos (objetos simplificados compatibles con la vista)
+        foreach ($phosphorusReturned as $pa) {
+            $returned[$pa->process_id] = $returned[$pa->process_id] ?? [];
+            // Empaquetar un objeto con los campos esperados por la vista
+            $returned[$pa->process_id][] = (object) [
+                'process_id' => $pa->process_id,
+                'service_id' => $pa->service_id,
+                'service' => $pa->service ?? null,
+                'service_name' => optional($pa->service)->descripcion ?? 'Servicio',
+                'type' => 'phosphorus',
+                'consecutivo_no' => $pa->consecutivo_no ?? null,
+                'review_date' => $pa->review_date ?? $pa->updated_at ?? null,
+                'review_observations' => $pa->review_observations ?? null,
+            ];
         }
 
         // Log per-process returned counts

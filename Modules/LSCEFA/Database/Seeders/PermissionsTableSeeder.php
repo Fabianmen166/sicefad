@@ -184,6 +184,41 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_admin[] = $permission->id;
 
+        // Permisos para la nueva sección de Reportes (solo Admin, usando nombres de ruta quality)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.reports.index'], [
+            'name' => 'Reportes - Listado (Admin)',
+            'description' => 'Puede ver el listado de procesos en realización (Informes)',
+            'description_english' => 'Can view reports list (in-progress processes)',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.reports.show'], [
+            'name' => 'Reportes - Ver detalle (Admin)',
+            'description' => 'Puede ver la vista previa del informe por proceso',
+            'description_english' => 'Can view report preview for a process',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        // Permiso para ver listado del Historial de Procesos (solo Admin)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.process_history.index'], [
+            'name' => 'Historial de Procesos - Listado (Admin)',
+            'description' => 'Puede ver el listado de procesos para acceder a su historial',
+            'description_english' => 'Can view processes list to access their history',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
+        // Permiso para ver el Historial de Proceso (solo Admin)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.process_history.show'], [
+            'name' => 'Historial de Proceso - Ver (Admin)',
+            'description' => 'Puede ver el historial completo del proceso (cotización -> análisis -> informe)',
+            'description_english' => 'Can view full process history (quote -> analyses -> report)',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
         $rol_admin = Role::where('slug', 'lscefa.admin')->first();
         $rol_admin->permissions()->syncWithoutDetaching($permissions_admin);
 

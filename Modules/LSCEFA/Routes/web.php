@@ -64,6 +64,14 @@ Route::middleware(['lang'])->group(function(){
                     ]
                 ])->except(['show']); // Excluimos la ruta show ya que no la estamos usando
             });
+
+            // Historial de procesos (solo Admin)
+            Route::get('admin/process-history', [\Modules\LSCEFA\Http\Controllers\ProcessHistoryController::class, 'index'])
+                ->name('lscefa.admin.process_history.index')
+                ->middleware('lscefa.permission:lscefa.admin.process_history.index');
+            Route::get('admin/process-history/{processId}', [\Modules\LSCEFA\Http\Controllers\ProcessHistoryController::class, 'show'])
+                ->name('lscefa.admin.process_history.show')
+                ->middleware('lscefa.permission:lscefa.admin.process_history.show');
         }); // Cierre del grupo de rutas de admin
 
         Route::middleware(['auth', 'lscefa.role:lscefa.intern'])->group(function () {
@@ -194,6 +202,18 @@ Route::middleware(['lang'])->group(function(){
                 Route::post('/process/{process}/reject', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'rejectProcess'])
                     ->name('process.reject');
             });
+
+            // Sección de creación de informes (Reportes)
+            Route::prefix('reports')->name('lscefa.quality.reports.')->group(function () {
+                // Listado de procesos en realización con filtro por código de ítem
+                Route::get('/', [\Modules\LSCEFA\Http\Controllers\ReportsController::class, 'index'])
+                    ->name('index');
+                // Vista previa del informe por proceso
+                Route::get('/{processId}', [\Modules\LSCEFA\Http\Controllers\ReportsController::class, 'show'])
+                    ->name('show');
+            });
+
+            
         }); // Cierre de Route::middleware(['auth', 'lscefa.role:lscefa.admin,lscefa.quality'])
 
         // Rutas de descarga de archivos

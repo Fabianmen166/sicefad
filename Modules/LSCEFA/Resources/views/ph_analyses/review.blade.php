@@ -228,6 +228,7 @@
                             <div class="col-md-6">
                                 <form method="post" action="{{ route('lscefa.quality.reviews.accept', $detail) }}" class="mb-3">
                                     @csrf
+                                    <input type="hidden" name="analysis_type" value="ph">
                                     <div class="form-group">
                                         <label>Observaciones (opcional)</label>
                                         <textarea name="observations" class="form-control" rows="3" placeholder="Ingrese observaciones adicionales (opcional)"></textarea>

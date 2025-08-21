@@ -65,6 +65,8 @@
                     $firstAnalysis = $pendingAnalyses->first();
                 @endphp
 
+                @php /* Prefill coincide con Conductividad: old() y variable del controlador */ @endphp
+
                 <form action="{{ route('lscefa.ph_analysis.store') }}" method="POST" id="phAnalysisForm" autocomplete="off">
                     @csrf
 
@@ -95,7 +97,18 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="consecutivo">Consecutivo No.</label>
-                                        <input type="text" class="form-control @error('consecutivo_no') is-invalid @enderror" id="consecutivo" name="consecutivo_no" value="{{ old('consecutivo_no', '') }}" required>
+                                        <input type="text" class="form-control @error('consecutivo_no') is-invalid @enderror" id="consecutivo" name="consecutivo_no" value="{{ request()->query('consecutivo', ((old('consecutivo_no') !== null && old('consecutivo_no') !== '') ? old('consecutivo_no') : ($consecutivo_no ?? ''))) }}" data-query-consecutivo="{{ request()->query('consecutivo','') }}" required>
+                                        <script>
+                                          (function(){
+                                            var input = document.getElementById('consecutivo');
+                                            if (!input) return;
+                                            var fromAttr = input.getAttribute('data-query-consecutivo') || '';
+                                            // Si el valor sigue vacío, y tenemos consecutivo por query, setearlo
+                                            if ((input.value === '' || input.value.trim() === '') && fromAttr) {
+                                                input.value = fromAttr;
+                                            }
+                                          })();
+                                        </script>
                                         @error('consecutivo_no')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -632,6 +645,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 @push('scripts')
 <script>
+  (function() {
+    try {
+      var params = new URLSearchParams(window.location.search || '');
+      var c = params.get('consecutivo');
+      var input = document.getElementById('consecutivo');
+      if (input && (!input.value || input.value.trim() === '') && c) {
+        input.value = c;
+      }
+    } catch (e) {
+      // noop
+    }
+  })();
+</script>
+<script>
 (function() {
     const form = document.getElementById('phAnalysisForm');
     if (!form) return;
@@ -648,12 +675,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Recuperar datos al cargar la página
     window.addEventListener('DOMContentLoaded', function() {
         const saved = localStorage.getItem(STORAGE_KEY);
+        const params = new URLSearchParams(window.location.search || '');
+        const queryConsecutivo = params.get('consecutivo');
         if (saved) {
             const data = JSON.parse(saved);
             Object.keys(data).forEach(key => {
-                // Soporta campos múltiples (arrays)
                 const field = form.querySelector(`[name="${key}"]`);
-                if (field) field.value = data[key];
+                if (!field) return;
+                // No sobrescribir el consecutivo si viene en la URL
+                if (key === 'consecutivo_no' && queryConsecutivo) return;
+                // No sobrescribir con vacío si el campo ya tiene valor
+                if ((data[key] === '' || data[key] === null) && field.value) return;
+                field.value = data[key];
             });
         }
     });

@@ -109,7 +109,7 @@ class PhAnalysisController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function processAll()
+    public function processAll(Request $request)
     {
         try {
             // Si hay IDs en sesión, solo procesar esos análisis
@@ -185,10 +185,56 @@ class PhAnalysisController extends Controller
                 'pending_items_count' => count($pendingItems),
             ]);
 
+            // Determinar consecutivo_no para prellenar si existe en alguno de los análisis
+            $consecutivoNo = null;
+            foreach ($pendingAnalyses as $pa) {
+                if (isset($pa->phAnalysis) && !empty($pa->phAnalysis->consecutivo_no)) {
+                    $consecutivoNo = $pa->phAnalysis->consecutivo_no;
+                    break;
+                }
+            }
+            // Fallback: si no se encontró en los pendientes, buscar en cualquier análisis (cualquier estado) del/los procesos cargados
+            if ($consecutivoNo === null) {
+                try {
+                    $processIds = collect($processes)->pluck('process_id')->filter()->unique()->values();
+                    if ($processIds->isNotEmpty()) {
+                        $relatedAnalysisIds = ServiceProcessDetail::whereIn('process_id', $processIds)
+                            ->whereHas('service', function($q){
+                                $q->whereRaw('LOWER(descripcion) LIKE ?', ['%ph%']);
+                            })
+                            ->pluck('id');
+                        if ($relatedAnalysisIds->isNotEmpty()) {
+                            $existing = PhAnalysis::whereIn('analysis_id', $relatedAnalysisIds)
+                                ->whereNotNull('consecutivo_no')
+                                ->where('consecutivo_no', '!=', '')
+                                ->orderByDesc('id')
+                                ->first();
+                            if ($existing) {
+                                $consecutivoNo = $existing->consecutivo_no;
+                            }
+                        }
+                    }
+                } catch (\Throwable $t) {
+                    Log::warning('processAll fallback consecutivo lookup failed', ['message' => $t->getMessage()]);
+                }
+            }
+
+            // Permitir prellenar por query param, igual que en otras pantallas (?consecutivo=XXXX)
+            $queryConsecutivo = trim((string) $request->query('consecutivo', ''));
+            if ($queryConsecutivo !== '') {
+                $consecutivoNo = $queryConsecutivo;
+            }
+
+            Log::info('PhAnalysisController@processAll consecutivo prefill', [ 'consecutivo_no' => $consecutivoNo, 'from_query' => $queryConsecutivo !== '' ? 'yes' : 'no' ]);
+
+            // Evitar que old() vacío tape el valor calculado en la vista
+            try { session()->forget('_old_input'); } catch (\Throwable $t) {}
+
             return view('lscefa::ph_analyses.process', [
                 'pendingAnalyses' => $pendingAnalyses,
                 'pendingItems' => $pendingItems,
                 'user' => Auth::user(),
+                'consecutivo_no' => $consecutivoNo,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in PhAnalysisController@processAll: ' . $e->getMessage(), [
@@ -206,7 +252,7 @@ class PhAnalysisController extends Controller
      * @param int $serviceId
      * @return \Illuminate\View\View
      */
-    public function phAnalysis($processId, $serviceId)
+    public function phAnalysis($processId, $serviceId, Request $request)
     {
         try {
             // Obtener el detalle del proceso de servicio que tenga un servicio con 'ph' en la descripción
@@ -227,32 +273,39 @@ class PhAnalysisController extends Controller
             // Construir ítems pendientes para la vista (cada ítem DEBE incluir analysis_id)
             $pendingItems = [];
             $pendingAnalyses = collect([$serviceProcessDetail]);
-            if ($phAnalysis) {
-                // Si tiene consecutivo, traer todos los análisis de pH con el mismo consecutivo y unir sus items_ensayo
-                if (!empty($phAnalysis->consecutivo_no)) {
-                    $siblings = PhAnalysis::where('consecutivo_no', $phAnalysis->consecutivo_no)->get();
-                    // Cargar los ServiceProcessDetail correspondientes para que la vista incluya todos en $pendingAnalyses
-                    $siblingAnalysisIds = $siblings->pluck('analysis_id')->unique()->values();
-                    if ($siblingAnalysisIds->isNotEmpty()) {
-                        $pendingAnalyses = ServiceProcessDetail::with(['process','service','phAnalysis'])
-                            ->whereIn('id', $siblingAnalysisIds)
-                            ->get();
-                    }
-                    foreach ($siblings as $sib) {
-                        if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
-                            foreach ($sib->items_ensayo as $item) {
-                                // Mostrar todos los ítems del consecutivo y asegurar association al analysis_id correcto
-                                $pendingItems[] = $item + ['analysis_id' => $sib->analysis_id];
-                            }
+
+            // Determinar el consecutivo objetivo priorizando el query param
+            $targetConsecutivo = null;
+            $queryConsecutivoEarly = trim((string) $request->query('consecutivo', ''));
+            if ($queryConsecutivoEarly !== '') {
+                $targetConsecutivo = $queryConsecutivoEarly;
+            } elseif ($phAnalysis && !empty($phAnalysis->consecutivo_no)) {
+                $targetConsecutivo = $phAnalysis->consecutivo_no;
+            }
+
+            if (!empty($targetConsecutivo)) {
+                // Cargar todos los análisis con el consecutivo indicado (de la URL o del registro actual)
+                $siblings = PhAnalysis::where('consecutivo_no', $targetConsecutivo)->get();
+                $siblingAnalysisIds = $siblings->pluck('analysis_id')->unique()->values();
+                if ($siblingAnalysisIds->isNotEmpty()) {
+                    $pendingAnalyses = ServiceProcessDetail::with(['process','service','phAnalysis'])
+                        ->whereIn('id', $siblingAnalysisIds)
+                        ->get();
+                }
+                foreach ($siblings as $sib) {
+                    if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
+                        foreach ($sib->items_ensayo as $item) {
+                            $pendingItems[] = $item + ['analysis_id' => $sib->analysis_id];
                         }
                     }
-                } else if (isset($phAnalysis->items_ensayo) && is_array($phAnalysis->items_ensayo)) {
-                    // Sin consecutivo, usar solo los ítems del análisis actual
-                    foreach ($phAnalysis->items_ensayo as $item) {
-                        $pendingItems[] = $item + ['analysis_id' => $serviceProcessDetail->id];
-                    }
+                }
+            } else if ($phAnalysis && isset($phAnalysis->items_ensayo) && is_array($phAnalysis->items_ensayo)) {
+                // Sin consecutivo definido, usar solo los ítems del análisis actual
+                foreach ($phAnalysis->items_ensayo as $item) {
+                    $pendingItems[] = $item + ['analysis_id' => $serviceProcessDetail->id];
                 }
             }
+
             // Si no hay registros existentes, preparar al menos una fila por defecto
             if (empty($pendingItems)) {
                 $pendingItems[] = [
@@ -276,6 +329,28 @@ class PhAnalysisController extends Controller
                 'pending_analyses_ids' => $pendingAnalyses->pluck('id')->all(),
             ]);
 
+            // Determinar consecutivo para prellenar (usar el mismo target priorizado arriba)
+            $consecutivoNo = $targetConsecutivo;
+            if ($consecutivoNo === null) {
+                if ($phAnalysis && !empty($phAnalysis->consecutivo_no)) {
+                    $consecutivoNo = $phAnalysis->consecutivo_no;
+                } else {
+                    foreach ($pendingAnalyses as $pa) {
+                        if (isset($pa->phAnalysis) && !empty($pa->phAnalysis->consecutivo_no)) {
+                            $consecutivoNo = $pa->phAnalysis->consecutivo_no;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Releer query para logging de consistencia (ya aplicado si existía)
+            $queryConsecutivo = $queryConsecutivoEarly;
+
+            Log::info('PhAnalysisController@phAnalysis consecutivo prefill', [ 'consecutivo_no' => $consecutivoNo, 'from_query' => $queryConsecutivo !== '' ? 'yes' : 'no' ]);
+
+            // Evitar que old() vacío tape el valor calculado en la vista
+            try { session()->forget('_old_input'); } catch (\Throwable $t) {}
+
             return view('lscefa::ph_analyses.process', [
                 'process' => $process,
                 'service' => $service,
@@ -284,6 +359,7 @@ class PhAnalysisController extends Controller
                 'pendingAnalyses' => $pendingAnalyses,
                 'pendingItems' => $pendingItems,
                 'user' => Auth::user(),
+                'consecutivo_no' => $consecutivoNo,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in PhAnalysisController@phAnalysis: ' . $e->getMessage(), [

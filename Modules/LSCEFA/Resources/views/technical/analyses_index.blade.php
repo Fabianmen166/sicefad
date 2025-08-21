@@ -133,6 +133,20 @@
                         $returnedDetails = collect();
                         foreach ($returned as $processId => $details) {
                             foreach ($details as $spd) {
+                                // Soportar entradas sintéticas para Fósforo (ya normalizadas con tipo)
+                                if (isset($spd->type) && $spd->type === 'phosphorus') {
+                                    $returnedDetails->push((object) [
+                                        'process_id' => $spd->process_id,
+                                        'service_id' => $spd->service_id,
+                                        'service_name' => $spd->service_name ?? ($spd->service->descripcion ?? 'Servicio'),
+                                        'type' => 'phosphorus',
+                                        'consecutivo_no' => $spd->consecutivo_no ?? null,
+                                        'review_date' => $spd->review_date ?? null,
+                                        'review_observations' => $spd->review_observations ?? null,
+                                    ]);
+                                    continue;
+                                }
+
                                 // Resolver el análisis asociado (pH o Conductividad)
                                 $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? null;
                                 if (!$analysis) { continue; }
@@ -164,12 +178,14 @@
                             ->map(function($group){
                                 $services = $group->pluck('service_name')->unique()->values()->all();
                                 $first = $group->first();
+                                // Tomar el primer consecutivo no vacío dentro del grupo
+                                $firstNonEmptyConsec = $group->pluck('consecutivo_no')->filter()->first();
                                 // Tomar la fecha de revisión más reciente del grupo
                                 $maxDate = $group->max(function($g){ return $g->review_date ? \Carbon\Carbon::parse($g->review_date) : null; });
                                 // Unir observaciones no vacías
                                 $observations = $group->pluck('review_observations')->filter()->unique()->values()->all();
                                 return (object) [
-                                    'consecutivo_no' => $first->consecutivo_no ?? null,
+                                    'consecutivo_no' => $firstNonEmptyConsec ?? null,
                                     'services' => $services,
                                     'review_date' => $maxDate,
                                     'observations' => $observations,
@@ -201,13 +217,17 @@
                                             // Construir ruta de acción según tipo
                                             $actionUrl = '#';
                                             if ($ref && $ref->type === 'ph') {
-                                                $actionUrl = route('lscefa.ph_analysis.show', [$ref->process_id, $ref->service_id]);
+                                                $actionUrl = route('lscefa.ph_analysis.show', [$ref->process_id, $ref->service_id]) . (isset($row->consecutivo_no) && $row->consecutivo_no ? ('?consecutivo=' . urlencode($row->consecutivo_no)) : '');
                                             } elseif ($ref && $ref->type === 'conductivity') {
                                                 $actionUrl = route('lscefa.conductivity_analysis.show', [$ref->process_id, $ref->service_id]);
+                                            } elseif ($ref && $ref->type === 'phosphorus') {
+                                                $actionUrl = route('lscefa.technical.analyses.phosphorus.process', [$ref->process_id, $ref->service_id]);
                                             }
                                         @endphp
                                         <tr>
-                                            <td class="align-middle">{{ $row->consecutivo_no ?? '—' }}</td>
+                                            <td class="align-middle">
+                                                <input type="text" class="form-control form-control-sm" value="{{ $row->consecutivo_no ?? '' }}" placeholder="—" readonly>
+                                            </td>
                                             <td class="align-middle">{{ $serviceText ?: '—' }}</td>
                                             <td class="align-middle">{{ $row->review_date ? \Carbon\Carbon::parse($row->review_date)->format('d/m/Y H:i') : '—' }}</td>
                                             <td class="align-middle">{{ $obsText }}</td>

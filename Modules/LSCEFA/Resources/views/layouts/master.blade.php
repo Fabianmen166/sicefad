@@ -300,7 +300,7 @@
                                 </a>
                             </li>
                         @endif
-                        
+
                         <!-- Menú de Administración - Solo visible para administradores -->
                         @if($isAdmin)
                             <li class="nav-item">
@@ -313,6 +313,18 @@
                                 <a href="{{ route('lscefa.quality.reviews.index') }}" class="nav-link {{ request()->routeIs('lscefa.quality.reviews.*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-clipboard-check"></i>
                                     <p>Revisiones</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.quality.reports.index') }}" class="nav-link {{ request()->routeIs('lscefa.quality.reports.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Informes</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.admin.process_history.index') }}" class="nav-link {{ request()->routeIs('lscefa.admin.process_history.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-history"></i>
+                                    <p>Historial</p>
                                 </a>
                             </li>
                         @endif

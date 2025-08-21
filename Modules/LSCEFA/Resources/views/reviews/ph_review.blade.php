@@ -78,10 +78,21 @@
                     <h1>Revisión de Análisis de pH</h1>
                 </div>
                 <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('lscefa.quality.reviews.index') }}">Inicio</a></li>
-                        <li class="breadcrumb-item active">Revisión de Análisis</li>
-                    </ol>
+                    <div class="d-flex justify-content-end align-items-center">
+                        <form action="{{ route('lscefa.quality.reviews.show', $analysis->id) }}" method="GET" class="mr-3">
+                            <input type="hidden" name="type" value="{{ $type ?? 'ph' }}">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="consecutivo" class="form-control" placeholder="Filtrar por consecutivo" value="{{ request('consecutivo', $effectiveConsecutivo ?? '') }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit"><i class="fas fa-filter"></i></button>
+                                </div>
+                            </div>
+                        </form>
+                        <ol class="breadcrumb float-sm-right mb-0">
+                            <li class="breadcrumb-item"><a href="{{ route('lscefa.quality.reviews.index') }}">Inicio</a></li>
+                            <li class="breadcrumb-item active">Revisión de Análisis</li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,7 +136,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label">Número de Consecutivo</label>
-                                <div class="value-display">{{ $analysis->consecutivo_no ?? 'N/A' }}</div>
+                                <div class="value-display">{{ $effectiveConsecutivo ?? ($analysis->consecutivo_no ?? 'N/A') }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -553,11 +564,11 @@
                             <form action="{{ route('lscefa.quality.reviews.accept', $analysis->id) }}" method="POST">
                                 @csrf
                                 <div class="modal-body">
-                                    <p>¿Está seguro de aprobar este análisis de pH?</p>
+                                    <p>¿Está seguro de aprobar este análisis de {{ strtoupper($type ?? 'ph') }}?</p>
                                     <div class="form-group">
                                         <label for="approval_notes">Observaciones (opcional):</label>
                                         <textarea class="form-control" id="approval_notes" name="observations" rows="3"></textarea>
-                                        <input type="hidden" name="analysis_type" value="ph">
+                                        <input type="hidden" name="analysis_type" value="{{ $type ?? 'ph' }}">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -592,7 +603,7 @@
                                         @error('observations')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
-                                        <input type="hidden" name="analysis_type" value="ph">
+                                        <input type="hidden" name="analysis_type" value="{{ $type ?? 'ph' }}">
                                     </div>
                                 </div>
                                 <div class="modal-footer">
