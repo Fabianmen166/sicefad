@@ -9,7 +9,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Procesamiento por Lotes - Análisis de Textura</h1>
+                    <h1>{{ isset($analysis) ? 'Editar Análisis Rechazado - Textura' : 'Procesamiento por Lotes - Análisis de Textura' }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
@@ -41,8 +41,11 @@
                 </div>
             @endif
 
-            <form action="{{ route('lscefa.technical.analyses.texture.batch_store') }}" method="POST" id="textureBatchForm">
+            <form action="{{ isset($analysis) ? route('lscefa.technical.analyses.texture.update_rejected', $analysis->id) : route('lscefa.technical.analyses.texture.batch_store') }}" method="POST" id="textureBatchForm">
                 @csrf
+                @if(isset($analysis))
+                    <input type="hidden" name="_method" value="POST">
+                @endif
                 <!-- Barra de Navegación Horizontal (SOLO UNA VEZ) -->
                 <div class="row mb-3">
                     <div class="col-12">
@@ -76,9 +79,9 @@
                         <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">
-                                    Información General del Análisis - Procesos
+                                    Información General del Análisis - Cotización
                                     @foreach($processes as $process)
-                                        {{ $loop->first ? '' : ', ' }}{{ $process->process_id }}
+                                        {{ $loop->first ? '' : ', ' }}{{ $process->quote_id }}
                                     @endforeach
                                 </h3>
                             </div>
@@ -88,37 +91,37 @@
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="consecutivo_no">Consecutivo No.</label>
-                                            <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no" required>
+                                            <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no" value="{{ isset($analysis) ? $analysis->consecutive_no : '' }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="fecha_analisis">Fecha del análisis</label>
-                                            <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis" required>
+                                            <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis" value="{{ isset($analysis) ? $analysis->analysis_date : '' }}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="nombre_analista">Nombre del Analista</label>
-                                            <input type="text" class="form-control" id="nombre_analista" name="nombre_analista">
+                                            <input type="text" class="form-control" id="nombre_analista" name="nombre_analista" value="{{ isset($analysis) ? $analysis->analyst_name : '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="metodologia_utilizada">Metodología Utilizada</label>
-                                            <input type="text" class="form-control" id="metodologia_utilizada" name="metodologia_utilizada">
+                                            <input type="text" class="form-control" id="metodologia_utilizada" name="metodologia_utilizada" value="{{ isset($analysis) ? $analysis->methodology_used : '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="codigo_termometro">Código Termómetro</label>
-                                            <input type="text" class="form-control" id="codigo_termometro" name="codigo_termometro">
+                                            <input type="text" class="form-control" id="codigo_termometro" name="codigo_termometro" value="{{ isset($analysis) ? $analysis->thermometer_code : '' }}">
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="form-group">
                                             <label for="codigo_hidrometro">Código Hidrómetro</label>
-                                            <input type="text" class="form-control" id="codigo_hidrometro" name="codigo_hidrometro">
+                                            <input type="text" class="form-control" id="codigo_hidrometro" name="codigo_hidrometro" value="{{ isset($analysis) ? $analysis->hydrometer_code : '' }}">
                                         </div>
                                     </div>
                                 </div>
@@ -172,7 +175,7 @@
                                     <div class="col-12">
                                         <div class="card">
                                             <div class="card-header">
-                                                <h3 class="card-title">Controles Analíticos - Proceso {{ $process->process_id }}</h3>
+                                                <h3 class="card-title">Controles Analíticos - Cotización {{ $process->quote_id }}</h3>
                                             </div>
                                             <div class="card-body">
                                                 
@@ -322,7 +325,7 @@
                                                     <table class="table table-bordered table-sm" id="muestras_table_{{ $index }}" style="min-width: 1800px;">
                                                         <thead class="table-light">
                                                             <tr>
-                                                                <th rowspan="2">ID Proceso</th>
+                                                                <th rowspan="2">ID Cotización</th>
                                                                 <th rowspan="2">Nombre de la muestra</th>
                                                                 <th rowspan="2">Peso (g)</th>
                                                                 <th colspan="6">Reporte de Resultados Análisis</th>
@@ -440,11 +443,11 @@
                                                                 </td>
                                                             </tr>
                                                             <!-- Duplicado B -->
-                                                            @php $processIds = $processes->pluck('process_id')->toArray(); @endphp
+                                                            @php $quoteIds = $processes->pluck('quote_id')->toArray(); @endphp
                                                             @foreach($processes as $pIndex => $proc)
                                                                 @if($pIndex >= 2)
                                                                 <tr class="muestra-row">
-                                                                    <td>{{ $proc->process_id }}</td>
+                                                                    <td>{{ $proc->quote_id }}</td>
                                                                     <td>
                                                                         <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][{{ $pIndex }}][codigo_interno]" value="Duplicado B">
                                                                     </td>
@@ -638,7 +641,7 @@
                         <div class="card">
                             <div class="card-body text-center">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save me-2"></i>Guardar Todos los Análisis
+                                    <i class="fas fa-save me-2"></i>{{ isset($analysis) ? 'Actualizar Análisis Rechazado' : 'Guardar Todos los Análisis' }}
                                 </button>
                                 <a href="{{ route('lscefa.technical.analyses.texture.index') }}" class="btn btn-secondary btn-lg">
                                     <i class="fas fa-arrow-left me-2"></i>Regresar
@@ -1278,17 +1281,17 @@ $(document).ready(function() {
         const processIndex = $(this).data('process-index');
         const muestraIndex = muestraIndexes[processIndex];
         
-        // En el script de agregar fila, modificar para que solo las primeras N filas tengan ID de proceso
-        const processIds = @json($processes->pluck('process_id'));
-        // Contar solo las filas de muestra con ID de proceso (excluyendo blanco y filas sin ID)
+        // En el script de agregar fila, modificar para que solo las primeras N filas tengan ID de cotización
+        const quoteIds = @json($processes->pluck('quote_id'));
+        // Contar solo las filas de muestra con ID de cotización (excluyendo blanco y filas sin ID)
         const muestraRows = $(`#muestras_container_${processIndex} .muestra-row td:first-child`).filter(function(){ return $(this).text().trim() !== ''; }).length;
-        if (muestraRows >= processIds.length) {
-            alert('No hay más muestras para procesar: ya se han asignado todos los procesos seleccionados.');
+        if (muestraRows >= quoteIds.length) {
+            alert('No hay más muestras para procesar: ya se han asignado todas las cotizaciones seleccionadas.');
             return;
         }
         let idCell = '';
-        if (processIds.length > 0) {
-            idCell = processIds[muestraRows];
+        if (quoteIds.length > 0) {
+            idCell = quoteIds[muestraRows];
         }
         const newMuestra = `
             <tr class="muestra-row">
@@ -1432,6 +1435,254 @@ $(document).ready(function() {
     $('.muestra-row').each(function() {
         calcularPorcentajesTextura($(this));
     });
+
+    // Si estamos editando un análisis rechazado, cargar los datos existentes
+    @if(isset($analysis))
+        // Cargar datos del análisis rechazado
+        const analysisData = @json($analysis);
+        
+        console.log('Cargando datos del análisis rechazado:', analysisData);
+        
+        // Cargar TODOS los campos básicos del análisis
+        if (analysisData.consecutive_no) $('#consecutivo_no').val(analysisData.consecutive_no);
+        if (analysisData.analysis_date) $('#fecha_analisis').val(analysisData.analysis_date);
+        if (analysisData.analyst_name) $('#nombre_analista').val(analysisData.analyst_name);
+        if (analysisData.methodology_used) $('#metodologia_utilizada').val(analysisData.methodology_used);
+        if (analysisData.thermometer_code) $('#codigo_termometro').val(analysisData.thermometer_code);
+        if (analysisData.hydrometer_code) $('#codigo_hidrometro').val(analysisData.hydrometer_code);
+        if (analysisData.equipment_used) $('#equipment_used').val(analysisData.equipment_used);
+        if (analysisData.method_interval) $('#method_interval').val(analysisData.method_interval);
+        
+        // Cargar campos de precisión analítica (Duplicados A y B) desde analytical_controls
+        @if(isset($precisionData) && count($precisionData) > 0)
+            console.log('Cargando datos de precisión analítica:', @json($precisionData));
+            
+            @foreach($precisionData as $precision)
+                @if(($precision['tipo'] ?? '') === 'duplicado_a')
+                    // Duplicado A
+                    $('input[name="analyses[0][duplicado_a_codigo]"]').val('{{ $precision['codigo_interno'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_promedio_arena]"]').val('{{ $precision['arena_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_promedio_arcilla]"]').val('{{ $precision['arcilla_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_promedio_limo]"]').val('{{ $precision['limo_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_dpr_arena]"]').val('{{ $precision['dpr_arena'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_dpr_arcilla]"]').val('{{ $precision['dpr_arcilla'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_dpr_limo]"]').val('{{ $precision['dpr_limo'] ?? '' }}');
+                    $('select[name="analyses[0][duplicado_a_aceptabilidad]"]').val('{{ $precision['aceptabilidad_control'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_a_observaciones]"]').val('{{ $precision['observaciones'] ?? '' }}');
+                @elseif(($precision['tipo'] ?? '') === 'duplicado_b')
+                    // Duplicado B
+                    $('input[name="analyses[0][duplicado_b_codigo]"]').val('{{ $precision['codigo_interno'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_promedio_arena]"]').val('{{ $precision['arena_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_promedio_arcilla]"]').val('{{ $precision['arcilla_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_promedio_limo]"]').val('{{ $precision['limo_1'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_dpr_arena]"]').val('{{ $precision['dpr_arena'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_dpr_arcilla]"]').val('{{ $precision['dpr_arcilla'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_dpr_limo]"]').val('{{ $precision['dpr_limo'] ?? '' }}');
+                    $('select[name="analyses[0][duplicado_b_aceptabilidad]"]').val('{{ $precision['aceptabilidad_control'] ?? '' }}');
+                    $('input[name="analyses[0][duplicado_b_observaciones]"]').val('{{ $precision['observaciones'] ?? '' }}');
+                @endif
+            @endforeach
+        @endif
+        
+        // Cargar campos de material de referencia (Exactitud) desde analytical_controls
+        @if(isset($accuracyData) && count($accuracyData) > 0)
+            console.log('Cargando datos de exactitud:', @json($accuracyData));
+            
+            @foreach($accuracyData as $accuracy)
+                @if(($accuracy['tipo'] ?? '') === 'material_referencia')
+                    $('input[name="analyses[0][material_referencia_lote]"]').val('{{ $accuracy['codigo_interno'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_esperado_arena]"]').val('{{ $accuracy['arena_1'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_esperado_arcilla]"]').val('{{ $accuracy['arcilla_1'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_esperado_limo]"]').val('{{ $accuracy['limo_1'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_obtenido_arena]"]').val('{{ $accuracy['dpr_arena'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_obtenido_arcilla]"]').val('{{ $accuracy['dpr_arcilla'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_obtenido_limo]"]').val('{{ $accuracy['dpr_limo'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_aceptabilidad]"]').val('{{ $accuracy['aceptabilidad_control'] ?? '' }}');
+                    $('input[name="analyses[0][material_referencia_observaciones]"]').val('{{ $accuracy['observaciones'] ?? '' }}');
+                @endif
+            @endforeach
+        @endif
+        
+        // Cargar observaciones generales
+        if (analysisData.general_observations) $('textarea[name*="[observaciones_generales]"]').val(analysisData.general_observations);
+        
+        // Cargar muestras si existen
+        if (analysisData.samples) {
+            try {
+                const samples = JSON.parse(analysisData.samples);
+                if (Array.isArray(samples) && samples.length > 0) {
+                    // Limpiar filas existentes excepto la primera (blanco)
+                    $('#muestras_container_0 tr:not(:first)').remove();
+                    
+                    // Agregar cada muestra
+                    samples.forEach((sample, index) => {
+                        if (index === 0) {
+                            // Actualizar la primera fila (blanco)
+                            $('#muestras_container_0 tr:first').find('input[name*="[peso]"]').val(sample.peso || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[lecturas_40s]"]').val(sample.lecturas_40s || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[temperatura_40s]"]').val(sample.temperatura_40s || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[lecturas_2h]"]').val(sample.lecturas_2h || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[temperatura_2h]"]').val(sample.temperatura_2h || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[humedad]"]').val(sample.humedad || '');
+                            $('#muestras_container_0 tr:first').find('input[name*="[observaciones]"]').val(sample.observaciones || '');
+                        } else {
+                            // Agregar nuevas filas para muestras adicionales
+                            const newRow = `
+                                <tr class="muestra-row">
+                                    <td></td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="analyses[0][items][${index}][codigo_interno]" value="${sample.codigo_interno || ''}">
+                                    </td>
+                                    <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[0][items][${index}][peso]" value="${sample.peso || ''}" placeholder="0.0000"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[0][items][${index}][lecturas_40s]" value="${sample.lecturas_40s || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[0][items][${index}][temperatura_40s]" value="${sample.temperatura_40s || ''}" placeholder="0.0"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[0][items][${index}][lecturas_2h]" value="${sample.lecturas_2h || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[0][items][${index}][temperatura_2h]" value="${sample.temperatura_2h || ''}" placeholder="0.0"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[0][items][${index}][lecturas_corregidas_40s]" value="${sample.lecturas_corregidas_40s || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[0][items][${index}][lecturas_corregidas_2h]" value="${sample.lecturas_corregidas_2h || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[0][items][${index}][humedad]" value="${sample.humedad || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[0][items][${index}][porcentaje_arena]" value="${sample.porcentaje_arena || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[0][items][${index}][porcentaje_arcilla]" value="${sample.porcentaje_arcilla || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[0][items][${index}][porcentaje_limo]" value="${sample.porcentaje_limo || ''}" placeholder="0.00" readonly></td>
+                                    <td>
+                                        <select class="form-control form-control-sm clase-textural" name="analyses[0][items][${index}][clase_textural]">
+                                            <option value="">Seleccionar</option>
+                                            <option value="Arena" ${sample.clase_textural === 'Arena' ? 'selected' : ''}>Arena</option>
+                                            <option value="Arena Limosa" ${sample.clase_textural === 'Arena Limosa' ? 'selected' : ''}>Arena Limosa</option>
+                                            <option value="Arena Arcillosa" ${sample.clase_textural === 'Arena Arcillosa' ? 'selected' : ''}>Arena Arcillosa</option>
+                                            <option value="Limo" ${sample.clase_textural === 'Limo' ? 'selected' : ''}>Limo</option>
+                                            <option value="Limo Arenoso" ${sample.clase_textural === 'Limo Arenoso' ? 'selected' : ''}>Limo Arenoso</option>
+                                            <option value="Limo Arcilloso" ${sample.clase_textural === 'Limo Arcilloso' ? 'selected' : ''}>Limo Arcilloso</option>
+                                            <option value="Arcilla" ${sample.clase_textural === 'Arcilla' ? 'selected' : ''}>Arcilla</option>
+                                            <option value="Arcilla Arenosa" ${sample.clase_textural === 'Arcilla Arenosa' ? 'selected' : ''}>Arcilla Arenosa</option>
+                                            <option value="Arcilla Limosa" ${sample.clase_textural === 'Arcilla Limosa' ? 'selected' : ''}>Arcilla Limosa</option>
+                                            <option value="Franco Arenoso" ${sample.clase_textural === 'Franco Arenoso' ? 'selected' : ''}>Franco Arenoso</option>
+                                            <option value="Franco Limoso" ${sample.clase_textural === 'Franco Limoso' ? 'selected' : ''}>Franco Limoso</option>
+                                            <option value="Franco Arcilloso" ${sample.clase_textural === 'Franco Arcilloso' ? 'selected' : ''}>Franco Arcilloso</option>
+                                            <option value="Franco" ${sample.clase_textural === 'Franco' ? 'selected' : ''}>Franco</option>
+                                        </select>
+                                    </td>
+                                    <td><textarea class="form-control form-control-sm" name="analyses[0][items][${index}][observaciones]" rows="2" placeholder="Observaciones">${sample.observaciones || ''}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            $('#muestras_container_0').append(newRow);
+                        }
+                    });
+                    
+                    // Recalcular porcentajes para todas las filas
+                    $('#muestras_container_0 .muestra-row').each(function() {
+                        calcularPorcentajesTextura($(this));
+                    });
+                    
+                    // Actualizar contador de muestras
+                    updateSampleCount(0);
+                }
+            } catch (e) {
+                console.error('Error parsing samples:', e);
+            }
+        }
+        
+        // Cargar controles analíticos si existen
+        if (analysisData.analytical_controls) {
+            try {
+                const controls = JSON.parse(analysisData.analytical_controls);
+                if (Array.isArray(controls) && controls.length > 0) {
+                    console.log('Cargando controles analíticos:', controls);
+                    
+                    // Limpiar controles existentes
+                    $('#controles_container_0 tr:not(:first)').remove();
+                    
+                    // Agregar cada control analítico
+                    controls.forEach((control, index) => {
+                        if (index === 0) {
+                            // Actualizar la primera fila
+                            $('#controles_container_0 tr:first').find('input[name*="[codigo_interno]"]').val(control.codigo_interno || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[peso_muestra]"]').val(control.peso_muestra || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[lectura_40s]"]').val(control.lectura_40s || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[temperatura_40s]"]').val(control.temperatura_40s || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[lectura_2h]"]').val(control.lectura_2h || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[temperatura_2h]"]').val(control.temperatura_2h || '');
+                            $('#controles_container_0 tr:first').find('input[name*="[humedad]"]').val(control.humedad || '');
+                            $('#controles_container_0 tr:first').find('textarea[name*="[observaciones]"]').val(control.observaciones || '');
+                        } else {
+                            // Agregar nuevas filas para controles adicionales
+                            const newControlRow = `
+                                <tr class="control-row">
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][codigo_interno]" value="${control.codigo_interno || ''}">
+                                    </td>
+                                    <td><input type="number" step="0.0001" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][peso_muestra]" value="${control.peso_muestra || ''}" placeholder="0.0000"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][lectura_40s]" value="${control.lectura_40s || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.1" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][temperatura_40s]" value="${control.temperatura_40s || ''}" placeholder="0.0"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][lectura_2h]" value="${control.lectura_2h || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.1" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][temperatura_2h]" value="${control.temperatura_2h || ''}" placeholder="0.0"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[0][analytical_controls][${index}][lectura_corregida_40s]" value="${control.lectura_corregida_40s || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[0][analytical_controls][${index}][lectura_corregida_2h]" value="${control.lectura_corregida_2h || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][humedad]" value="${control.humedad || ''}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[0][analytical_controls][${index}][porcentaje_arena]" value="${control.porcentaje_arena || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[0][analytical_controls][${index}][porcentaje_arcilla]" value="${control.porcentaje_arcilla || ''}" placeholder="0.00" readonly></td>
+                                    <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[0][analytical_controls][${index}][porcentaje_limo]" value="${control.porcentaje_limo || ''}" placeholder="0.00" readonly></td>
+                                    <td>
+                                        <select class="form-control form-control-sm clase-textural" name="analyses[0][analytical_controls][${index}][clase_textural]">
+                                            <option value="">Seleccionar</option>
+                                            <option value="Arena" ${control.clase_textural === 'Arena' ? 'selected' : ''}>Arena</option>
+                                            <option value="Arena Limosa" ${control.clase_textural === 'Arena Limosa' ? 'selected' : ''}>Arena Limosa</option>
+                                            <option value="Arena Arcillosa" ${control.clase_textural === 'Arena Arcillosa' ? 'selected' : ''}>Arena Arcillosa</option>
+                                            <option value="Limo" ${control.clase_textural === 'Limo' ? 'selected' : ''}>Limo</option>
+                                            <option value="Limo Arenoso" ${control.clase_textural === 'Limo Arenoso' ? 'selected' : ''}>Limo Arenoso</option>
+                                            <option value="Limo Arcilloso" ${control.clase_textural === 'Limo Arcilloso' ? 'selected' : ''}>Limo Arcilloso</option>
+                                            <option value="Arcilla" ${control.clase_textural === 'Arcilla' ? 'selected' : ''}>Arcilla</option>
+                                            <option value="Arcilla Arenosa" ${control.clase_textural === 'Arcilla Arenosa' ? 'selected' : ''}>Arcilla Arenosa</option>
+                                            <option value="Arcilla Limosa" ${control.clase_textural === 'Arcilla Limosa' ? 'selected' : ''}>Arcilla Limosa</option>
+                                            <option value="Franco Arenoso" ${control.clase_textural === 'Franco Arenoso' ? 'selected' : ''}>Franco Arenoso</option>
+                                            <option value="Franco Limoso" ${control.clase_textural === 'Franco Limoso' ? 'selected' : ''}>Franco Limoso</option>
+                                            <option value="Franco Arcilloso" ${control.clase_textural === 'Franco Arcilloso' ? 'selected' : ''}>Franco Arcilloso</option>
+                                            <option value="Franco" ${control.clase_textural === 'Franco' ? 'selected' : ''}>Franco</option>
+                                        </select>
+                                    </td>
+                                    <td><textarea class="form-control form-control-sm" name="analyses[0][analytical_controls][${index}][observaciones]" rows="2" placeholder="Observaciones">${control.observaciones || ''}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-control" title="Eliminar control">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            $('#controles_container_0').append(newControlRow);
+                        }
+                    });
+                    
+                    // Recalcular porcentajes para todas las filas de controles
+                    $('#controles_container_0 .control-row').each(function() {
+                        calcularPorcentajesTextura($(this));
+                    });
+                    
+                    // Actualizar contador de controles
+                    updateControlCount(0);
+                }
+            } catch (e) {
+                console.error('Error parsing analytical controls:', e);
+            }
+        }
+        
+        // Sincronizar campos generales a todos los procesos después de cargar los datos
+        setTimeout(() => {
+            const fields = ['consecutivo_no', 'fecha_analisis', 'nombre_analista', 'metodologia_utilizada', 'codigo_termometro', 'codigo_hidrometro'];
+            fields.forEach(function(field) {
+                const value = $('#' + field).val();
+                if (value) {
+                    $('[id^="' + field + '_"]').each(function() {
+                        $(this).val(value);
+                    });
+                }
+            });
+        }, 500);
+    @endif
     });
 
     // === PROMEDIOS DE DUPLICADOS EN PRECISIÓN ANALÍTICA ===

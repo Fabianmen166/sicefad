@@ -353,17 +353,17 @@
 
                             <!-- Items de Ensayo Tab -->
                             <div class="tab-pane fade" id="items-content" role="tabpanel" aria-labelledby="items-tab">
-                                <!-- Procesos Seleccionados -->
+                                <!-- Cotizaciones Seleccionadas -->
                                 <div class="card mt-4">
                                     <div class="card-header">
-                                        <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
+                                        <h4><i class="fas fa-list"></i> Cotizaciones a Procesar</h4>
                                     </div>
                                     <div class="card-body">
                                 @foreach($pendingProcesses as $process)
                                 <div class="process-item mb-4">
                                     <div class="card">
                                         <div class="card-header">
-                                            <h5>Proceso: {{ $process->process_id }}</h5>
+                                            <h5>Cotización: {{ $process->quote_id }}</h5>
                                             <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
                                         </div>
                                         <div class="card-body">
@@ -387,7 +387,7 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Items para este proceso -->
+                                            <!-- Items para esta cotización -->
                                             <div class="items-container">
                                                 <h6>Items de Ensayo</h6>
                                                 <div class="table-responsive" style="overflow-x: auto; min-width: 100%;">
@@ -542,7 +542,7 @@
 let itemIndices = {};
 let duplicadoIndex = {{ count($pendingProcesses) }};
 
-// Inicializar índices de items para cada proceso
+// Inicializar índices de items para cada cotización
 @foreach($pendingProcesses as $process)
     itemIndices['{{ $process->process_id }}'] = 1;
 @endforeach

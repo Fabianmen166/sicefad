@@ -128,6 +128,10 @@ Route::middleware(['lang'])->group(function(){
                 ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch.post');
             Route::post('/technical/analyses/texture/batch-store', [TextureAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.texture.batch_store')
                 ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch_store');
+            Route::get('/technical/analyses/texture/{id}/edit-rejected', [TextureAnalysisController::class, 'editRejected'])->name('lscefa.technical.analyses.texture.edit_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.edit_rejected');
+            Route::post('/technical/analyses/texture/{id}/update-rejected', [TextureAnalysisController::class, 'updateRejected'])->name('lscefa.technical.analyses.texture.update_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.update_rejected');
             Route::get('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'show'])->name('lscefa.technical.analyses.texture.show');
             Route::get('/technical/analyses/texture/{id}/edit', [TextureAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.texture.edit');
             Route::put('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'update'])->name('lscefa.technical.analyses.texture.update');

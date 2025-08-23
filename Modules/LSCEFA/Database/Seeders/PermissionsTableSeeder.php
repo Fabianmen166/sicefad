@@ -1504,6 +1504,8 @@ class PermissionsTableSeeder extends Seeder
             ['slug' => 'lscefa.technical.analyses.texture.update', 'name' => 'Actualizar análisis de textura', 'description' => 'Puede actualizar análisis de textura', 'description_english' => 'Can update texture analysis'],
             ['slug' => 'lscefa.technical.analyses.texture.destroy', 'name' => 'Eliminar análisis de textura', 'description' => 'Puede eliminar análisis de textura', 'description_english' => 'Can delete texture analysis'],
             ['slug' => 'lscefa.technical.analyses.texture.report', 'name' => 'Descargar reporte de textura', 'description' => 'Puede descargar reportes de análisis de textura', 'description_english' => 'Can download texture analysis reports'],
+            ['slug' => 'lscefa.technical.analyses.texture.edit_rejected', 'name' => 'Editar análisis de textura rechazado', 'description' => 'Puede editar análisis de textura que han sido rechazados', 'description_english' => 'Can edit rejected texture analysis'],
+            ['slug' => 'lscefa.technical.analyses.texture.update_rejected', 'name' => 'Actualizar análisis de textura rechazado', 'description' => 'Puede actualizar análisis de textura que han sido rechazados', 'description_english' => 'Can update rejected texture analysis'],
         ];
         foreach ($texture_permissions as $tp) {
             $perm = Permission::updateOrCreate(['slug' => $tp['slug']], [

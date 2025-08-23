@@ -212,14 +212,10 @@ class TextureAnalysisController extends Controller
 
     public function batchStore(Request $request)
     {
-        Log::info('BatchStore called', ['request_data' => $request->all()]);
-        $request->validate([
-            'analyses' => 'required|array',
-            'analyses.*.process_id' => 'required|exists:processes,process_id',
-            'analyses.*.service_id' => 'required|exists:services,services_id',
-        ]);
-        Log::info('DEBUG: validación pasada');
-
+        // Log para debug - ver todos los datos que llegan
+        Log::info('Datos completos recibidos en batchStore:', $request->all());
+        Log::info('Controles analíticos recibidos:', $request->analytical_controls ?? []);
+        
         try {
             DB::beginTransaction();
             $analysesInput = $request->input('analyses');
@@ -292,6 +288,7 @@ class TextureAnalysisController extends Controller
                         'user_id' => Auth::id(),
                         'process_id' => $analysisData['process_id'],
                         'service_id' => $analysisData['service_id'],
+                        'review_status' => 'pending',
                         'samples' => $samples,
                         'analytical_controls' => $controls,
                         'duplicate_a_code' => $analysisData['duplicate_a_code'] ?? null,
@@ -326,6 +323,138 @@ class TextureAnalysisController extends Controller
                     ]);
                     Log::info('Despues de BatchTextureAnalysis::create', ['id' => $batch->id, 'process_id' => $batch->process_id]);
                     Log::info('BatchTextureAnalysis created', ['id' => $batch->id, 'process_id' => $batch->process_id]);
+
+                    // Guardar controles analíticos individuales
+                    $analyticalControls = [];
+                    
+                    // Extraer datos de Duplicado A
+                    if (!empty($analysisData['duplicado_a_codigo'])) {
+                        $analyticalControls[] = [
+                            'identificacion' => $analysisData['duplicado_a_codigo'],
+                            'codigo_interno' => '',
+                            'arena_1' => $analysisData['duplicado_a_promedio_arena'] ?? '',
+                            'arcilla_1' => $analysisData['duplicado_a_promedio_arcilla'] ?? '',
+                            'limo_1' => $analysisData['duplicado_a_promedio_limo'] ?? '',
+                            'dpr_arena' => $analysisData['duplicado_a_dpr_arena'] ?? '',
+                            'dpr_arcilla' => $analysisData['duplicado_a_dpr_arcilla'] ?? '',
+                            'dpr_limo' => $analysisData['duplicado_a_dpr_limo'] ?? '',
+                            'aceptabilidad_control' => $analysisData['duplicado_a_aceptabilidad'] ?? '',
+                            'observaciones' => $analysisData['duplicado_a_observaciones'] ?? '',
+                        ];
+                    }
+                    
+                    // Extraer datos de Duplicado B
+                    if (!empty($analysisData['duplicado_b_codigo'])) {
+                        $analyticalControls[] = [
+                            'identificacion' => $analysisData['duplicado_b_codigo'],
+                            'codigo_interno' => '',
+                            'arena_1' => $analysisData['duplicado_b_promedio_arena'] ?? '',
+                            'arcilla_1' => $analysisData['duplicado_b_promedio_arcilla'] ?? '',
+                            'limo_1' => $analysisData['duplicado_b_promedio_limo'] ?? '',
+                            'dpr_arena' => $analysisData['duplicado_b_dpr_arena'] ?? '',
+                            'dpr_arcilla' => $analysisData['duplicado_b_dpr_arcilla'] ?? '',
+                            'dpr_limo' => $analysisData['duplicado_b_dpr_limo'] ?? '',
+                            'aceptabilidad_control' => $analysisData['duplicado_b_aceptabilidad'] ?? '',
+                            'observaciones' => $analysisData['duplicado_b_observaciones'] ?? '',
+                        ];
+                    }
+                    
+                    // Extraer datos de Material de Referencia (Exactitud)
+                    if (!empty($analysisData['material_referencia_lote'])) {
+                        $analyticalControls[] = [
+                            'identificacion' => 'Material de Referencia',
+                            'codigo_interno' => $analysisData['material_referencia_lote'] ?? '',
+                            'arena_1' => $analysisData['material_referencia_esperado_arena'] ?? '',
+                            'arcilla_1' => $analysisData['material_referencia_esperado_arcilla'] ?? '',
+                            'limo_1' => $analysisData['material_referencia_esperado_limo'] ?? '',
+                            'dpr_arena' => $analysisData['material_referencia_obtenido_arena'] ?? '',
+                            'dpr_arcilla' => $analysisData['material_referencia_obtenido_arcilla'] ?? '',
+                            'dpr_limo' => $analysisData['material_referencia_obtenido_limo'] ?? '',
+                            'aceptabilidad_control' => $analysisData['material_referencia_aceptabilidad'] ?? '',
+                            'observaciones' => $analysisData['material_referencia_observaciones'] ?? '',
+                        ];
+                    }
+                    
+                    // Guardar cada control en la tabla analytical_controls
+                    foreach ($analyticalControls as $control) {
+                        // Log para debug - ver qué datos llegan
+                        Log::info('Datos de control a guardar:', $control);
+                        
+                        // Obtener los nombres de las columnas de la tabla analytical_controls
+                        $columns = \Schema::getColumnListing('analytical_controls');
+                        
+                        $data = [
+                            'analysis_id' => $batch->id,
+                            'process_id' => $analysisData['process_id'],
+                            'analysis_type' => 'texture',
+                        ];
+                        
+                        // Mapeo flexible: acepta nombres antiguos y los mapea a los nuevos
+                        $jsonData = [
+                            'identificacion' => $control['identificacion'] ?? '',
+                            'codigo_interno' => $control['codigo_interno'] ?? '',
+                            'arena_1' => $control['arena_1'] ?? $control['valor_esperado'] ?? $control['arena'] ?? '',
+                            'arcilla_1' => $control['arcilla_1'] ?? $control['valor_leido'] ?? $control['arcilla'] ?? '',
+                            'limo_1' => $control['limo_1'] ?? $control['porcentaje_error'] ?? $control['limo'] ?? '',
+                            'dpr_arena' => $control['dpr_arena'] ?? $control['dpr_arena_1'] ?? $control['dpr_arena_2'] ?? '',
+                            'dpr_arcilla' => $control['dpr_arcilla'] ?? $control['dpr_arcilla_1'] ?? $control['dpr_arcilla_2'] ?? '',
+                            'dpr_limo' => $control['dpr_limo'] ?? $control['dpr_limo_1'] ?? $control['dpr_limo_2'] ?? '',
+                            'aceptabilidad_control' => $control['aceptabilidad_control'] ?? $control['aceptabilidad'] ?? $control['aceptabilidad_dpr'] ?? '',
+                            'observaciones' => $control['observaciones'] ?? $control['obs'] ?? $control['comentarios'] ?? '',
+                        ];
+                        
+                        // Guardar todos los campos del control que coincidan con alguna columna
+                        foreach ($control as $key => $value) {
+                            if (in_array($key, $columns)) {
+                                $data[$key] = $value;
+                            }
+                        }
+                        
+                        // Guardar todo el control como JSON en la columna controles_analiticos usando los nombres de la tabla
+                        if (in_array('controles_analiticos', $columns)) {
+                            $data['controles_analiticos'] = json_encode($jsonData);
+                        }
+                        
+                        \Modules\LSCEFA\Entities\AnalyticalControl::create($data);
+                    }
+                    // Guardar datos de la tabla de Exactitud (material de referencia)
+                    if (isset($analysisData['material_referencia'])) {
+                        $ref = $analysisData['material_referencia'];
+                        $data = [
+                            'analysis_id' => $batch->id,
+                            'process_id' => $analysisData['process_id'],
+                            'analysis_type' => 'texture',
+                        ];
+                        // Mapeo para el JSON de exactitud igual que arriba
+                        $jsonMap = [
+                                'identificacion' => 'identificacion',
+                                'codigo_interno' => 'codigo_interno',
+                                'arena_1' => 'arena_1',
+                                'arcilla_1' => 'arcilla_1',
+                                'limo_1' => 'limo_1',
+                                'dpr_arena' => 'dpr_arena',
+                                'dpr_arcilla' => 'dpr_arcilla',
+                                'dpr_limo' => 'dpr_limo',
+                                'aceptabilidad_control' => 'aceptabilidad_control',
+                                'observaciones' => 'observaciones',
+                            ];
+                        $jsonData = [];
+                        foreach ($jsonMap as $from => $to) {
+                            if (isset($ref[$from])) {
+                                $jsonData[$to] = $ref[$from];
+                            }
+                        }
+                        foreach ($ref as $key => $value) {
+                            if (in_array($key, $columns)) {
+                                $data[$key] = $value;
+                            }
+                        }
+                        if (in_array('controles_analiticos', $columns)) {
+                            $data['controles_analiticos'] = json_encode($jsonData);
+                        }
+                        \Modules\LSCEFA\Entities\AnalyticalControl::create($data);
+                    }
+                    $batch->save();
                 } catch (\Exception $e) {
                     Log::error('Error creating BatchTextureAnalysis', [
                         'error' => $e->getMessage(),
@@ -415,5 +544,252 @@ class TextureAnalysisController extends Controller
     {
         $analysis = TextureAnalysis::with(['items', 'analyticalControls'])->findOrFail($id);
         return view('lscefa::analyses.texture.report', compact('analysis'));
+    }
+
+    /**
+     * Editar un análisis de textura rechazado
+     */
+    public function editRejected($id)
+    {
+        // Cargar el análisis con todas las relaciones necesarias
+        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with([
+            'analyticalControls',
+            'process',
+            'process.quote'
+        ])->findOrFail($id);
+        
+        // Verificar que el análisis esté rechazado
+        if ($analysis->review_status !== 'rejected') {
+            return redirect()->route('lscefa.technical.analyses.texture.index')
+                ->with('error', 'Este análisis no está rechazado o ya fue corregido.');
+        }
+
+        // Obtener el proceso y servicio asociados
+        $process = \Modules\LSCEFA\Models\Process::find($analysis->process_id);
+        $service = \Modules\LSCEFA\Models\Service::find($analysis->service_id);
+
+        // Crear un array de procesos con el proceso del análisis rechazado
+        $processes = collect([$process]);
+
+        // Cargar los controles analíticos desde la tabla analytical_controls
+        $analyticalControls = \Modules\LSCEFA\Entities\AnalyticalControl::where('analysis_id', $id)
+            ->where('analysis_type', 'texture')
+            ->get();
+
+        // Debug: Log detallado de la estructura de analytical_controls
+        \Log::info('Estructura completa de analytical_controls:', [
+            'total_controls' => $analyticalControls->count(),
+            'controls_data' => $analyticalControls->toArray()
+        ]);
+
+        // Extraer datos de Precisión Analítica y Exactitud desde los controles
+        $precisionData = [];
+        $accuracyData = [];
+        
+        foreach ($analyticalControls as $control) {
+            \Log::info('Procesando control individual:', [
+                'control_id' => $control->id,
+                'has_controles_analiticos' => isset($control->controles_analiticos),
+                'controles_analiticos_raw' => $control->controles_analiticos
+            ]);
+            
+            if (isset($control->controles_analiticos)) {
+                $controlData = json_decode($control->controles_analiticos, true);
+                
+                \Log::info('Control decodificado:', [
+                    'control_data' => $controlData,
+                    'identificacion' => $controlData['identificacion'] ?? 'NO_IDENTIFICACION'
+                ]);
+                
+                if ($controlData) {
+                    // Lógica mejorada para identificar el tipo de control
+                    $identificacion = strtolower($controlData['identificacion'] ?? '');
+                    
+                    if (str_contains($identificacion, 'duplicado a') || 
+                        (str_contains($identificacion, 'duplicado') && !str_contains($identificacion, 'b'))) {
+                        // Es Duplicado A
+                        $controlData['tipo'] = 'duplicado_a';
+                        $precisionData[] = $controlData;
+                        \Log::info('Agregado a precisionData (Duplicado A):', $controlData);
+                    } elseif (str_contains($identificacion, 'duplicado b') || 
+                               (str_contains($identificacion, 'duplicado') && !str_contains($identificacion, 'a'))) {
+                        // Es Duplicado B
+                        $controlData['tipo'] = 'duplicado_b';
+                        $precisionData[] = $controlData;
+                        \Log::info('Agregado a precisionData (Duplicado B):', $controlData);
+                    } elseif (str_contains($identificacion, 'material de referencia') || 
+                               str_contains($identificacion, 'referencia')) {
+                        // Es Material de Referencia
+                        $controlData['tipo'] = 'material_referencia';
+                        $accuracyData[] = $controlData;
+                        \Log::info('Agregado a accuracyData (Material de Referencia):', $controlData);
+                    } else {
+                        // Si no coincide con ninguno, intentar identificar por el contenido
+                        if (isset($controlData['arena_1']) && isset($controlData['arcilla_1'])) {
+                            // Si tiene datos de arena y arcilla, probablemente sea un duplicado
+                            if (count($precisionData) == 0) {
+                                $controlData['tipo'] = 'duplicado_a';
+                                $precisionData[] = $controlData;
+                                \Log::info('Agregado a precisionData (Duplicado A por contenido):', $controlData);
+                            } elseif (count($precisionData) == 1) {
+                                $controlData['tipo'] = 'duplicado_b';
+                                $precisionData[] = $controlData;
+                                \Log::info('Agregado a precisionData (Duplicado B por contenido):', $controlData);
+                            } else {
+                                $controlData['tipo'] = 'material_referencia';
+                                $accuracyData[] = $controlData;
+                                \Log::info('Agregado a accuracyData (Material de Referencia por contenido):', $controlData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Debug: Log todos los datos del análisis para verificar qué se está cargando
+        \Log::info('Datos del análisis rechazado cargado:', [
+            'id' => $analysis->id,
+            'consecutive_no' => $analysis->consecutive_no,
+            'analysis_date' => $analysis->analysis_date,
+            'analyst_name' => $analysis->analyst_name,
+            'samples_count' => is_array($analysis->samples) ? count($analysis->samples) : (is_string($analysis->samples) ? 'string' : 'null'),
+            'analytical_controls_count' => is_array($analysis->analytical_controls) ? count($analysis->analytical_controls) : (is_string($analysis->analytical_controls) ? 'string' : 'null'),
+            'precision_data' => $precisionData,
+            'accuracy_data' => $accuracyData,
+            'all_fillable_fields' => $analysis->toArray()
+        ]);
+
+        // Pasar el análisis rechazado y los datos extraídos para que se pueda editar
+        return view('lscefa::analyses.texture.batch_process', compact('processes', 'analysis', 'precisionData', 'accuracyData'));
+    }
+
+    /**
+     * Actualizar un análisis de textura rechazado
+     */
+    public function updateRejected(Request $request, $id)
+    {
+        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::findOrFail($id);
+        
+        // Verificar que el análisis esté rechazado
+        if ($analysis->review_status !== 'rejected') {
+            return redirect()->route('lscefa.technical.analyses.texture.index')
+                ->with('error', 'Este análisis no está rechazado o ya fue corregido.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Validar los datos del formulario (usando los nombres de campos del formulario)
+            $request->validate([
+                'consecutivo_no' => 'required|string',
+                'fecha_analisis' => 'required|date',
+                'nombre_analista' => 'nullable|string',
+                'metodologia_utilizada' => 'nullable|string',
+                'codigo_termometro' => 'nullable|string',
+                'codigo_hidrometro' => 'nullable|string',
+                'equipment_used' => 'nullable|string',
+                'method_interval' => 'nullable|string',
+                'samples' => 'required|array',
+                'analytical_controls' => 'required|array',
+                'duplicate_a_code' => 'nullable|string',
+                'duplicate_a_avg_sand' => 'nullable|numeric',
+                'duplicate_a_avg_clay' => 'nullable|numeric',
+                'duplicate_a_avg_silt' => 'nullable|numeric',
+                'duplicate_a_dpr_sand' => 'nullable|numeric',
+                'duplicate_a_dpr_clay' => 'nullable|numeric',
+                'duplicate_a_dpr_silt' => 'nullable|numeric',
+                'duplicate_a_acceptability' => 'nullable|string',
+                'duplicate_a_observations' => 'nullable|string',
+                'duplicate_b_code' => 'nullable|string',
+                'duplicate_b_avg_sand' => 'nullable|numeric',
+                'duplicate_b_avg_clay' => 'nullable|numeric',
+                'duplicate_b_avg_silt' => 'nullable|numeric',
+                'duplicate_b_dpr_sand' => 'nullable|numeric',
+                'duplicate_b_dpr_clay' => 'nullable|numeric',
+                'duplicate_b_dpr_silt' => 'nullable|numeric',
+                'duplicate_b_acceptability' => 'nullable|string',
+                'duplicate_b_observations' => 'nullable|string',
+                'reference_material_expected_sand' => 'nullable|numeric',
+                'reference_material_expected_clay' => 'nullable|numeric',
+                'reference_material_expected_silt' => 'nullable|numeric',
+                'reference_material_obtained_sand' => 'nullable|numeric',
+                'reference_material_obtained_clay' => 'nullable|numeric',
+                'reference_material_obtained_silt' => 'nullable|numeric',
+                'reference_material_error_percent' => 'nullable|numeric',
+                'reference_material_acceptability' => 'nullable|string',
+                'reference_material_observations' => 'nullable|string',
+                'general_observations' => 'nullable|string',
+            ]);
+
+            // Actualizar el análisis con los nuevos datos (usando los nombres de campos del formulario)
+            $analysis->update([
+                'consecutive_no' => $request->consecutivo_no,
+                'analysis_date' => $request->fecha_analisis,
+                'analyst_name' => $request->nombre_analista,
+                'methodology_used' => $request->metodologia_utilizada,
+                'thermometer_code' => $request->codigo_termometro,
+                'hydrometer_code' => $request->codigo_hidrometro,
+                'equipment_used' => $request->equipment_used,
+                'method_interval' => $request->method_interval,
+                'samples' => json_encode($request->samples),
+                'analytical_controls' => json_encode($request->analytical_controls),
+                'duplicate_a_code' => $request->duplicate_a_code,
+                'duplicate_a_avg_sand' => $request->duplicate_a_avg_sand,
+                'duplicate_a_avg_clay' => $request->duplicate_a_avg_clay,
+                'duplicate_a_avg_silt' => $request->duplicate_a_avg_silt,
+                'duplicate_a_dpr_sand' => $request->duplicate_a_dpr_sand,
+                'duplicate_a_dpr_clay' => $request->duplicate_a_dpr_clay,
+                'duplicate_a_dpr_silt' => $request->duplicate_a_dpr_silt,
+                'duplicate_a_acceptability' => $request->duplicate_a_acceptability,
+                'duplicate_a_observations' => $request->duplicate_a_observations,
+                'duplicate_b_code' => $request->duplicate_b_code,
+                'duplicate_b_avg_sand' => $request->duplicate_b_avg_sand,
+                'duplicate_b_avg_clay' => $request->duplicate_b_avg_clay,
+                'duplicate_b_avg_silt' => $request->duplicate_b_avg_silt,
+                'duplicate_b_dpr_sand' => $request->duplicate_b_dpr_sand,
+                'duplicate_b_dpr_clay' => $request->duplicate_b_dpr_clay,
+                'duplicate_b_dpr_silt' => $request->duplicate_b_dpr_silt,
+                'duplicate_b_acceptability' => $request->duplicate_b_acceptability,
+                'duplicate_b_observations' => $request->duplicate_b_observations,
+                'reference_material_expected_sand' => $request->reference_material_expected_sand,
+                'reference_material_expected_clay' => $request->reference_material_expected_clay,
+                'reference_material_expected_silt' => $request->reference_material_expected_silt,
+                'reference_material_obtained_sand' => $request->reference_material_obtained_sand,
+                'reference_material_obtained_clay' => $request->reference_material_obtained_clay,
+                'reference_material_obtained_silt' => $request->reference_material_obtained_silt,
+                'reference_material_error_percent' => $request->reference_material_error_percent,
+                'reference_material_acceptability' => $request->reference_material_acceptability,
+                'reference_material_observations' => $request->reference_material_observations,
+                'general_observations' => $request->general_observations,
+                'review_status' => 'pending', // Cambiar a pending para que vuelva a revisión
+                'review_observations' => null, // Limpiar observaciones anteriores
+                'reviewed_by' => null,
+                'review_date' => null,
+            ]);
+
+            // Actualizar el estado del ServiceProcessDetail a completed
+            $spd = \Modules\LSCEFA\Models\ServiceProcessDetail::where('process_id', $analysis->process_id)
+                ->where('service_id', $analysis->service_id)
+                ->first();
+            
+            if ($spd) {
+                $spd->update(['status' => 'completed']);
+            }
+
+            DB::commit();
+
+            return redirect()->route('lscefa.technical.analyses.texture.index')
+                ->with('success', 'Análisis de textura corregido exitosamente. Ha sido enviado nuevamente para revisión.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating rejected texture analysis', [
+                'analysis_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withInput()->with('error', 'Error al actualizar el análisis: ' . $e->getMessage());
+        }
     }
 }

@@ -13,6 +13,8 @@ use Modules\LSCEFA\Models\TurbidityAnalysis;
 use Modules\LSCEFA\Models\HardnessAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
+use Modules\LSCEFA\Entities\BoronAnalysis;
+use Modules\LSCEFA\Entities\BoronAnalysisDetail;
 
 class ReviewController extends Controller
 {
@@ -57,6 +59,36 @@ class ReviewController extends Controller
                 });
             }
 
+            // Obtener análisis de textura SOLO si el detalle de proceso está completado
+            $textureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::all()->filter(function($item) {
+                if (!$item->process_id || !$item->service_id) return false;
+                $spd = \Modules\LSCEFA\Models\ServiceProcessDetail::where('process_id', $item->process_id)
+                    ->where('service_id', $item->service_id)
+                    ->first();
+                return $spd && $spd->status === 'completed';
+            });
+
+            // Transformar resultados de textura
+            $textureResults = $textureAnalyses->map(function($item) {
+                return $this->transformTextureAnalysis($item, 'texture');
+            });
+
+            // Obtener análisis de boro SOLO si el detalle de proceso está completado
+            $boronAnalyses = BoronAnalysisDetail::with(['process.quote.customer', 'service'])
+                ->whereHas('process.serviceProcessDetails', function($query) {
+                    $query->where('status', 'completed');
+                })
+                ->where(function($q) {
+                    $q->whereNull('review_status')
+                      ->orWhereNotIn('review_status', ['approved','rejected']);
+                })
+                ->get();
+
+            // Transformar resultados de boro
+            $boronResults = $boronAnalyses->map(function($item) {
+                return $this->transformBoronAnalysis($item, 'boron');
+            });
+
             // Aplicar filtro de búsqueda si existe
             if ($request->filled('q')) {
                 $search = trim($request->get('q'));
@@ -72,6 +104,13 @@ class ReviewController extends Controller
                 // Búsqueda para fósforo usando su relación process->quote->customer
                 $phosphorusAnalyses->where(function($q) use ($search){
                     $q->where('consecutivo_no', 'like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                          $qq->where('applicant', 'like', "%{$search}%");
+                      });
+                });
+                // Búsqueda para boro
+                $boronAnalyses->where(function($q) use ($search){
+                    $q->where('consecutive_no', 'like', "%{$search}%")
                       ->orWhereHas('process.quote.customer', function($qq) use ($search){
                           $qq->where('applicant', 'like', "%{$search}%");
                       });
@@ -92,7 +131,7 @@ class ReviewController extends Controller
             });
 
             // Combinar todos los resultados
-            $allResults = $phResults->concat($conductivityResults)->concat($phosphorusResults);
+            $allResults = $phResults->concat($conductivityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults);
 
             // Agrupar por consecutivo_no
             $groupedResults = $allResults->groupBy('consecutivo_no')->map(function($group) {
@@ -210,6 +249,83 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * Transforma un análisis de textura al formato común
+     */
+    protected function transformTextureAnalysis($analysis, $type)
+    {
+        $items = is_array($analysis->samples) ? $analysis->samples : [];
+        $firstItem = !empty($items) ? (object)$items[0] : null;
+        $process = null;
+        $quote = null;
+        $customer = null;
+        // Servicio: mostrar el tipo de análisis en texto
+        $serviceName = 'Textura';
+        return (object)[
+            'id' => $analysis->id,
+            'type' => $type, // Esto se usará para el badge arriba
+            'service_name' => $serviceName,
+            'analysis_id' => $analysis->id,
+            'consecutivo_no' => $analysis->consecutive_no, // Muestra
+            'fecha_analisis' => $analysis->analysis_date,
+            'codigo_probeta' => $analysis->consecutive_no, // Mostrar consecutivo como muestra
+            'codigo_equipo' => null,
+            'review_status' => $analysis->review_status ?? 'pending',
+            'user' => (object)['name' => $analysis->analyst_name], // Analista
+            'process' => $process,
+            'quote' => $quote,
+            'customer' => $customer,
+            'first_item' => $firstItem,
+            'created_at' => $analysis->created_at,
+            'items_ensayo' => $items
+        ];
+    }
+
+    /**
+     * Transforma un análisis de boro al formato común
+     */
+    protected function transformBoronAnalysis($analysis, $type)
+    {
+        // Para boro, cada fila es un item individual
+        $item = [
+            'identificacion' => $analysis->internal_code ?? 'N/A',
+            'peso_muestra' => $analysis->sample_weight ?? 'N/A',
+            'pw' => $analysis->pw ?? 'N/A',
+            'v_extractante' => $analysis->extractant_volume ?? 'N/A',
+            'lectura_blanco' => $analysis->blank_reading ?? 'N/A',
+            'factor_dilucion' => $analysis->dilution_factor ?? 'N/A',
+            'boro_disponible_mg_l' => $analysis->available_boron_mg_l ?? 'N/A',
+            'boro_disponible_mg_kg' => $analysis->available_boron_mg_kg ?? 'N/A',
+            'observaciones' => $analysis->item_observations ?? '',
+        ];
+
+        $process = $analysis->process ?? null;
+        $quote = $process->quote ?? null;
+        $customer = $quote->customer ?? null;
+        
+        // Servicio: mostrar el tipo de análisis en texto
+        $serviceName = 'Boro';
+        
+        return (object)[
+            'id' => $analysis->id,
+            'type' => $type, // Esto se usará para el badge arriba
+            'service_name' => $serviceName,
+            'analysis_id' => $analysis->id,
+            'consecutivo_no' => $analysis->consecutive_no ?? 'N/A',
+            'fecha_analisis' => $analysis->analysis_date,
+            'codigo_probeta' => $analysis->internal_code ?? 'N/A',
+            'codigo_equipo' => $analysis->equipment_used,
+            'review_status' => $analysis->review_status ?? 'pending',
+            'user' => (object)['name' => $analysis->analyst_name], // Analista
+            'process' => $process,
+            'quote' => $quote,
+            'customer' => $customer,
+            'first_item' => (object)$item,
+            'created_at' => $analysis->created_at,
+            'items_ensayo' => [$item]
+        ];
+    }
+
     // Ver detalle de un análisis para revisión
     public function show($id)
     {
@@ -252,58 +368,39 @@ class ReviewController extends Controller
                 $analysis = $pAnalysis;
                 $type = 'phosphorus';
             }
-        } elseif ($type === 'conductivity') {
-            // Normalizar estructuras para conductividad
-            if (isset($analysis->controles_analiticos)) {
-                if (is_string($analysis->controles_analiticos)) {
-                    $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
-                } elseif (is_array($analysis->controles_analiticos)) {
-                    $controles_analiticos = $analysis->controles_analiticos;
-                } elseif (is_object($analysis->controles_analiticos)) {
-                    $controles_analiticos = (array)$analysis->controles_analiticos;
-                }
-                // Asegurar array indexado y elementos como arrays
-                $controles_analiticos = array_values($controles_analiticos);
-                foreach ($controles_analiticos as $k => $ctrl) {
-                    if (is_object($ctrl)) { $controles_analiticos[$k] = (array)$ctrl; }
-                }
+        } elseif ($forcedType === 'texture') {
+            $batchTexture = \Modules\LSCEFA\Entities\BatchTextureAnalysis::find($id);
+            if ($batchTexture) {
+                $analysis = $batchTexture;
+                $type = 'texture';
             }
-
-            if (isset($analysis->precision_analitica)) {
-                if (is_string($analysis->precision_analitica)) {
-                    $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
-                } elseif (is_array($analysis->precision_analitica)) {
-                    $precision_analitica = $analysis->precision_analitica;
-                } elseif (is_object($analysis->precision_analitica)) {
-                    $precision_analitica = (array)$analysis->precision_analitica;
+        } elseif ($forcedType === 'boron') {
+            // Para boro, buscar directamente en BoronAnalysisDetail usando el ID
+            \Log::info('ReviewController@show: Buscando análisis de boro', ['id' => $id, 'forcedType' => $forcedType]);
+            
+            $analysis = BoronAnalysisDetail::with([
+                'process.quote',
+                'process.customer',
+                'service',
+            ])->find($id);
+            
+            \Log::info('ReviewController@show: Resultado búsqueda BoronAnalysisDetail', ['found' => !!$analysis]);
+            
+            if ($analysis) {
+                $type = 'boron';
+            } else {
+                // Si no se encuentra en BoronAnalysisDetail, buscar en BoronAnalysis
+                $analysis = BoronAnalysis::with([
+                    'process.quote',
+                    'process.customer',
+                    'service',
+                ])->find($id);
+                
+                \Log::info('ReviewController@show: Resultado búsqueda BoronAnalysis', ['found' => !!$analysis]);
+                
+                if ($analysis) {
+                    $type = 'boron';
                 }
-            }
-
-            // Fallback: si no hay veracidad_analitica pero existe campo legado 'veracidad', usarlo
-            if ((empty($analysis->veracidad_analitica) || (is_array($analysis->veracidad_analitica) && count($analysis->veracidad_analitica) === 0))
-                && isset($analysis->veracidad)) {
-                $legacy = $analysis->veracidad;
-                if (is_string($legacy)) { $legacy = json_decode($legacy, true) ?? []; }
-                if (is_object($legacy)) { $legacy = (array)$legacy; }
-                $legacy = array_values($legacy);
-                foreach ($legacy as $k => $v) { if (is_object($v)) { $legacy[$k] = (array)$v; } }
-                $analysis->veracidad_analitica = $legacy;
-            }
-
-            if (isset($analysis->veracidad_analitica)) {
-                if (is_string($analysis->veracidad_analitica)) {
-                    $veracidad = json_decode($analysis->veracidad_analitica, true) ?? [];
-                } elseif (is_array($analysis->veracidad_analitica)) {
-                    $veracidad = $analysis->veracidad_analitica;
-                } elseif (is_object($analysis->veracidad_analitica)) {
-                    $veracidad = (array)$analysis->veracidad_analitica;
-                }
-                // Forzar índices numéricos y normalizar elementos
-                $veracidad = array_values($veracidad);
-                foreach ($veracidad as $k => $v) {
-                    if (is_object($v)) { $veracidad[$k] = (array)$v; }
-                }
-                $analysis->veracidad_analitica = $veracidad;
             }
         }
 
@@ -343,6 +440,29 @@ class ReviewController extends Controller
                     if ($pAnalysis) {
                         $analysis = $pAnalysis;
                         $type = 'phosphorus';
+                    } else {
+                        // Buscar en análisis de boro - primero en BoronAnalysisDetail
+                        $boronAnalysisDetail = BoronAnalysisDetail::with([
+                            'process.quote',
+                            'process.customer',
+                            'service',
+                        ])->find($id);
+                        
+                        if ($boronAnalysisDetail) {
+                            $analysis = $boronAnalysisDetail;
+                            $type = 'boron';
+                        } else {
+                            // Si no se encuentra en BoronAnalysisDetail, buscar en BoronAnalysis
+                            $boronAnalysis = BoronAnalysis::with([
+                                'process.quote',
+                                'process.customer',
+                                'service',
+                            ])->find($id);
+                            if ($boronAnalysis) {
+                                $analysis = $boronAnalysis;
+                                $type = 'boron';
+                            }
+                        }
                     }
                 }
             }
@@ -365,6 +485,20 @@ class ReviewController extends Controller
                 $analyticalControl = AnalyticalControl::where('process_id', $analysis->process_id)->first();
             } catch (\Throwable $e) {
                 \Log::warning('No se pudo cargar AnalyticalControl en ReviewController@show (phosphorus): ' . $e->getMessage());
+                $analyticalControl = null;
+            }
+        } elseif ($type === 'boron') {
+            $detail = ServiceProcessDetail::where('process_id', $analysis->process_id)
+                ->where('service_id', $analysis->service_id)
+                ->first();
+            $process = $analysis->process ?? ($detail->process ?? null);
+            $quote = $process->quote ?? null;
+            $customer = $process->customer ?? ($quote->customer ?? null);
+            // Cargar controles analíticos ligados al proceso (si existen)
+            try {
+                $analyticalControl = AnalyticalControl::where('process_id', $analysis->process_id)->first();
+            } catch (\Throwable $e) {
+                \Log::warning('No se pudo cargar AnalyticalControl en ReviewController@show (boron): ' . $e->getMessage());
                 $analyticalControl = null;
             }
         } else {
@@ -393,9 +527,28 @@ class ReviewController extends Controller
             'ph' => 'lscefa::reviews.ph_review',
             'conductivity' => 'lscefa::reviews.conductivity_show',
             'phosphorus' => 'lscefa::reviews.phosphorus_review',
+            'texture' => 'lscefa::reviews.texture_readonly',
+            'boron' => 'lscefa::reviews.boron_readonly',
             default => 'lscefa::reviews.ph_review'
         };
         
+        // Si es textura, asegurar que samples y analytical_controls sean arrays
+        if ($type === 'texture') {
+            if (is_string($analysis->samples)) {
+                $analysis->samples = json_decode($analysis->samples, true) ?? [];
+            }
+            // Cargar controles analíticos desde la relación y mapear a la estructura esperada por la vista
+            $controls = $analysis->analyticalControls()->get()->map(function($ctrl) {
+                // Si los campos principales están vacíos, intentar decodificar el JSON
+                $json = $ctrl->controles_analiticos ?? null;
+                $extra = $json ? json_decode($json, true) : [];
+                // Mostrar todos los campos del JSON, aunque no existan en la tabla
+                return $extra;
+            })->toArray();
+            $analysis->analytical_controls = $controls;
+            return view($view, ['analysis' => $analysis]);
+        }
+
         // Asegurarse de que los ítems de ensayo estén disponibles en la vista
         $items_ensayo = [];
         
@@ -721,7 +874,7 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['nullable', 'string', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus'],
+            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus,texture,boron'],
         ]);
 
         // Buscar el análisis específico según el tipo
@@ -729,8 +882,12 @@ class ReviewController extends Controller
             $analysis = PhAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'conductivity') {
             $analysis = ConductivityAnalysis::findOrFail($id);
-        } else { // phosphorus
+        } elseif ($validated['analysis_type'] === 'phosphorus') {
             $analysis = PhosphorusAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'texture') {
+            $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'boron') {
+            $analysis = BoronAnalysisDetail::findOrFail($id);
         }
 
         // Actualizar el estado de revisión
@@ -741,6 +898,8 @@ class ReviewController extends Controller
         $analysis->reviewed_by = auth()->id();
         $analysis->review_date = now();
         $analysis->save();
+
+
 
         // Persistir solo los resultados por ítem en service_process_details.result
         try {
@@ -781,6 +940,25 @@ class ReviewController extends Controller
                                 'resultado' => $item['valor_leido'] ?? null,
                             ];
                         }
+                    } elseif ($validated['analysis_type'] === 'texture') {
+                        // Para textura, extraer datos de las muestras
+                        $samples = is_string($analysis->samples) ? json_decode($analysis->samples, true) : $analysis->samples;
+                        if (is_array($samples)) {
+                            foreach ($samples as $sample) {
+                                if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
+                                    $resultsOnly[] = [
+                                        'identificacion' => $sample['codigo_interno'] ?? null,
+                                        'resultado' => $sample['clase_textural'] ?? null,
+                                    ];
+                                }
+                            }
+                        }
+                    } elseif ($validated['analysis_type'] === 'boron') {
+                        // Para boro, extraer datos del análisis individual
+                        $resultsOnly[] = [
+                            'identificacion' => $analysis->internal_code ?? null,
+                            'resultado' => $analysis->available_boron_mg_kg ?? $analysis->available_boron_mg_l ?? null,
+                        ];
                     } else { // conductivity
                         foreach ($items as $item) {
                             if (is_object($item)) { $item = (array)$item; }
@@ -824,6 +1002,36 @@ class ReviewController extends Controller
                 }
             }
             
+            // Verificar análisis de textura
+            if ($validated['analysis_type'] === 'texture') {
+                // Para textura, verificar si hay otros análisis del mismo proceso
+                $otherTextureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $analysis->process_id)
+                    ->where('id', '!=', $analysis->id)
+                    ->get();
+                
+                foreach ($otherTextureAnalyses as $otherAnalysis) {
+                    if ($otherAnalysis->review_status !== 'approved') {
+                        $allApproved = false;
+                        break;
+                    }
+                }
+            }
+            
+            // Verificar análisis de boro
+            if ($validated['analysis_type'] === 'boron') {
+                // Para boro, verificar si hay otros análisis del mismo proceso
+                $otherBoronAnalyses = BoronAnalysis::where('process_id', $analysis->process_id)
+                    ->where('id', '!=', $analysis->id)
+                    ->get();
+                
+                foreach ($otherBoronAnalyses as $otherAnalysis) {
+                    if ($otherAnalysis->review_status !== 'approved') {
+                        $allApproved = false;
+                        break;
+                    }
+                }
+            }
+            
             // Si todos los análisis están aprobados, marcar el detalle como aprobado
             if ($allApproved) {
                 $detail->status = 'approved';
@@ -841,7 +1049,7 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['required', 'string', 'min:3', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus'],
+            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus,texture,boron'],
         ], [
             'observations.required' => 'Debe ingresar observaciones para rechazar el análisis.',
             'observations.min' => 'Las observaciones deben tener al menos :min caracteres.',
@@ -852,8 +1060,12 @@ class ReviewController extends Controller
             $analysis = PhAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'conductivity') {
             $analysis = ConductivityAnalysis::findOrFail($id);
-        } else { // phosphorus
+        } elseif ($validated['analysis_type'] === 'phosphorus') {
             $analysis = PhosphorusAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'texture') {
+            $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'boron') {
+            $analysis = BoronAnalysisDetail::findOrFail($id);
         }
 
         // Actualizar el estado de revisión
@@ -863,8 +1075,8 @@ class ReviewController extends Controller
         $analysis->review_date = now();
         $analysis->save();
 
-        // Marcar el detalle como rechazado
-        if ($validated['analysis_type'] === 'phosphorus') {
+        // Marcar el detalle según el tipo de análisis
+        if ($validated['analysis_type'] === 'phosphorus' || $validated['analysis_type'] === 'boron') {
             $detail = ServiceProcessDetail::where('process_id', $analysis->process_id)
                 ->where('service_id', $analysis->service_id)
                 ->first();
@@ -872,7 +1084,13 @@ class ReviewController extends Controller
             $detail = $analysis->analysis;
         }
         if ($detail) {
-            $detail->status = 'rejected';
+            if ($validated['analysis_type'] === 'texture' || $validated['analysis_type'] === 'boron') {
+                // Para textura y boro, poner en pending para que aparezca en la tabla de análisis devueltos
+                $detail->status = 'pending';
+            } else {
+                // Para otros análisis, mantener como rejected
+                $detail->status = 'rejected';
+            }
             $detail->save();
         }
 
@@ -919,6 +1137,25 @@ class ReviewController extends Controller
                             'identificacion' => $item['identificacion'] ?? null,
                             'resultado' => $resultado,
                         ];
+                    }
+                } else {
+                    // Verificar si es un análisis de textura
+                    $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $detail->process_id)
+                        ->where('service_id', $detail->service_id)
+                        ->first();
+                    
+                    if ($textureAnalysis) {
+                        $samples = is_string($textureAnalysis->samples) ? json_decode($textureAnalysis->samples, true) : $textureAnalysis->samples;
+                        if (is_array($samples)) {
+                            foreach ($samples as $sample) {
+                                if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
+                                    $resultsOnly[] = [
+                                        'identificacion' => $sample['codigo_interno'] ?? null,
+                                        'resultado' => $sample['clase_textural'] ?? null,
+                                    ];
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -969,4 +1206,5 @@ class ReviewController extends Controller
             ->route('lscefa.quality.reviews.index')
             ->with('success', 'Proceso rechazado correctamente.');
     }
+
 }

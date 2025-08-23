@@ -147,11 +147,11 @@
                                     continue;
                                 }
 
-                                // Resolver el análisis asociado (pH o Conductividad)
-                                $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? null;
+                                // Resolver el análisis asociado (pH, Conductividad o Textura)
+                                $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? $spd->batchTextureAnalysis ?? null;
                                 if (!$analysis) { continue; }
 
-                                $type = $spd->phAnalysis ? 'ph' : ($spd->conductivityAnalysis ? 'conductivity' : null);
+                                $type = $spd->phAnalysis ? 'ph' : ($spd->conductivityAnalysis ? 'conductivity' : ($spd->batchTextureAnalysis ? 'texture' : null));
                                 $returnedDetails->push((object) [
                                     'process_id' => $spd->process_id,
                                     'service_id' => $spd->service_id,
@@ -222,6 +222,14 @@
                                                 $actionUrl = route('lscefa.conductivity_analysis.show', [$ref->process_id, $ref->service_id]);
                                             } elseif ($ref && $ref->type === 'phosphorus') {
                                                 $actionUrl = route('lscefa.technical.analyses.phosphorus.process', [$ref->process_id, $ref->service_id]);
+                                            } elseif ($ref && $ref->type === 'texture') {
+                                                // Para textura, necesitamos el ID del análisis rechazado, no del proceso
+                                                $textureAnalysis = $spd->batchTextureAnalysis;
+                                                if ($textureAnalysis) {
+                                                    $actionUrl = route('lscefa.technical.analyses.texture.edit_rejected', $textureAnalysis->id);
+                                                } else {
+                                                    $actionUrl = '#';
+                                                }
                                             }
                                         @endphp
                                         <tr>

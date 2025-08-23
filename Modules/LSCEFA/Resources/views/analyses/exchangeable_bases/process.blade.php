@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <p><strong>ID Proceso:</strong> {{ $process->process_id }}</p>
+                            <p><strong>ID Cotización:</strong> {{ $process->quote_id }}</p>
                             <p><strong>Cliente:</strong> {{ $process->customer->nombre ?? 'N/A' }}</p>
                         </div>
                         <div class="col-md-6">

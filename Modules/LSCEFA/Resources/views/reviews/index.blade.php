@@ -85,6 +85,7 @@
                             <h3 class="card-title mb-0">
                                 <i class="fas fa-flask mr-2"></i>
                                 Análisis #{{ $analysis->consecutivo_no ?? 'N/A' }}
+                                <span class="badge bg-dark analysis-type-badge">{{ $analysis->service_name ?? ucfirst($analysis->type) }}</span>
                                 @foreach($analysis->analysis_types ?? [] as $type)
                                     @if(isset($typeClasses[$type]) && isset($typeTexts[$type]))
                                     <span class="badge {{ $typeClasses[$type] }} analysis-type-badge">
@@ -116,11 +117,11 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p><strong>Muestra:</strong> {{ $analysis->codigo_probeta ?? 'N/A' }}</p>
-                                        <p><strong>Equipo:</strong> {{ $analysis->codigo_equipo ?? 'N/A' }}</p>
+                                        <!-- <p><strong>Equipo:</strong> {{ $analysis->codigo_equipo ?? 'N/A' }}</p> -->
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Analista:</strong> {{ $analysis->user->name ?? 'N/A' }}</p>
-                                        <p><strong>Cliente:</strong> {{ $analysis->customer->applicant ?? 'N/A' }}</p>
+                                        <!-- <p><strong>Cliente:</strong> {{ $analysis->customer->applicant ?? 'N/A' }}</p> -->
                                     </div>
                                 </div>
                                 

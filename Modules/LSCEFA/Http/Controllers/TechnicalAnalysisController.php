@@ -19,7 +19,7 @@ class TechnicalAnalysisController extends Controller
         $processes = Process::with([
                 'quote',
                 'serviceProcessDetails' => function($q){
-                    $q->with(['service', 'phAnalysis', 'conductivityAnalysis']);
+                    $q->with(['service', 'phAnalysis', 'conductivityAnalysis', 'batchTextureAnalysis']);
                 }
             ])
             ->orderBy('reception_date', 'desc')
@@ -44,14 +44,20 @@ class TechnicalAnalysisController extends Controller
         }
 
         // Calcular 'devueltos' a nivel global (no paginado) para no perder análisis por páginas
-        $returnedQuery = ServiceProcessDetail::with(['service', 'phAnalysis', 'conductivityAnalysis'])
-            ->where('status', 'rejected')
+        $returnedQuery = ServiceProcessDetail::with(['service', 'phAnalysis', 'conductivityAnalysis', 'batchTextureAnalysis'])
+            ->where(function($q){
+                $q->where('status', 'rejected')
+                  ->orWhere('status', 'pending');
+            })
             ->where(function($q){
                 $q->whereHas('phAnalysis', function($qa){
                         $qa->whereIn('review_status', ['returned', 'rejected']);
                     })
                   ->orWhereHas('conductivityAnalysis', function($qb){
                         $qb->whereIn('review_status', ['returned', 'rejected']);
+                    })
+                  ->orWhereHas('batchTextureAnalysis', function($qc){
+                        $qc->whereIn('review_status', ['rejected']);
                     });
             })
             ->get();

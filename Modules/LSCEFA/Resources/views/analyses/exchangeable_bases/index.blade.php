@@ -54,7 +54,7 @@
                             <thead>
                                 <tr>
                                     <th><input type="checkbox" id="selectAll"></th>
-                                    <th>ID Proceso</th>
+                                    <th>ID Cotización</th>
                                     <th>Servicio</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
@@ -73,7 +73,7 @@
                                     @if($exchangeableBasesService && $exchangeableBasesService->status === 'pending')
                                         <tr data-process-id="{{ $process->process_id }}" data-service-type="exchangeable_bases">
                                             <td><input type="checkbox" class="process-checkbox" value="{{ $process->process_id }}"></td>
-                                            <td>{{ $process->process_id }}</td>
+                                            <td>{{ $process->quote_id }}</td>
                                             <td>{{ $exchangeableBasesService->service->descripcion ?? 'Análisis de Bases Cambiables' }}</td>
                                             <td><span class="badge badge-warning">Pendiente</span></td>
                                             <td>

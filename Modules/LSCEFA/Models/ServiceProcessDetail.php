@@ -34,4 +34,9 @@ class ServiceProcessDetail extends Model
     {
         return $this->hasOne(ConductivityAnalysis::class, 'analysis_id');
     }
+
+    public function batchTextureAnalysis()
+    {
+        return $this->hasOne(\Modules\LSCEFA\Entities\BatchTextureAnalysis::class, 'process_id', 'process_id');
+    }
 } 
