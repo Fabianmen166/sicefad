@@ -36,6 +36,16 @@ class LSCEFAServiceProvider extends ServiceProvider
         // Registrar los middlewares
         $this->app['router']->aliasMiddleware('lscefa.role', CheckLSCEFARole::class);
         $this->app['router']->aliasMiddleware('lscefa.redirect', RedirectIfNotLSCEFA::class);
+        
+        // Registrar comandos del módulo
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Modules\LSCEFA\Console\Commands\CheckAnalyticalControls::class,
+                \Modules\LSCEFA\Console\Commands\FixAnalyticalControls::class,
+                \Modules\LSCEFA\Console\Commands\FixSpecificControl::class,
+                \Modules\LSCEFA\Console\Commands\TestHumidityAnalysis::class,
+            ]);
+        }
     }
 
     /**

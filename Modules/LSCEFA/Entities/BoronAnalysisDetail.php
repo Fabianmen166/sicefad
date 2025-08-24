@@ -59,7 +59,10 @@ class BoronAnalysisDetail extends Model
         'test_items',
         
         // Observaciones generales
-        'general_observations'
+        'general_observations',
+        
+        // Estado de revisión
+        'review_status'
     ];
 
     protected $casts = [

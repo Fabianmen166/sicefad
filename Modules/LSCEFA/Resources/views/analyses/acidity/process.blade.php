@@ -3,361 +3,353 @@
 @section('title', 'Procesar Análisis de Carbono Orgánico Total')
 
 @section('content')
-    <div class="content-wrapper">
-        <!-- Content Header -->
+<div class="content-wrapper p-0 m-0" style="max-width: 100%;">
+    <!-- Content Header -->
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>Se encontraron los siguientes errores:</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Se encontraron los siguientes errores:</strong>
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    <!-- Main Content -->
+    <form action="{{ route('lscefa.technical.analyses.acidity.store') }}" method="POST" id="form-acidez" class="w-100">
+        @csrf
+        <input type="hidden" name="process_id" value="{{ $process->process_id }}">
 
+        <section class="content p-0 m-0">
+            <div class="container-fluid p-0 m-0">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        {{ session('error') }}
+                    </div>
+                @endif
 
-        <!-- Main Content -->
-        <form action="{{ route('lscefa.technical.analyses.acidity.store') }}" method="POST" id="form-acidez">
-            @csrf
-            <input type="hidden" name="process_id" value="{{ $process->process_id }}">
-
-
-            <section class="content">
-                <div class="container-fluid">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible">
-                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    <!-- INFORMACIÓN GENERAL -->
-                    <div class="card">
-                        <div class="card-header text-center">
-                            <h3 class="card-title mb-0">Información General</h3>
-                        </div>
-                        <div class="card-body">
-                            <!-- Primera fila -->
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="proceso">Procesos Involucrados</label>
-                                        <input type="text" class="form-control" id="proceso"
-                                            value="{{ $process->process_id }}" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="servicio">Servicios Involucrados</label>
-                                        <input type="text" class="form-control" id="servicio" value="Acidez" readonly>
-                                        <!-- Valor fijo o eliminar si no es necesario -->
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="analista" class="form-label-fixed">Analista</label>
-                                        <input type="text" class="form-control form-control-sm" id="analista"
-                                            value="">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="consecutivo_no" class="form-label-fixed">Consecutivo No.</label>
-                                        <input type="text" class="form-control form-control-sm" id="consecutivo_no"
-                                            name="consecutivo_no">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="fecha_analisis" class="form-label-fixed">Fecha del Análisis</label>
-                                        <input type="date" class="form-control form-control-sm" id="fecha_analisis"
-                                            name="fecha_analisis" value="{{ old('fecha_analisis') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="unidades_reporte_equipo" class="form-label-fixed">Unidades de reporte
-                                            equipo</label>
-                                        <input type="text" class="form-control form-control-sm"
-                                            name="unidades_reporte_equipo" id="unidades_reporte_equipo"
-                                            value="{{ old('unidades_reporte_equipo', 'g/100g') }}">
-                                    </div>
+                <!-- INFORMACIÓN GENERAL -->
+                <div class="card border-0 shadow-none">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="card-title mb-0">Información General</h3>
+                    </div>
+                    <div class="card-body p-3">
+                        <!-- Primera fila -->
+                        <div class="row g-3">
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="proceso">Procesos Involucrados</label>
+                                    <input type="text" class="form-control form-control-sm" id="proceso"
+                                        value="{{ $process->process_id }}" readonly>
                                 </div>
                             </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="servicio">Servicios Involucrados</label>
+                                    <input type="text" class="form-control form-control-sm" id="servicio" value="Acidez" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="analista">Analista</label>
+                                    <input type="text" class="form-control form-control-sm" id="analista"
+                                        value="{{ Auth::user()->name ?? '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="consecutivo_no">Consecutivo No.</label>
+                                    <input type="text" class="form-control form-control-sm" id="consecutivo_no"
+                                        name="consecutivo_no">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="fecha_analisis">Fecha del Análisis</label>
+                                    <input type="date" class="form-control form-control-sm" id="fecha_analisis"
+                                        name="fecha_analisis" value="{{ old('fecha_analisis') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="unidades_reporte_equipo">Unidades de reporte equipo</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                        name="unidades_reporte_equipo" id="unidades_reporte_equipo"
+                                        value="{{ old('unidades_reporte_equipo', 'g/100g') }}">
+                                </div>
+                            </div>
+                        </div>
 
-                            <!-- Segunda fila -->
-                            <div class="row mt-3">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="nombre_metodo" class="form-label-fixed">Nombre del Método</label>
-                                        <input type="text" class="form-control form-control-sm" name="nombre_metodo"
-                                            id="nombre_metodo" value="{{ old('nombre_metodo', 'NTC 5403:2021') }}">
-                                    </div>
+                        <!-- Segunda fila -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="nombre_metodo">Nombre del Método</label>
+                                    <input type="text" class="form-control form-control-sm" name="nombre_metodo"
+                                        id="nombre_metodo" value="{{ old('nombre_metodo', 'NTC 5403:2021') }}">
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="equipo_utilizado" class="form-label-fixed">Equipo utilizado</label>
-                                        <input type="text" class="form-control form-control-sm" name="equipo_utilizado"
-                                            id="equipo_utilizado" value="{{ old('equipo_utilizado') }}">
-                                    </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="equipo_utilizado">Equipo utilizado</label>
+                                    <input type="text" class="form-control form-control-sm" name="equipo_utilizado"
+                                        id="equipo_utilizado" value="{{ old('equipo_utilizado') }}">
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="intervalo_metodo" class="form-label-fixed">Intervalo del método</label>
-                                        <input type="text" class="form-control form-control-sm" name="intervalo_metodo"
-                                            id="intervalo_metodo" value="{{ old('intervalo_metodo', '0.1 - 15%') }}">
-                                    </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="intervalo_metodo">Intervalo del método</label>
+                                    <input type="text" class="form-control form-control-sm" name="intervalo_metodo"
+                                        id="intervalo_metodo" value="{{ old('intervalo_metodo', '0.1 - 15%') }}">
                                 </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <label for="resolucion_instrumental" class="form-label-fixed">Resolución
-                                            instrumental</label>
-                                        <input type="text" class="form-control form-control-sm"
-                                            name="resolucion_instrumental" id="resolucion_instrumental"
-                                            value="{{ old('resolucion_instrumental') }}">
-                                    </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="resolucion_instrumental">Resolución instrumental</label>
+                                    <input type="text" class="form-control form-control-sm"
+                                        name="resolucion_instrumental" id="resolucion_instrumental"
+                                        value="{{ old('resolucion_instrumental') }}">
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- CONTROLES DE CALIDAD -->
-                    <div class="card mt-3">
-                        <div class="card-header py-2">
-                            <h6 class="mb-0">CONTROLES DE CALIDAD</h6>
+                <!-- CONTROLES DE CALIDAD -->
+                <div class="card mt-3 border-0 shadow-none">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h6 class="mb-0">CONTROLES DE CALIDAD</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <!-- Muestra fortificada -->
+                        <div class="border p-3 mb-3 rounded">
+                            <h6 class="mb-3 text-center bg-secondary text-white py-2 rounded">Muestra fortificada porcentaje de Recuperación</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Identificación de muestra</label>
+                                        <input type="text" id="identificacion_mf"
+                                            name="controles_analiticos[identificacion_mf]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_mf') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor referencia</label>
+                                        <input type="number" step="any" id="valor_referencia"
+                                            name="controles_analiticos[valor_referencia]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.valor_referencia') }}"
+                                            oninput="calcularError()">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor obtenido</label>
+                                        <input type="number" step="any" id="valor_obtenido"
+                                            name="controles_analiticos[valor_obtenido]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.valor_obtenido') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>%REC</label>
+                                        <input type="text" id="controles_analiticos[recuperacion]"
+                                            name="controles_analiticos[recuperacion]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Aceptable/no aceptable</label>
+                                        <input type="text" id="aceptable_fortificada"
+                                            name="controles_analiticos[aceptable_fortificada]"
+                                            class="form-control form-control-sm" readonly>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-2">
 
-                            <!-- Muestra fortificada -->
-                            <div class="border p-3 mb-3">
-                                <h6 class="mb-3 text-center bg-secondary text-white py-2">Muestra fortificada porcentaje de
-                                    Recuperación</h6>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Identificación de muestra</label>
-                                            <input type="text" id="identificacion_mf"
-                                                name="controles_analiticos[identificacion_mf]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_mf') }}">
-                                        </div>
+                        <!-- %Error (Material de Referencia) -->
+                        <div class="border p-3 mb-3 rounded">
+                            <h6 class="mb-3 text-center bg-secondary text-white py-2 rounded">%Error</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Identificación de muestra</label>
+                                        <input type="text" id="identificacion_mr"
+                                            name="controles_analiticos[identificacion_mr]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_mr') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor referencia</label>
-                                            <input type="number" step="any" id="valor_referencia"
-                                                name="controles_analiticos[valor_referencia]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.valor_referencia') }}"
-                                                oninput="calcularError()">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor referencia</label>
+                                        <input type="number" step="any" id="valor_referencia"
+                                            name="valor_referencia" class="form-control form-control-sm"
+                                            value="{{ old('valor_referencia') }}" oninput="calcularError()">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor obtenido</label>
-                                            <input type="number" step="any" id="valor_obtenido"
-                                                name="controles_analiticos[valor_obtenido]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.valor_obtenido') }}">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor obtenido</label>
+                                        <input type="number" step="any" id="valor_obtenido"
+                                            name="valor_obtenido" class="form-control form-control-sm"
+                                            value="{{ old('valor_obtenido') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">%REC</label>
-                                            <input type="text" id="controles_analiticos[recuperacion]"
-                                                name="controles_analiticos[recuperacion]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>%ERROR</label>
+                                        <input type="text" id="error_analitico" name="error_analitico"
+                                            value="{{ old('error_analitico') }}" class="form-control form-control-sm"
+                                            readonly>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Aceptable/no aceptable</label>
-                                            <input type="text" id="aceptable_fortificada"
-                                                name="controles_analiticos[aceptable_fortificada]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Aceptable/no aceptable</label>
+                                        <input type="text" id="aceptable_referencia"
+                                            name="controles_analiticos[aceptable_referencia]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- %Error (Material de Referencia) -->
-                            <div class="border p-3 mb-3">
-                                <h6 class="mb-3 text-center bg-secondary text-white py-2">%Error</h6>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Identificación de muestra</label>
-                                            <input type="text" id="identificacion_mr"
-                                                name="controles_analiticos[identificacion_mr]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_mr') }}">
-                                        </div>
+                        <!-- Diferencia porcentual Relativa (DPR) -->
+                        <div class="border p-3 mb-3 rounded">
+                            <h6 class="mb-3 text-center bg-secondary text-white py-2 rounded">Diferencia porcentual Relativa (DPR)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Identificación de muestra</label>
+                                        <input type="text" id="identificacion_dm"
+                                            name="controles_analiticos[identificacion_dm]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_dm') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor referencia</label>
-                                            <input type="number" step="any" id="valor_referencia"
-                                                name="valor_referencia" class="form-control form-control-sm"
-                                                value="{{ old('valor_referencia') }}" oninput="calcularError()">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor Leído M1</label>
+                                        <input type="number" step="any" id="replica_1"
+                                            name="controles_analiticos[replica_1]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.replica_1') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor obtenido</label>
-                                            <input type="number" step="any" id="valor_obtenido"
-                                                name="valor_obtenido" class="form-control form-control-sm"
-                                                value="{{ old('valor_obtenido') }}">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor Leído M2</label>
+                                        <input type="number" step="any" id="replica_2"
+                                            name="controles_analiticos[replica_2]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.replica_2') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">%ERROR</label>
-                                            <input type="text" id="error_analitico" name="error_analitico"
-                                                value="{{ old('error_analitico') }}" class="form-control form-control-sm"
-                                                readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>%DPR</label>
+                                        <input type="text" id="dpr" name="controles_analiticos[dpr]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Aceptable/no aceptable</label>
-                                            <input type="text" id="aceptable_referencia"
-                                                name="controles_analiticos[aceptable_referencia]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Aceptable/no aceptable</label>
+                                        <input type="text" id="aceptable_duplicado"
+                                            name="controles_analiticos[aceptable_duplicado]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Diferencia porcentual Relativa (DPR) -->
-                            <div class="border p-3 mb-3">
-                                <h6 class="mb-3 text-center bg-secondary text-white py-2">Diferencia porcentual Relativa
-                                    (DPR)</h6>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Identificación de muestra</label>
-                                            <input type="text" id="identificacion_dm"
-                                                name="controles_analiticos[identificacion_dm]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_dm') }}">
-                                        </div>
+                        <!-- Blanco del método -->
+                        <div class="border p-3 mb-3 rounded">
+                            <h6 class="mb-3 text-center bg-secondary text-white py-2 rounded">Blanco del método</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Identificación de muestra</label>
+                                        <input type="text" id="identificacion_bm"
+                                            name="controles_analiticos[identificacion_bm]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.identificacion_bm') }}">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor Leído M1</label>
-                                            <input type="number" step="any" id="replica_1"
-                                                name="controles_analiticos[replica_1]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.replica_1') }}">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>LCM</label>
+                                        <input type="number" step="any" id="limite_cuantificacion_metodo"
+                                            name="controles_analiticos[limite_cuantificacion_metodo]"
+                                            class="form-control form-control-sm"
+                                            oninput="evaluarAceptabilidadBlanco()">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor Leído M2</label>
-                                            <input type="number" step="any" id="replica_2"
-                                                name="controles_analiticos[replica_2]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.replica_2') }}">
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Valor leído</label>
+                                        <input type="number" step="any" id="controles_analiticos[valor_leido]"
+                                            name="controles_analiticos[valor_leido]"
+                                            class="form-control form-control-sm"
+                                            oninput="evaluarAceptabilidadBlanco()">
                                     </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">%DPR</label>
-                                            <input type="text" id="dpr" name="controles_analiticos[dpr]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label>Rango del metodo</label>
+                                        <input type="number" step="any" id="rango_metodo"
+                                            name="controles_analiticos[rango_metodo]"
+                                            class="form-control form-control-sm"
+                                            value="{{ old('controles_analiticos.rango_metodo') }}"
+                                            oninput="evaluarAceptabilidadBlanco()">
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Aceptable/no aceptable</label>
-                                            <input type="text" id="aceptable_duplicado"
-                                                name="controles_analiticos[aceptable_duplicado]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label>Aceptable/no aceptable</label>
+                                        <input type="text" id="aceptable_blanco"
+                                            name="controles_analiticos[aceptable_blanco]"
+                                            class="form-control form-control-sm" readonly>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Blanco del método -->
-                            <div class="border p-3 mb-3">
-                                <h6 class="mb-3 text-center bg-secondary text-white py-2">Blanco del método</h6>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Identificación de muestra</label>
-                                            <input type="text" id="identificacion_bm"
-                                                name="controles_analiticos[identificacion_bm]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.identificacion_bm') }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">LCM</label>
-                                            <input type="number" step="any" id="limite_cuantificacion_metodo"
-                                                name="controles_analiticos[limite_cuantificacion_metodo]"
-                                                class="form-control form-control-sm"
-                                                oninput="evaluarAceptabilidadBlanco()">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Valor leído</label>
-                                            <input type="number" step="any" id="controles_analiticos[valor_leido]"
-                                                name="controles_analiticos[valor_leido]"
-                                                class="form-control form-control-sm"
-                                                oninput="evaluarAceptabilidadBlanco()">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Rango del metodo</label>
-                                            <input type="number" step="any" id="rango_metodo"
-                                                name="controles_analiticos[rango_metodo]"
-                                                class="form-control form-control-sm"
-                                                value="{{ old('controles_analiticos.rango_metodo') }}"
-                                                oninput="evaluarAceptabilidadBlanco()">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label class="form-label-fixed">Aceptable/no aceptable</label>
-                                            <input type="text" id="aceptable_blanco"
-                                                name="controles_analiticos[aceptable_blanco]"
-                                                class="form-control form-control-sm" readonly>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <label class="form-label-fixed">Observaciones Generales</label>
-                                <textarea id="controles_analiticos[observaciones]" name="controles_analiticos[observaciones]" rows="2" class="form-control form-control-sm"></textarea>
-                            </div>
+                        <div class="mt-3">
+                            <label>Observaciones Generales</label>
+                            <textarea id="controles_analiticos[observaciones]" name="controles_analiticos[observaciones]" rows="2" class="form-control"></textarea>
                         </div>
                     </div>
-                    <!-- REGISTRO DE MUESTRAS -->
-                    <div class="card mt-3">
-                        <div class="card-header py-2">
-                            <h6 class="mb-0">Información de Resultados</h6>
-                        </div>
-                        <div class="card-body p-2">
+                </div>
+
+                <!-- REGISTRO DE MUESTRAS -->
+                <div class="card mt-3 border-0 shadow-none">
+                    <div class="card-header bg-primary text-white py-2">
+                        <h6 class="mb-0">Información de Resultados</h6>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
                             <table class="table table-bordered text-center" id="tablaMuestras">
-                                <thead>
+                                <thead class="thead-light">
                                     <tr>
                                         <th>Código interno</th>
                                         <th>Peso de muestra (g)</th>
                                         <th>Vol NaOH consumido Blanco (mL)</th>
-                                         <th>% Humedad(g / 100g)</th>
+                                        <th>% Humedad(g / 100g)</th>
                                         <th>Molaridad NaOH</th>
                                         <th>Vol NaOH consumido muestra (mL)</th>
                                         <th>Acidez</th>
@@ -368,121 +360,56 @@
                                     <!-- Fila inicial -->
                                     <tr class="muestra-fila">
                                         <td>
-                                            <input type="text" id="rows[0][codigo_interno]"   name="rows[0][codigo_interno]" class="form-control"
-                                                required>
+                                            <input type="text" id="rows[0][codigo_interno]" name="rows[0][codigo_interno]" class="form-control form-control-sm" required>
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" id="rows[0][peso_muestra]" name="rows[0][peso_muestra]"
-                                                class="form-control peso-muestra" required>
-                                        </td>
-                                        
-                                        <td>
-                                            <input type="number" step="0.01" id="rows[0][consumido_blanco]"  name="rows[0][consumido_blanco]"
-                                                class="form-control consumido-blanco" required>
+                                                class="form-control form-control-sm peso-muestra" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01"  id="rows[0][porcentaje_humedad]" name="rows[0][porcentaje_humedad]"
-                                                class="form-control humedad">
+                                            <input type="number" step="0.01" id="rows[0][consumido_blanco]" name="rows[0][consumido_blanco]"
+                                                class="form-control form-control-sm consumido-blanco" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" id="rows[0][porcentaje_humedad]" name="rows[0][porcentaje_humedad]"
+                                                class="form-control form-control-sm humedad">
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" id="rows[0][molaridad]" name="rows[0][molaridad]"
-                                                class="form-control molaridad" required>
+                                                class="form-control form-control-sm molaridad" required>
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" id="rows[0][consumido_muestra]" name="rows[0][consumido_muestra]"
-                                                class="form-control consumido_muestra" required>
+                                                class="form-control form-control-sm consumido_muestra" required>
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" id="rows[0][acidez]" name="rows[0][acidez]"
-                                                class="form-control acidez" readonly>
+                                                class="form-control form-control-sm acidez" readonly>
                                         </td>
-                                        
                                         <td>
                                             <button type="button" class="btn btn-danger btn-sm quitar-fila">×</button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button type="button" class="btn btn-primary" id="agregar-fila">+ Agregar fila</button>
-                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-primary btn-sm" id="agregar-fila">+ Agregar fila</button>
                         </div>
                     </div>
+                </div>
 
-                    <!-- BOTONES -->
-                    <div class="card">
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">Guardar Análisis de Acidez</button>
-                            <a href="{{ route('lscefa.technical.analyses.acidity.index') }}"
-                                class="btn btn-secondary">Cancelar</a>
-                        </div>
+                <!-- BOTONES -->
+                <div class="card mt-3 border-0 shadow-none">
+                    <div class="card-footer bg-light">
+                        <button type="submit" class="btn btn-primary">Guardar Análisis de Acidez</button>
+                        <a href="{{ route('lscefa.technical.analyses.acidity.index') }}" class="btn btn-secondary">Cancelar</a>
                     </div>
-        </form>
-    </div>
-
-    <style>
-        /* CSS para mejorar la alineación de los formularios */
-        .form-label-fixed {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            min-height: 40px;
-            /* Altura fija para todos los labels */
-            color: #495057;
-            font-size: 0.875rem;
-            line-height: 1.2;
-            display: flex;
-            align-items: flex-end;
-            /* Alinea el texto al final del contenedor */
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        /* Asegurar que todos los inputs tengan la misma altura */
-        .form-control-sm {
-            height: calc(1.5em + 0.5rem + 2px);
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            line-height: 1.5;
-            border-radius: 0.2rem;
-        }
-
-        /* Espaciado consistente en las tarjetas de controles */
-        .border {
-            border: 1px solid #dee2e6 !important;
-            border-radius: 0.375rem;
-        }
-
-        /* Mejorar el espaciado de los headers de secciones */
-        .bg-secondary {
-            background-color: #6c757d !important;
-            border-radius: 0.25rem;
-        }
-
-        /* Alineación de columnas en la tabla */
-        #tablaMuestras th {
-            vertical-align: middle;
-            background-color: #f8f9fa;
-            font-weight: 600;
-            font-size: 0.875rem;
-            padding: 0.75rem 0.5rem;
-        }
-
-        #tablaMuestras td {
-            vertical-align: middle;
-            padding: 0.5rem;
-        }
-
-        #tablaMuestras input {
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            padding: 0.375rem 0.5rem;
-            font-size: 0.875rem;
-        }
-    </style>
-
+                </div>
+            </div>
+        </section>
+    </form>
+</div>
 @endsection
 
 <script>

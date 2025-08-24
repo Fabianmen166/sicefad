@@ -83,5 +83,63 @@
             </div>
         </div>
     </div>
+
+    <!-- Botones de descarga simplificados -->
+    <div class="card mt-3">
+        <div class="card-header">Descargar Informes</div>
+        <div class="card-body">
+            <p>Servicios disponibles para descarga:</p>
+            @foreach($process->serviceProcessDetails as $spd)
+                @if($spd->status === 'approved')
+                    @php 
+                        $serviceName = strtolower($spd->service->descripcion ?? '');
+                        $serviceNameNorm = str_replace(['á','é','í','ó','ú'], ['a','e','i','o','u'], $serviceName);
+                    @endphp
+                    
+                    <div class="mb-3">
+                        <strong>{{ $spd->service->descripcion ?? 'N/A' }}</strong> - 
+                        <span class="badge badge-success">Aprobado</span>
+                        
+                        @if(strpos($serviceName, 'ph') !== false)
+                            <a href="{{ route('lscefa.ph_analysis.download', $spd->phAnalysis->id ?? 0) }}" class="btn btn-success btn-sm ml-2">
+                                <i class="fas fa-download"></i> Descargar pH
+                            </a>
+                        @endif
+                        
+                        @if(strpos($serviceNameNorm, 'textura') !== false || strpos($serviceNameNorm, 'texture') !== false)
+                            @php 
+                                $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $spd->process_id)
+                                    ->where('service_id', $spd->service_id)
+                                    ->first();
+                            @endphp
+                            @if($textureAnalysis)
+                                <a href="{{ route('lscefa.technical.analyses.texture.download', $textureAnalysis->id) }}" class="btn btn-success btn-sm ml-2">
+                                    <i class="fas fa-download"></i> Descargar Textura
+                                </a>
+                            @endif
+                        @endif
+                        
+                        @if(strpos($serviceNameNorm, 'boro') !== false || strpos($serviceNameNorm, 'boron') !== false)
+                            @php 
+                                $boronAnalysis = \Modules\LSCEFA\Entities\BoronAnalysisDetail::where('process_id', $spd->process_id)
+                                    ->where('service_id', $spd->service_id)
+                                    ->first();
+                            @endphp
+                            @if($boronAnalysis)
+                                <a href="{{ route('lscefa.technical.analyses.boron.download', $boronAnalysis->id) }}" class="btn btn-success btn-sm ml-2">
+                                    <i class="fas fa-download"></i> Descargar Boro
+                                </a>
+                            @endif
+                        @endif
+                    </div>
+                @else
+                    <div class="mb-2">
+                        <strong>{{ $spd->service->descripcion ?? 'N/A' }}</strong> - 
+                        Estado: {{ $spd->status }}
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
 </div>
 @endsection

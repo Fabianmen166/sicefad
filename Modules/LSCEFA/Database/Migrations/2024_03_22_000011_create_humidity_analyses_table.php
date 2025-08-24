@@ -11,13 +11,13 @@ class CreateHumidityAnalysesTable extends Migration
         Schema::create('humidity_analyses', function (Blueprint $table) {
             $table->id();
 
-            $table->string('process_id'); // Clave foránea para relacionar con la tabla de processes
-           
-
+           $table->string('process_id'); // Relación con processes
+           $table->unsignedBigInteger('service_id')->nullable();  // Relación con services - temporalmente nullable
+            $table->unsignedBigInteger('analysis_id')->nullable(); // Relación con service_process_details - temporalmente nullable
+            $table->unsignedBigInteger('user_id')->nullable();
            
             $table->string('consecutivo_no')->nullable();
             $table->date('fecha_analisis')->nullable();
-            // Usuario que realiza el análisis
 
             // Detalles del horno y equipo
             $table->time('hora_ingreso_horno')->nullable();
@@ -30,6 +30,7 @@ class CreateHumidityAnalysesTable extends Migration
             $table->string('resolucion_instrumental')->nullable();
             $table->date('fecha_fin_analisis')->nullable();
             $table->string('codigo_interno')->nullable();
+            $table->decimal('recuperacion', 8, 4)->nullable();
             $table->decimal('peso_capsula', 8, 4)->nullable();
             $table->decimal('peso_muestra', 8, 4)->nullable();
             $table->decimal('peso_capsula_muestra_humedad', 8, 4)->nullable();
@@ -50,8 +51,10 @@ class CreateHumidityAnalysesTable extends Migration
 
             // Relaciones
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
-           
-           
+            $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade'); // Cambiado a services_id
+            $table->foreign('analysis_id')->references('id')->on('service_process_details')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('reviewed_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 

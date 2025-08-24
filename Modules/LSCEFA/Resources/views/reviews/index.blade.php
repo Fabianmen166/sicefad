@@ -65,14 +65,16 @@
                         'ph' => 'bg-primary',
                         'conductivity' => 'bg-info',
                         'turbidity' => 'bg-warning',
-                        'hardness' => 'bg-secondary'
+                        'hardness' => 'bg-secondary',
+                        'texture' => 'bg-success'
                     ];
                     
                     $typeTexts = [
                         'ph' => 'pH',
                         'conductivity' => 'Conductividad',
                         'turbidity' => 'Turbidez',
-                        'hardness' => 'Dureza'
+                        'hardness' => 'Dureza',
+                        'texture' => 'Textura'
                     ];
                     
                     // Contar ítems de ensayo
@@ -85,6 +87,7 @@
                             <h3 class="card-title mb-0">
                                 <i class="fas fa-flask mr-2"></i>
                                 Análisis #{{ $analysis->consecutivo_no ?? 'N/A' }}
+                                <span class="badge bg-dark analysis-type-badge">{{ $analysis->service_name ?? ucfirst($analysis->type) }}</span>
                                 @foreach($analysis->analysis_types ?? [] as $type)
                                     @if(isset($typeClasses[$type]) && isset($typeTexts[$type]))
                                     <span class="badge {{ $typeClasses[$type] }} analysis-type-badge">
@@ -116,11 +119,11 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p><strong>Muestra:</strong> {{ $analysis->codigo_probeta ?? 'N/A' }}</p>
-                                        <p><strong>Equipo:</strong> {{ $analysis->codigo_equipo ?? 'N/A' }}</p>
+                                        <!-- <p><strong>Equipo:</strong> {{ $analysis->codigo_equipo ?? 'N/A' }}</p> -->
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Analista:</strong> {{ $analysis->user->name ?? 'N/A' }}</p>
-                                        <p><strong>Cliente:</strong> {{ $analysis->customer->applicant ?? 'N/A' }}</p>
+                                        <!-- <p><strong>Cliente:</strong> {{ $analysis->customer->applicant ?? 'N/A' }}</p> -->
                                     </div>
                                 </div>
                                 
@@ -144,10 +147,17 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-right">
-                                <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}?type={{ $analysis->type ?? '' }}" 
-                                   class="btn btn-primary">
-                                    <i class="fas fa-eye mr-1"></i> Revisar
-                                </a>
+                                @if(isset($analysis->review_status) && $analysis->review_status === 'approved')
+                                    <a href="{{ route('lscefa.technical.analyses.texture.report', $analysis->id) }}" 
+                                       class="btn btn-success">
+                                        <i class="fas fa-download mr-1"></i> Descargar Reporte
+                                    </a>
+                                @else
+                                    <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}?type={{ $analysis->type ?? '' }}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-eye mr-1"></i> Revisar
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>

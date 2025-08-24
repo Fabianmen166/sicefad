@@ -133,25 +133,26 @@
                         $returnedDetails = collect();
                         foreach ($returned as $processId => $details) {
                             foreach ($details as $spd) {
-                                // Soportar entradas sintéticas para Fósforo (ya normalizadas con tipo)
-                                if (isset($spd->type) && $spd->type === 'phosphorus') {
+                                // Soportar entradas sintéticas para Fósforo y Boro (ya normalizadas con tipo)
+                                if (isset($spd->type) && ($spd->type === 'phosphorus' || $spd->type === 'boron')) {
                                     $returnedDetails->push((object) [
                                         'process_id' => $spd->process_id,
                                         'service_id' => $spd->service_id,
                                         'service_name' => $spd->service_name ?? ($spd->service->descripcion ?? 'Servicio'),
-                                        'type' => 'phosphorus',
+                                        'type' => $spd->type,
                                         'consecutivo_no' => $spd->consecutivo_no ?? null,
                                         'review_date' => $spd->review_date ?? null,
                                         'review_observations' => $spd->review_observations ?? null,
+                                        'id' => $spd->id ?? null, // Agregar ID para las rutas de acción
                                     ]);
                                     continue;
                                 }
 
-                                // Resolver el análisis asociado (pH o Conductividad)
-                                $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? null;
+                                // Resolver el análisis asociado (pH, Conductividad o Textura)
+                                $analysis = $spd->phAnalysis ?? $spd->conductivityAnalysis ?? $spd->batchTextureAnalysis ?? null;
                                 if (!$analysis) { continue; }
 
-                                $type = $spd->phAnalysis ? 'ph' : ($spd->conductivityAnalysis ? 'conductivity' : null);
+                                $type = $spd->phAnalysis ? 'ph' : ($spd->conductivityAnalysis ? 'conductivity' : ($spd->batchTextureAnalysis ? 'texture' : null));
                                 $returnedDetails->push((object) [
                                     'process_id' => $spd->process_id,
                                     'service_id' => $spd->service_id,
@@ -160,6 +161,7 @@
                                     'consecutivo_no' => $analysis->consecutivo_no ?? null,
                                     'review_date' => $analysis->review_date ?? $analysis->updated_at ?? $spd->updated_at ?? null,
                                     'review_observations' => $analysis->review_observations ?? $spd->observations ?? null,
+                                    'id' => $analysis->id ?? null, // Agregar ID para las rutas de acción
                                 ]);
                             }
                         }
@@ -222,6 +224,12 @@
                                                 $actionUrl = route('lscefa.conductivity_analysis.show', [$ref->process_id, $ref->service_id]);
                                             } elseif ($ref && $ref->type === 'phosphorus') {
                                                 $actionUrl = route('lscefa.technical.analyses.phosphorus.process', [$ref->process_id, $ref->service_id]);
+                                            } elseif ($ref && $ref->type === 'texture') {
+                                                // Para textura, necesitamos el ID del análisis rechazado, no del proceso
+                                                $actionUrl = route('lscefa.technical.analyses.texture.edit_rejected', $ref->id);
+                                            } elseif ($ref && $ref->type === 'boron') {
+                                                // Para boro, necesitamos el ID del análisis rechazado, no del proceso
+                                                $actionUrl = route('lscefa.technical.analyses.boron.edit_rejected', $ref->id);
                                             }
                                         @endphp
                                         <tr>

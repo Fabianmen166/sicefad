@@ -16,7 +16,10 @@ class HumidityAnalysis extends Model
     protected $table = 'humidity_analyses';
 
     protected $fillable = [
-        'process_id',
+         'process_id',
+        'service_id', 
+        'analysis_id',
+        'user_id',
         'consecutivo_no',
         'fecha_analisis',
         'hora_ingreso_horno',
@@ -24,6 +27,7 @@ class HumidityAnalysis extends Model
         'temperatura_horno',
         'nombre_metodo',
         'intervalo_metodo',
+        'recuperacion',
         'equipo_utilizado',
         'unidades_reporte_equipo',
         'resolucion_instrumental',
@@ -40,7 +44,6 @@ class HumidityAnalysis extends Model
         'reviewer_role',
         'review_date',
         'review_observations',
-        'status'
     ];
 
     protected $casts = [
@@ -62,17 +65,23 @@ class HumidityAnalysis extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function analyticalControl(): HasOne
     {
         return $this->hasOne(AnalyticalControl::class, 'humidity_analysis_id');
     }
+    
+    public function analysis()
+    {
+        // Apuntar correctamente a Models/ServiceProcessDetail
+        return $this->belongsTo(\Modules\LSCEFA\Models\ServiceProcessDetail::class, 'analysis_id');
+    }
 
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewed_by');
+        return $this->belongsTo(\App\Models\User::class, 'reviewed_by');
     }
 
     public function scopePendingReview($query)
@@ -89,4 +98,5 @@ class HumidityAnalysis extends Model
     {
         return $query->where('review_status', 'rejected');
     }
+
 }

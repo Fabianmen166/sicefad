@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('texture_analyses')) {
-            Schema::create('texture_analyses', function (Blueprint $table) {
-                $table->id();
-                $table->string('process_id');
-                $table->string('consecutivo_no');
-                $table->date('fecha_analisis');
-                $table->string('equipo_utilizado')->nullable();
-                $table->string('intervalo_metodo')->nullable();
-                $table->string('analista')->nullable();
-                $table->unsignedBigInteger('user_id');
-                $table->unsignedBigInteger('service_id')->nullable();
-                $table->timestamps();
+        Schema::create('texture_analyses', function (Blueprint $table) {
+            $table->id();
+            $table->string('process_id');
+            $table->unsignedBigInteger('service_id');
+            $table->string('consecutivo_no');
+            $table->date('fecha_analisis');
+            $table->string('equipo_utilizado')->nullable();
+            $table->string('intervalo_metodo')->nullable();
+            $table->string('analista')->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->timestamps();
 
                 $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
                 $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');

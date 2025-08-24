@@ -28,7 +28,7 @@ use Modules\LSCEFA\Http\Controllers\CationicAnalysisController;
 use Modules\LSCEFA\Http\Controllers\PhosphorusAnalysisController;
 use Modules\LSCEFA\Http\Controllers\SulfurAnalysisController;
 use Modules\LSCEFA\Http\Controllers\ExchangeableBasesAnalysisController;
-use Modules\LSCEFA\Http\Controllers\BoronAnalysisController;
+// use Modules\LSCEFA\Http\Controllers\BoronAnalysisController; // Archivo no existe
 use Modules\LSCEFA\Http\Controllers\CarbonoAnalysisController;
 use Modules\LSCEFA\Http\Controllers\MicronutrientsAnalysisController;
 use Modules\LSCEFA\Http\Controllers\TextureAnalysisController;
@@ -128,11 +128,16 @@ Route::middleware(['lang'])->group(function(){
                 ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch.post');
             Route::post('/technical/analyses/texture/batch-store', [TextureAnalysisController::class, 'batchStore'])->name('lscefa.technical.analyses.texture.batch_store')
                 ->middleware('lscefa.permission:lscefa.technical.analyses.texture.batch_store');
+            Route::get('/technical/analyses/texture/{id}/edit-rejected', [TextureAnalysisController::class, 'editRejected'])->name('lscefa.technical.analyses.texture.edit_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.edit_rejected');
+            Route::post('/technical/analyses/texture/{id}/update-rejected', [TextureAnalysisController::class, 'updateRejected'])->name('lscefa.technical.analyses.texture.update_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.texture.update_rejected');
             Route::get('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'show'])->name('lscefa.technical.analyses.texture.show');
             Route::get('/technical/analyses/texture/{id}/edit', [TextureAnalysisController::class, 'edit'])->name('lscefa.technical.analyses.texture.edit');
             Route::put('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'update'])->name('lscefa.technical.analyses.texture.update');
             Route::delete('/technical/analyses/texture/{id}', [TextureAnalysisController::class, 'destroy'])->name('lscefa.technical.analyses.texture.destroy');
             Route::get('/technical/analyses/texture/{id}/report', [TextureAnalysisController::class, 'report'])->name('lscefa.technical.analyses.texture.report');
+            Route::get('/technical/analyses/texture/{analysisId}/download', [TextureAnalysisController::class, 'downloadTextureReport'])->name('lscefa.technical.analyses.texture.download');
         });
 
         // Rutas protegidas por rol para admin y gestión de calidad
@@ -352,6 +357,11 @@ Route::middleware(['lang'])->group(function(){
             Route::put('/technical/analyses/boron/{id}', [BoronAnalysisController2::class, 'update'])->name('lscefa.technical.analyses.boron.update');
             Route::delete('/technical/analyses/boron/{id}', [BoronAnalysisController2::class, 'destroy'])->name('lscefa.technical.analyses.boron.destroy');
             Route::get('/technical/analyses/boron/{id}/report', [BoronAnalysisController2::class, 'report'])->name('lscefa.technical.analyses.boron.report');
+            Route::get('/technical/analyses/boron/{id}/edit-rejected', [BoronAnalysisController2::class, 'editRejected'])->name('lscefa.technical.analyses.boron.edit_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.edit_rejected');
+            Route::post('/technical/analyses/boron/{id}/update-rejected', [BoronAnalysisController2::class, 'updateRejected'])->name('lscefa.technical.analyses.boron.update_rejected')
+                ->middleware('lscefa.permission:lscefa.technical.analyses.boron.update_rejected');
+            Route::get('/technical/analyses/boron/{analysisId}/download', [BoronAnalysisController2::class, 'downloadBoronReport'])->name('lscefa.technical.analyses.boron.download');
 
             // Rutas para Análisis de Carbono
             Route::get('/technical/analyses/carbon', [CarbonoAnalysisController::class, 'index'])->name('lscefa.technical.analyses.carbon.index');
@@ -398,7 +408,7 @@ Route::middleware(['lang'])->group(function(){
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     }); // Cierre de Route::prefix('lscefa')
-}); // Cierre de Route::middleware(['lang'])
+
         
 
 

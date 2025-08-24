@@ -15,8 +15,11 @@ class CreateAnalyticalControlsTable extends Migration
     {
         Schema::create('analytical_controls', function (Blueprint $table) {
             $table->id();
-             $table->string('process_id');
-             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
+            $table->string('process_id');
+            $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
+            $table->unsignedBigInteger('humidity_analysis_id')->nullable()->after('analysis_id');
+            $table->foreign('humidity_analysis_id')->references('id')->on('humidity_analyses')->onDelete('cascade');
+     
 
             // Campos de controle analíticos
             $table->decimal('masa_suelo', 10, 4)->nullable();

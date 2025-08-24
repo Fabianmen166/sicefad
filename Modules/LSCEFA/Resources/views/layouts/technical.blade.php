@@ -134,22 +134,26 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Textura -->
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.cationic.index') }}"
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.technical.analyses.texture.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.texture.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Intercambio Catiónico</p>
+                                <p>Textura</p>
                             </a>
                         </li>
-
+                        <!-- Análisis de Boro -->
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}"
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Fósforo</p>
+                                <p>Boro</p>
+                                <p>Boro</p>
                             </a>
                         </li>
-
+                    
                     </ul>
                 </nav>
             </div>

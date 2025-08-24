@@ -10,6 +10,7 @@ use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Models\Service;
 use Modules\LSCEFA\Models\PhAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
+use Modules\LSCEFA\Entities\BatchTextureAnalysis;
 
 class ReportsController extends Controller
 {
@@ -28,7 +29,23 @@ class ReportsController extends Controller
                 'quote.customer',
                 'customer',
             ])
-            ->whereIn('status', ['pending', 'processing', 'in_progress']);
+            ->where(function($q) {
+                $q->whereIn('status', ['pending', 'processing', 'in_progress'])
+                  ->orWhereHas('serviceProcessDetails', function($subQ) {
+                      $subQ->where('status', 'approved')
+                           ->whereHas('service', function($serviceQ) {
+                               $serviceQ->where(function($serviceSubQ) {
+                                   $serviceSubQ->whereRaw('LOWER(descripcion) LIKE ?', ['%textura%'])
+                                           ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%texture%']);
+                               });
+                           });
+                  })
+                  ->orWhereRaw('EXISTS (
+                      SELECT 1 FROM boron_analysis_details 
+                      WHERE boron_analysis_details.process_id = processes.process_id 
+                      AND boron_analysis_details.review_status = "approved"
+                  )');
+            });
 
         if ($itemFilter !== '') {
             $query->where('item_code', 'LIKE', "%{$itemFilter}%");
@@ -148,6 +165,37 @@ class ReportsController extends Controller
                     'fecha_analisis' => $fechaAnalisis,
                     'tecnica' => 'Fotométrico',
                     'documento' => 'NTC 5350:2020 Bray II',
+                ];
+                continue;
+            }
+
+            // Textura
+            if (strpos($serviceNameNorm, 'textura') !== false || strpos($serviceNameNorm, 'texture') !== false) {
+                // Buscar fecha_analisis en tabla batch_texture_analyses por process_id y service_id
+                $fechaAnalisis = '';
+                try {
+                    $ta = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $spd->process_id)
+                        ->where('service_id', $spd->service_id)
+                        ->latest('analysis_date')
+                        ->first();
+                    if ($ta && !empty($ta->analysis_date)) {
+                        $fechaAnalisis = $ta->analysis_date;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener fecha_analisis de textura para reporte', [
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Textura',
+                    'resultado' => $resultadoDisplay,
+                    'unidad' => 'Clase textural',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Hidrómetro de Bouyoucos',
+                    'documento' => 'NTC 5264:2023',
                 ];
                 continue;
             }
