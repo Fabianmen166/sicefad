@@ -34,12 +34,20 @@
                         </li>
 
 
-                        <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                       <li class="nav-item">
+                            <a href="{{ route('lscefa.ph_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.ph_analysis.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Gestión de pH</p>
+                                <p>Análisis de pH</p>
                             </a>
                         </li>
+                         <!-- Análisis de Conductividad -->
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.conductivity_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.conductivity_analysis.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-tint"></i>
+                                <p>Conductividad</p>
+                            </a>
+                        </li>
+                       
 
                         <!-- Gestión de Análisis de humedad -->
                         <li class="nav-item">
@@ -49,18 +57,27 @@
                                 <p>Humedad</p>
                             </a>
                         </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="" class="nav-link text-success">
+                         <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.carbon.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.carbon.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Conductividad</p>
+                                <p>Carbono Orgánico</p>
                             </a>
                         </li>
-
-
-
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.acidity.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.acidity.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Acidez</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.micronutrients.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Micronutrientes</p>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.cationic.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
@@ -68,9 +85,6 @@
                                 <p>Intercambio Catiónico</p>
                             </a>
                         </li>
-
-
-
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
@@ -78,9 +92,6 @@
                                 <p>Fósforo</p>
                             </a>
                         </li>
-
-
-
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
@@ -88,9 +99,21 @@
                                 <p>Azufre</p>
                             </a>
                         </li>
-
-
-
+                         <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Bases Cambiables</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('lscefa.technical.analyses.cationic.index') }}"
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-flask"></i>
+                                <p>Intercambio Catiónico</p>
+                            </a>
+                        </li>
+                       
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
@@ -98,16 +121,7 @@
                                 <p>Boro</p>
                             </a>
                         </li>
-
-
-
-                        <li class="nav-item">
-                            <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-flask"></i>
-                                <p>Bases Cambiables</p>
-                            </a>
-                        </li>
+                        
 
                     </ul>
                 </nav>

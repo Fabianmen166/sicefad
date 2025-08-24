@@ -16,56 +16,66 @@ class AnalyticalControl extends Model
         'process_id',
         'analysis_type',
         'analysis_id',
+        'humidity_analysis_id',
 
-        // Campos históricos (pueden o no existir según migración previa)
-        'blank_identification',
-        'blank_lcm',
-        'blank_measured_value',
-        'blank_acceptable',
-        'blank_observations',
-        'error_identification',
-        'error_theoretical_value',
-        'error_measured_value',
-        'error_percentage',
-        'error_acceptable',
-        'error_observations',
-        'recovery_identification',
-        'recovery_theoretical_value',
-        'recovery_measured_value',
-        'recovery_percentage',
-        'recovery_acceptable',
-        'recovery_observations',
-        'dpr_identification',
-        'dpr',
+        'masa_suelo',
+        'masa_agua',
+        'masa_suelo_seco',
+        'humedad_fortificada_teorica',
+        'humedad_obtenida',
+        'humedad_fortificada',
+        'recuperacion',
+        'valor_referencia',
+        'valor_obtenido',
+        'valor_leido',
+        'blanco_metodo',
+        'resultado',
+        'limite_cuantificacion_metodo',
+        'rango_metodo',
+        'humedad_replica_1',
+        'humedad_replica_2',
         'replica_1',
         'replica_2',
+        'dpr',
         'identificacion_mf',
-        'identificacion_bm',
         'identificacion_mr',
         'identificacion_dm',
-        'valor_obtenido',
-        'valor_referencia',
-        'valor_leido',
-        'limite_cuantificacion_metodo',
-        'dpr_replicate2',
-        'dpr_percentage',
-        'dpr_acceptable',
-        'dpr_observations',
-        'dpr_duplicate_a',
-        'dpr_duplicate_b',
-        'dpr_result',
-        'dpr_acceptability',
-        'curve_measured_value',
-        'curve_error_percentage',
+        'identificacion_bm',
+        'estado',
+        'observaciones',
 
-        // Contenedor JSON unificado para diferentes bloques de controles
+        // Campos de recuperación
+        'recuperacion_identificacion',
+        'recuperacion_valor_teorico',
+        'recuperacion_valor_leido',
+        'recuperacion_porcentaje',
+        'recuperacion_aceptable',
+        'recuperacion_observaciones',
+
+        // Campos de DPR
+        'dpr_identificacion',
+        'dpr_replica1',
+        'dpr_replica2',
+        'dpr_porcentaje',
+        'dpr_aceptable',
+        'dpr_observaciones',
+        
+        // Campos JSON
         'controles_analiticos',
-        'analytical_controls',
+        
+        // Campos DPR de curva
+        'dpr_duplicado_a',
+        'dpr_duplicado_b',
+        'dpr_resultado',
+        'dpr_aceptabilidad',
+        
+        // Campos de curva de calibración
+        'curva_valor_leido',
+        'curva_error_porcentaje',
 
         'created_at',
         'updated_at'
     ];
-
     protected $casts = [
         'blank_lcm' => 'decimal:2',
         'blank_measured_value' => 'decimal:2',
@@ -94,6 +104,16 @@ class AnalyticalControl extends Model
     public function process()
     {
         return $this->belongsTo(\Modules\LSCEFA\Models\Process::class, 'process_id', 'process_id');
+    }
+
+    public function humidityAnalysis()
+    {
+        return $this->belongsTo(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'humidity_analysis_id');
+    }
+
+    public function serviceProcessDetail()
+    {
+        return $this->belongsTo(\Modules\LSCEFA\Models\ServiceProcessDetail::class, 'analysis_id');
     }
 
     protected static function newFactory()

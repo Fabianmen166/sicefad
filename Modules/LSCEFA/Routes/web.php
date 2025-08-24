@@ -405,7 +405,7 @@ Route::middleware(['lang'])->group(function(){
         // Ruta para que el header global funcione correctamente en el módulo LSCEFA
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     }); // Cierre de Route::prefix('lscefa')
-}); // Cierre de Route::middleware(['lang'])
+
         
 
 

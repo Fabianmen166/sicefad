@@ -142,16 +142,18 @@
                                 <p>Textura</p>
                             </a>
                         </li>
-
                         <!-- Análisis de Boro -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
+                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
+                                <p>Boro</p>
                                 <p>Boro</p>
                             </a>
                         </li>
-
+                    
                     </ul>
                 </nav>
             </div>

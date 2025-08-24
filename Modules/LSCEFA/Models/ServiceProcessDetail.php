@@ -34,6 +34,10 @@ class ServiceProcessDetail extends Model
     {
         return $this->hasOne(ConductivityAnalysis::class, 'analysis_id');
     }
+    public function humidityAnalysis()
+    {
+        return $this->hasOne(HumidityAnalysis::class, 'analysis_id'); // Nuevo método para HumidityAnalysis
+    }
 
     public function batchTextureAnalysis()
     {

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('texture_analyses', function (Blueprint $table) {
             $table->id();
             $table->string('process_id');
+            $table->unsignedBigInteger('service_id');
             $table->string('consecutivo_no');
             $table->date('fecha_analisis');
             $table->string('equipo_utilizado')->nullable();
