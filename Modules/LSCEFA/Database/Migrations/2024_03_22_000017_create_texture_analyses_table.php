@@ -11,24 +11,26 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('texture_analyses', function (Blueprint $table) {
-            $table->id();
-            $table->string('process_id');
-            $table->string('consecutivo_no');
-            $table->date('fecha_analisis');
-            $table->string('equipo_utilizado')->nullable();
-            $table->string('intervalo_metodo')->nullable();
-            $table->string('analista')->nullable();
-            $table->unsignedBigInteger('user_id');
-            $table->timestamps();
+        if (!Schema::hasTable('texture_analyses')) {
+            Schema::create('texture_analyses', function (Blueprint $table) {
+                $table->id();
+                $table->string('process_id');
+                $table->string('consecutivo_no');
+                $table->date('fecha_analisis');
+                $table->string('equipo_utilizado')->nullable();
+                $table->string('intervalo_metodo')->nullable();
+                $table->string('analista')->nullable();
+                $table->unsignedBigInteger('user_id');
+                $table->unsignedBigInteger('service_id')->nullable();
+                $table->timestamps();
 
-            $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
-            $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+                $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
+                $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
-            
-            $table->index('fecha_analisis');
-        });
+                $table->index('fecha_analisis');
+            });
+        }
     }
 
     /**
@@ -36,6 +38,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('texture_analyses');
+        // No eliminar para evitar afectar instalaciones previas
+        // Schema::dropIfExists('texture_analyses');
     }
 };

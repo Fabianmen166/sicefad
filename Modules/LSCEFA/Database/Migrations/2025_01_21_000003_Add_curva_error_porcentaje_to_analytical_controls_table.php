@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class AddCurvaErrorPorcentajeToAnalyticalControlsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,11 @@ class AddCurvaErrorPorcentajeToAnalyticalControlsTable extends Migration
      */
     public function up()
     {
-        Schema::table('analytical_controls', function (Blueprint $table) {
-            $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
-        });
+        if (Schema::hasTable('analytical_controls') && !Schema::hasColumn('analytical_controls', 'curva_error_porcentaje')) {
+            Schema::table('analytical_controls', function (Blueprint $table) {
+                $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
+            });
+        }
     }
 
     /**
@@ -25,8 +27,11 @@ class AddCurvaErrorPorcentajeToAnalyticalControlsTable extends Migration
      */
     public function down()
     {
-        Schema::table('analytical_controls', function (Blueprint $table) {
-            $table->dropColumn('curva_error_porcentaje');
-        });
+        // No eliminar para evitar afectar instalaciones previas
+        // if (Schema::hasTable('analytical_controls') && Schema::hasColumn('analytical_controls', 'curva_error_porcentaje')) {
+        //     Schema::table('analytical_controls', function (Blueprint $table) {
+        //         $table->dropColumn('curva_error_porcentaje');
+        //     });
+        // }
     }
-} 
+};

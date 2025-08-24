@@ -228,6 +228,9 @@ Route::middleware(['lang'])->group(function(){
                 // Vista previa del informe por proceso
                 Route::get('/{processId}', [\Modules\LSCEFA\Http\Controllers\ReportsController::class, 'show'])
                     ->name('show');
+                // Descargar PDF del informe
+                Route::get('/{processId}/pdf', [\Modules\LSCEFA\Http\Controllers\ReportsController::class, 'pdf'])
+                    ->name('pdf');
             });
 
             

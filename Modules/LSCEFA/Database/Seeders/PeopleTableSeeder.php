@@ -24,5 +24,16 @@ class PeopleTableSeeder extends Seeder{
             'population_group_id' => $population_group->id,
             'Pension_entity_id' => $pension_entity->id,
         ]);
+
+        // Persona requerida para crear el usuario 'MariaG' en UsersTableSeeder
+        Person::firstOrCreate(['document_number' => '1079605057' ],[
+            'document_type' => 'Cedula Ciudadania',
+            'first_name' => 'MARIA',
+            'first_last_name' => 'GONZALES',
+            'second_last_name' => null,
+            'eps_id' => $eps->id,
+            'population_group_id' => $population_group->id,
+            'Pension_entity_id' => $pension_entity->id,
+        ]);
     }
 }

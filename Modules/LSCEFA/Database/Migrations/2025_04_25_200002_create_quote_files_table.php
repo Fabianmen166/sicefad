@@ -7,19 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up()
     {
-        Schema::create('quote_files', function (Blueprint $table) {
-            $table->id();
-            $table->string('quote_id');
-            $table->string('filename');
-            $table->string('path');
-            $table->string('mime');
-            $table->unsignedBigInteger('size');
-            $table->timestamps();
-            $table->foreign('quote_id')->references('quote_id')->on('quotes')->onDelete('cascade');
-        });
+        if (!Schema::hasTable('quote_files')) {
+            Schema::create('quote_files', function (Blueprint $table) {
+                $table->id();
+                $table->string('quote_id');
+                $table->string('filename');
+                $table->string('path');
+                $table->string('mime');
+                $table->unsignedBigInteger('size');
+                $table->timestamps();
+                $table->foreign('quote_id')->references('quote_id')->on('quotes')->onDelete('cascade');
+            });
+        }
     }
     public function down()
     {
-        Schema::dropIfExists('quote_files');
+        // No eliminar para evitar afectar instalaciones previas
+        // Schema::dropIfExists('quote_files');
     }
 }; 

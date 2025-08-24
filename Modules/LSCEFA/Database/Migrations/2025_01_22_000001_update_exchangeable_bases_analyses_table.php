@@ -11,49 +11,56 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('exchangeable_bases_analyses', function (Blueprint $table) {
-            // Eliminar campos antiguos
-            $table->dropColumn([
-                'pw',
-                'v_extractante',
-                'lectura_blanco',
-                'factor_dilucion',
-                'bases_cambiables_mg_l',
-                'bases_cambiables_mg_kg',
-                'observaciones_item'
-            ]);
+        if (!Schema::hasTable('exchangeable_bases_analyses')) {
+            return;
+        }
 
-            // Agregar campos nuevos
-            $table->decimal('humedad', 8, 4)->nullable()->after('peso_muestra');
-            $table->decimal('volumen_final', 8, 2)->nullable()->after('humedad');
-            
-            // Campos para Na
-            $table->decimal('na_lectura', 8, 4)->nullable()->after('volumen_final');
-            $table->decimal('na_blanco', 8, 4)->nullable()->after('na_lectura');
-            $table->decimal('na_factor', 8, 4)->nullable()->after('na_blanco');
-            $table->decimal('na_resultado', 8, 4)->nullable()->after('na_factor');
-            
-            // Campos para K
-            $table->decimal('k_lectura', 8, 4)->nullable()->after('na_resultado');
-            $table->decimal('k_blanco', 8, 4)->nullable()->after('k_lectura');
-            $table->decimal('k_factor', 8, 4)->nullable()->after('k_blanco');
-            $table->decimal('k_resultado', 8, 4)->nullable()->after('k_factor');
-            
-            // Campos para Ca
-            $table->decimal('ca_lectura', 8, 4)->nullable()->after('k_resultado');
-            $table->decimal('ca_blanco', 8, 4)->nullable()->after('ca_lectura');
-            $table->decimal('ca_factor', 8, 4)->nullable()->after('ca_blanco');
-            $table->decimal('ca_resultado', 8, 4)->nullable()->after('ca_factor');
-            
-            // Campos para Mg
-            $table->decimal('mg_lectura', 8, 4)->nullable()->after('ca_resultado');
-            $table->decimal('mg_blanco', 8, 4)->nullable()->after('mg_lectura');
-            $table->decimal('mg_factor', 8, 4)->nullable()->after('mg_blanco');
-            $table->decimal('mg_resultado', 8, 4)->nullable()->after('mg_factor');
-            
-            // Campo de observaciones
-            $table->text('observaciones')->nullable()->after('mg_resultado');
-        });
+        // Eliminar campos antiguos si existen (uno por uno para evitar errores)
+        $oldCols = [
+            'pw', 'v_extractante', 'lectura_blanco', 'factor_dilucion',
+            'bases_cambiables_mg_l', 'bases_cambiables_mg_kg', 'observaciones_item'
+        ];
+        foreach ($oldCols as $col) {
+            if (Schema::hasColumn('exchangeable_bases_analyses', $col)) {
+                Schema::table('exchangeable_bases_analyses', function (Blueprint $table) use ($col) {
+                    $table->dropColumn($col);
+                });
+            }
+        }
+
+        // Agregar campos nuevos si no existen
+        $addIfMissing = function (string $col, callable $definition): void {
+            if (!Schema::hasColumn('exchangeable_bases_analyses', $col)) {
+                Schema::table('exchangeable_bases_analyses', function (Blueprint $table) use ($definition) {
+                    $definition($table);
+                });
+            }
+        };
+
+        $addIfMissing('humedad', fn (Blueprint $t) => $t->decimal('humedad', 8, 4)->nullable()->after('peso_muestra'));
+        $addIfMissing('volumen_final', fn (Blueprint $t) => $t->decimal('volumen_final', 8, 2)->nullable()->after('humedad'));
+        // Na
+        $addIfMissing('na_lectura', fn (Blueprint $t) => $t->decimal('na_lectura', 8, 4)->nullable()->after('volumen_final'));
+        $addIfMissing('na_blanco', fn (Blueprint $t) => $t->decimal('na_blanco', 8, 4)->nullable()->after('na_lectura'));
+        $addIfMissing('na_factor', fn (Blueprint $t) => $t->decimal('na_factor', 8, 4)->nullable()->after('na_blanco'));
+        $addIfMissing('na_resultado', fn (Blueprint $t) => $t->decimal('na_resultado', 8, 4)->nullable()->after('na_factor'));
+        // K
+        $addIfMissing('k_lectura', fn (Blueprint $t) => $t->decimal('k_lectura', 8, 4)->nullable()->after('na_resultado'));
+        $addIfMissing('k_blanco', fn (Blueprint $t) => $t->decimal('k_blanco', 8, 4)->nullable()->after('k_lectura'));
+        $addIfMissing('k_factor', fn (Blueprint $t) => $t->decimal('k_factor', 8, 4)->nullable()->after('k_blanco'));
+        $addIfMissing('k_resultado', fn (Blueprint $t) => $t->decimal('k_resultado', 8, 4)->nullable()->after('k_factor'));
+        // Ca
+        $addIfMissing('ca_lectura', fn (Blueprint $t) => $t->decimal('ca_lectura', 8, 4)->nullable()->after('k_resultado'));
+        $addIfMissing('ca_blanco', fn (Blueprint $t) => $t->decimal('ca_blanco', 8, 4)->nullable()->after('ca_lectura'));
+        $addIfMissing('ca_factor', fn (Blueprint $t) => $t->decimal('ca_factor', 8, 4)->nullable()->after('ca_blanco'));
+        $addIfMissing('ca_resultado', fn (Blueprint $t) => $t->decimal('ca_resultado', 8, 4)->nullable()->after('ca_factor'));
+        // Mg
+        $addIfMissing('mg_lectura', fn (Blueprint $t) => $t->decimal('mg_lectura', 8, 4)->nullable()->after('ca_resultado'));
+        $addIfMissing('mg_blanco', fn (Blueprint $t) => $t->decimal('mg_blanco', 8, 4)->nullable()->after('mg_lectura'));
+        $addIfMissing('mg_factor', fn (Blueprint $t) => $t->decimal('mg_factor', 8, 4)->nullable()->after('mg_blanco'));
+        $addIfMissing('mg_resultado', fn (Blueprint $t) => $t->decimal('mg_resultado', 8, 4)->nullable()->after('mg_factor'));
+        // Observaciones
+        $addIfMissing('observaciones', fn (Blueprint $t) => $t->text('observaciones')->nullable()->after('mg_resultado'));
     }
 
     /**
@@ -61,26 +68,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('exchangeable_bases_analyses', function (Blueprint $table) {
-            // Revertir cambios
-            $table->dropColumn([
-                'humedad',
-                'volumen_final',
-                'na_lectura', 'na_blanco', 'na_factor', 'na_resultado',
-                'k_lectura', 'k_blanco', 'k_factor', 'k_resultado',
-                'ca_lectura', 'ca_blanco', 'ca_factor', 'ca_resultado',
-                'mg_lectura', 'mg_blanco', 'mg_factor', 'mg_resultado',
-                'observaciones'
-            ]);
-
-            // Restaurar campos antiguos
-            $table->decimal('pw', 8, 4)->nullable();
-            $table->decimal('v_extractante', 8, 2)->nullable();
-            $table->decimal('lectura_blanco', 8, 4)->nullable();
-            $table->decimal('factor_dilucion', 8, 4)->nullable();
-            $table->decimal('bases_cambiables_mg_l', 8, 4)->nullable();
-            $table->decimal('bases_cambiables_mg_kg', 8, 4)->nullable();
-            $table->text('observaciones_item')->nullable();
-        });
+        // No eliminar/restaurar para evitar afectar instalaciones previas
+        // Implementar reversión con las mismas comprobaciones de hasColumn si fuese necesario.
     }
 }; 

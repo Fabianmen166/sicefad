@@ -201,6 +201,15 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_admin[] = $permission->id;
 
+        // Permiso para descargar el PDF del informe (solo Admin)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.reports.pdf'], [
+            'name' => 'Reportes - Descargar PDF (Admin)',
+            'description' => 'Puede descargar el informe en PDF',
+            'description_english' => 'Can download the report as PDF',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
         // Permiso para ver listado del Historial de Procesos (solo Admin)
         $permission = Permission::updateOrCreate(['slug' => 'lscefa.admin.process_history.index'], [
             'name' => 'Historial de Procesos - Listado (Admin)',

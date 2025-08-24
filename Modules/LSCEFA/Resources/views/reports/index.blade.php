@@ -32,7 +32,7 @@
                             <th>Cliente</th>
                             <th>Servicios</th>
                             <th>Estado</th>
-                            <th style="width:120px">Acción</th>
+                            <th style="width:180px">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -47,6 +47,7 @@
                                 <td>{{ ucfirst($process->status) }}</td>
                                 <td>
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('lscefa.quality.reports.show', $process->process_id) }}">Ver</a>
+                                    <a class="btn btn-sm btn-success" href="{{ route('lscefa.quality.reports.pdf', $process->process_id) }}">Descargar</a>
                                 </td>
                             </tr>
                         @empty
