@@ -147,9 +147,14 @@ class ReviewController extends Controller
                 return $this->transformAnalysis($item, 'phosphorus');
             });
 
+            $phosphorusResults = $phosphorusAnalyses->get()->map(function($item) {
+                return $this->transformAnalysis($item, 'phosphorus');
+            });
+
             // Combinar todos los resultados
             $allResults = $phResults->concat($conductivityResults)
                                ->concat($humidityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults);
+            $allResults = $phResults->concat($conductivityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults);
 
             // Agrupar por servicio para humedad, por consecutivo para otros
             $groupedResults = $allResults->groupBy(function($item) {
@@ -386,6 +391,19 @@ class ReviewController extends Controller
                     'analysis.process.quote.customer',
                     'user'
                 ])->find($id);
+            
+            if ($phAnalysis) {
+                $analysis = $phAnalysis;
+                $type = 'ph';
+            } else {
+                // Buscar en análisis de conductividad
+                $conductivityAnalysis = ConductivityAnalysis::with([
+                    'analysis.process.quote',
+                    'analysis.service',
+                    'analysis.process.customer',
+                    'analysis.process.quote.customer',
+                    'user'
+                ])->find($id);
                 
                 if ($conductivityAnalysis) {
                     $analysis = $conductivityAnalysis;
@@ -411,6 +429,89 @@ class ReviewController extends Controller
                 return redirect()->route('lscefa.quality.reviews.index')
                     ->with('error', 'No se encontró el análisis solicitado.');
             }
+            
+            $detail = $analysis->analysis;
+            $process = $detail->process ?? null;
+            $quote = $process->quote ?? null;
+            $customer = $process->customer ?? ($quote->customer ?? null);
+            
+            // Resolver nombre del técnico responsable con fallback
+            $technicianName = null;
+            try {
+                if (isset($analysis->user) && $analysis->user) {
+                    $technicianName = $analysis->user->nickname ?? $analysis->user->name ?? null;
+                }
+                if (!$technicianName && !empty($analysis->user_id)) {
+                    $user = \App\Models\User::find($analysis->user_id);
+                    $technicianName = $user->nickname ?? $user->name ?? null;
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('No se pudo resolver el técnico responsable en ReviewController@show: ' . $e->getMessage());
+            }
+            
+            // Determinar qué vista usar según el tipo de análisis
+            $view = match($type) {
+                'ph' => 'lscefa::reviews.ph_review',
+                'conductivity' => 'lscefa::reviews.conductivity_show',
+                'humidity' => 'lscefa::reviews.humidity_show',
+                default => 'lscefa::reviews.ph_review'
+            };
+            
+            // Preparar datos específicos según el tipo de análisis
+            $viewData = [
+                'detail' => $detail,
+                'analysis' => $analysis,
+                'process' => $process,
+                'quote' => $quote,
+                'customer' => $customer,
+                'readonly' => false,
+                'technicianName' => $technicianName,
+            ];
+            
+            // Agregar datos específicos según el tipo
+            if ($type === 'ph') {
+                $viewData = array_merge($viewData, $this->preparePhData($analysis));
+            } elseif ($type === 'humidity') {
+                $viewData = array_merge($viewData, $this->prepareHumidityData($analysis));
+            }
+            
+            return view($view, $viewData);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error en ReviewController@show: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+                
+                if ($conductivityAnalysis) {
+                    $analysis = $conductivityAnalysis;
+                    $type = 'conductivity';
+                } else {
+                    // Buscar en análisis de humedad
+                    $humidityAnalysis = HumidityAnalysis::with([
+                        'analysis.process.quote',
+                        'analysis.service',
+                        'analysis.process.customer',
+                        'analysis.process.quote.customer',
+                        'user'
+                    ])->find($id);
+                    
+                    if ($humidityAnalysis) {
+                        $analysis = $humidityAnalysis;
+                        $type = 'humidity';
+                    }
+                }
+            }
+            
+            if (!$analysis) {
+                return redirect()->route('lscefa.quality.reviews.index')
+                    ->with('error', 'Ocurrió un error al cargar el análisis. Por favor, intente nuevamente.');
+            }
+    }
+
+    /**
+     * Prepara los datos específicos para análisis de pH
+     */
+    protected function preparePhData($analysis)
+    {
             
             $detail = $analysis->analysis;
             $process = $detail->process ?? null;
@@ -499,7 +600,6 @@ class ReviewController extends Controller
                         'valor_leido' => $itemArray['valor_leido'] ?? 'N/A',
                         'observaciones' => $itemArray['observaciones'] ?? ''
                     ];
-                }
         // Función auxiliar para normalizar un item a estructura común
         $normalizeItem = function($item) {
             if (is_object($item)) { $item = (array)$item; }
@@ -628,6 +728,26 @@ class ReviewController extends Controller
                 $precision_analitica['replicas'] = $replicas;
             }
         }
+        // Add debug logging
+        \Log::info('Analysis Data Structure:', [
+            'has_muestra_referencia' => isset($analysis->muestra_referencia) ? 'Yes' : 'No',
+            'muestra_referencia_type' => gettype($analysis->muestra_referencia ?? 'null'),
+            'muestra_referencia_data' => $analysis->muestra_referencia ?? 'Not set',
+            'has_controles_analiticos' => isset($analysis->controles_analiticos) ? 'Yes' : 'No',
+            'controles_analiticos_type' => gettype($analysis->controles_analiticos ?? 'null'),
+            'controles_analiticos_count' => is_array($analysis->controles_analiticos ?? null) 
+                ? count($analysis->controles_analiticos) 
+                : (is_object($analysis->controles_analiticos ?? null) 
+                    ? count((array)$analysis->controles_analiticos) 
+                    : 'N/A'),
+            'has_veracidad_analitica' => isset($analysis->veracidad_analitica) ? 'Yes' : 'No',
+            'veracidad_analitica_type' => gettype($analysis->veracidad_analitica ?? 'null'),
+            'veracidad_analitica_count' => is_array($analysis->veracidad_analitica ?? null)
+                ? count($analysis->veracidad_analitica)
+                : (is_object($analysis->veracidad_analitica ?? null)
+                    ? count((array)$analysis->veracidad_analitica)
+                    : 'N/A'),
+        ]);
         
         // Procesar muestra de referencia
         if (isset($analysis->muestra_referencia)) {
@@ -904,13 +1024,13 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['nullable', 'string', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron'],
+            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus,texture,boron,humidity,humidity,phosphorus,texture,boron'],
         ]);
 
         // Buscar el análisis específico según el tipo
         if ($validated['analysis_type'] === 'ph') {
             $analysis = PhAnalysis::findOrFail($id);
-        } elseif ($validated['analysis_type'] === 'conductivity')if ($validated['analysis_type'] === 'conductivity') {
+        } elseif ($validated['analysis_type'] === 'conductivity') {
             $analysis = ConductivityAnalysis::findOrFail($id);
         } else {
             $analysis = HumidityAnalysis::findOrFail($id);
@@ -1038,9 +1158,6 @@ class ReviewController extends Controller
             if ($detail->humidityAnalysis && $detail->humidityAnalysis->id != $analysis->id) {
                 if ($detail->humidityAnalysis->review_status !== 'approved') {
                     $allApproved = false;
-                }
-            }
-            
             // Verificar análisis de textura
             if ($validated['analysis_type'] === 'texture') {
                 // Para textura, verificar si hay otros análisis del mismo proceso
