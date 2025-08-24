@@ -13,7 +13,6 @@ use Modules\LSCEFA\Models\HardnessAnalysis;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
-use Modules\LSCEFA\Entities\AnalyticalControl;
 use Modules\LSCEFA\Entities\BoronAnalysis;
 use Modules\LSCEFA\Entities\BoronAnalysisDetail;
 
@@ -391,19 +390,6 @@ class ReviewController extends Controller
                     'analysis.process.quote.customer',
                     'user'
                 ])->find($id);
-            
-            if ($phAnalysis) {
-                $analysis = $phAnalysis;
-                $type = 'ph';
-            } else {
-                // Buscar en análisis de conductividad
-                $conductivityAnalysis = ConductivityAnalysis::with([
-                    'analysis.process.quote',
-                    'analysis.service',
-                    'analysis.process.customer',
-                    'analysis.process.quote.customer',
-                    'user'
-                ])->find($id);
                 
                 if ($conductivityAnalysis) {
                     $analysis = $conductivityAnalysis;
@@ -421,6 +407,39 @@ class ReviewController extends Controller
                     if ($humidityAnalysis) {
                         $analysis = $humidityAnalysis;
                         $type = 'humidity';
+                    } else {
+                        // Buscar en análisis de fósforo
+                        $phosphorusAnalysis = PhosphorusAnalysis::with([
+                            'process.quote.customer',
+                            'service'
+                        ])->find($id);
+                        
+                        if ($phosphorusAnalysis) {
+                            $analysis = $phosphorusAnalysis;
+                            $type = 'phosphorus';
+                        } else {
+                            // Buscar en análisis de textura
+                            $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with([
+                                'process.quote.customer',
+                                'service'
+                            ])->find($id);
+                            
+                            if ($textureAnalysis) {
+                                $analysis = $textureAnalysis;
+                                $type = 'texture';
+                            } else {
+                                // Buscar en análisis de boro
+                                $boronAnalysis = BoronAnalysisDetail::with([
+                                    'process.quote.customer',
+                                    'service'
+                                ])->find($id);
+                                
+                                if ($boronAnalysis) {
+                                    $analysis = $boronAnalysis;
+                                    $type = 'boron';
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -430,8 +449,8 @@ class ReviewController extends Controller
                     ->with('error', 'No se encontró el análisis solicitado.');
             }
             
-            $detail = $analysis->analysis;
-            $process = $detail->process ?? null;
+            $detail = $analysis->analysis ?? null;
+            $process = $detail->process ?? $analysis->process ?? null;
             $quote = $process->quote ?? null;
             $customer = $process->customer ?? ($quote->customer ?? null);
             
@@ -454,6 +473,9 @@ class ReviewController extends Controller
                 'ph' => 'lscefa::reviews.ph_review',
                 'conductivity' => 'lscefa::reviews.conductivity_show',
                 'humidity' => 'lscefa::reviews.humidity_show',
+                'phosphorus' => 'lscefa::reviews.ph_review',
+                'texture' => 'lscefa::reviews.ph_review',
+                'boron' => 'lscefa::reviews.ph_review',
                 default => 'lscefa::reviews.ph_review'
             };
             
@@ -466,89 +488,7 @@ class ReviewController extends Controller
                 'customer' => $customer,
                 'readonly' => false,
                 'technicianName' => $technicianName,
-            ];
-            
-            // Agregar datos específicos según el tipo
-            if ($type === 'ph') {
-                $viewData = array_merge($viewData, $this->preparePhData($analysis));
-            } elseif ($type === 'humidity') {
-                $viewData = array_merge($viewData, $this->prepareHumidityData($analysis));
-            }
-            
-            return view($view, $viewData);
-            
-        } catch (\Exception $e) {
-            \Log::error('Error en ReviewController@show: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
-                
-                if ($conductivityAnalysis) {
-                    $analysis = $conductivityAnalysis;
-                    $type = 'conductivity';
-                } else {
-                    // Buscar en análisis de humedad
-                    $humidityAnalysis = HumidityAnalysis::with([
-                        'analysis.process.quote',
-                        'analysis.service',
-                        'analysis.process.customer',
-                        'analysis.process.quote.customer',
-                        'user'
-                    ])->find($id);
-                    
-                    if ($humidityAnalysis) {
-                        $analysis = $humidityAnalysis;
-                        $type = 'humidity';
-                    }
-                }
-            }
-            
-            if (!$analysis) {
-                return redirect()->route('lscefa.quality.reviews.index')
-                    ->with('error', 'Ocurrió un error al cargar el análisis. Por favor, intente nuevamente.');
-            }
-    }
-
-    /**
-     * Prepara los datos específicos para análisis de pH
-     */
-    protected function preparePhData($analysis)
-    {
-            
-            $detail = $analysis->analysis;
-            $process = $detail->process ?? null;
-            $quote = $process->quote ?? null;
-            $customer = $process->customer ?? ($quote->customer ?? null);
-            
-            // Resolver nombre del técnico responsable con fallback
-            $technicianName = null;
-            try {
-                if (isset($analysis->user) && $analysis->user) {
-                    $technicianName = $analysis->user->nickname ?? $analysis->user->name ?? null;
-                }
-                if (!$technicianName && !empty($analysis->user_id)) {
-                    $user = \App\Models\User::find($analysis->user_id);
-                    $technicianName = $user->nickname ?? $user->name ?? null;
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('No se pudo resolver el técnico responsable en ReviewController@show: ' . $e->getMessage());
-            }
-            
-            // Determinar qué vista usar según el tipo de análisis
-            $view = match($type) {
-                'ph' => 'lscefa::reviews.ph_review',
-                'conductivity' => 'lscefa::reviews.conductivity_show',
-                'humidity' => 'lscefa::reviews.humidity_show',
-                default => 'lscefa::reviews.ph_review'
-            };
-            
-            // Preparar datos específicos según el tipo de análisis
-            $viewData = [
-                'detail' => $detail,
-                'analysis' => $analysis,
-                'process' => $process,
-                'quote' => $quote,
-                'customer' => $customer,
-                'readonly' => false,
-                'technicianName' => $technicianName,
+                'type' => $type,
             ];
             
             // Agregar datos específicos según el tipo
@@ -578,28 +518,6 @@ class ReviewController extends Controller
         $muestra_referencia = [];
         $precision_analitica = [];
         
-        // Procesar ítems de ensayo
-        if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
-            foreach ($analysis->items_ensayo as $item) {
-                if (is_array($item)) {
-                    $items_ensayo[] = [
-                        'identificacion' => $item['identificacion'] ?? 'N/A',
-                        'peso' => $item['peso'] ?? 'N/A',
-                        'volumen_agua' => $item['volumen_agua'] ?? 'N/A',
-                        'temperatura' => $item['temperatura'] ?? 'N/A',
-                        'valor_leido' => $item['valor_leido'] ?? 'N/A',
-                        'observaciones' => $item['observaciones'] ?? ''
-                    ];
-                } elseif (is_object($item)) {
-                    $itemArray = (array)$item;
-                    $items_ensayo[] = [
-                        'identificacion' => $itemArray['identificacion'] ?? 'N/A',
-                        'peso' => $itemArray['peso'] ?? 'N/A',
-                        'volumen_agua' => $itemArray['volumen_agua'] ?? 'N/A',
-                        'temperatura' => $itemArray['temperatura'] ?? 'N/A',
-                        'valor_leido' => $itemArray['valor_leido'] ?? 'N/A',
-                        'observaciones' => $itemArray['observaciones'] ?? ''
-                    ];
         // Función auxiliar para normalizar un item a estructura común
         $normalizeItem = function($item) {
             if (is_object($item)) { $item = (array)$item; }
@@ -614,75 +532,14 @@ class ReviewController extends Controller
             ];
         };
 
-        // 1) Agregar los items del análisis actual (si existen)
-        if ($type === 'phosphorus') {
-            // Para fósforo, construir ítem a partir de la fila
-            $norm = $normalizeItem([
-                'identificacion' => $analysis->codigo_interno ?? 'N/A',
-                'valor_leido' => $analysis->fosforo_disponible_mg_kg
-                    ?? $analysis->available_phosphorus_mg_kg
-                    ?? $analysis->available_phosphorus_mg_l
-                    ?? $analysis->fosforo_disponible_mg_l
-                    ?? null,
-                'observaciones' => $analysis->observaciones_item ?? '',
-            ]);
-            if ($norm !== null) { $items_ensayo[] = $norm; }
-        } elseif (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
+        // Procesar ítems de ensayo del análisis actual
+        if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
             foreach ($analysis->items_ensayo as $item) {
                 $norm = $normalizeItem($item);
                 if ($norm !== null) { $items_ensayo[] = $norm; }
             }
         }
 
-        // Determinar consecutivo efectivo (permite filtrar por query string en la vista de pH)
-        $effectiveConsecutivo = null;
-        try {
-            $effectiveConsecutivo = request('consecutivo') ?: ($analysis->consecutivo_no ?? null);
-        } catch (\Throwable $e) {
-            $effectiveConsecutivo = $analysis->consecutivo_no ?? null;
-        }
-
-        // 2) Si es pH, agregar también los items de ensayo de todos los análisis con el mismo consecutivo (efectivo)
-        if ($type === 'ph' && !empty($effectiveConsecutivo)) {
-            try {
-                $siblings = PhAnalysis::where('consecutivo_no', $effectiveConsecutivo)
-                    ->where('id', '!=', $analysis->id)
-                    ->get();
-                foreach ($siblings as $sib) {
-                    if (isset($sib->items_ensayo) && is_array($sib->items_ensayo)) {
-                        foreach ($sib->items_ensayo as $item) {
-                            $norm = $normalizeItem($item);
-                            if ($norm !== null) { $items_ensayo[] = $norm; }
-                        }
-                    }
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('No se pudieron cargar items_ensayo hermanos por consecutivo en ReviewController@show: ' . $e->getMessage());
-            }
-        }
-        // Para fósforo, agregar hermanos por mismo consecutivo_no
-        if ($type === 'phosphorus' && !empty($analysis->consecutivo_no)) {
-            try {
-                $siblings = PhosphorusAnalysis::where('consecutivo_no', $analysis->consecutivo_no)
-                    ->where('id', '!=', $analysis->id)
-                    ->get();
-                foreach ($siblings as $sib) {
-                    $norm = $normalizeItem([
-                        'identificacion' => $sib->codigo_interno ?? 'N/A',
-                        'valor_leido' => $sib->fosforo_disponible_mg_kg
-                            ?? $sib->available_phosphorus_mg_kg
-                            ?? $sib->available_phosphorus_mg_l
-                            ?? $sib->fosforo_disponible_mg_l
-                            ?? null,
-                        'observaciones' => $sib->observaciones_item ?? '',
-                    ]);
-                    if ($norm !== null) { $items_ensayo[] = $norm; }
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('No se pudieron cargar items fósforo hermanos por consecutivo en ReviewController@show: ' . $e->getMessage());
-            }
-        }
-        
         // Procesar controles analíticos
         if (isset($analysis->controles_analiticos)) {
             if (is_string($analysis->controles_analiticos)) {
@@ -728,26 +585,6 @@ class ReviewController extends Controller
                 $precision_analitica['replicas'] = $replicas;
             }
         }
-        // Add debug logging
-        \Log::info('Analysis Data Structure:', [
-            'has_muestra_referencia' => isset($analysis->muestra_referencia) ? 'Yes' : 'No',
-            'muestra_referencia_type' => gettype($analysis->muestra_referencia ?? 'null'),
-            'muestra_referencia_data' => $analysis->muestra_referencia ?? 'Not set',
-            'has_controles_analiticos' => isset($analysis->controles_analiticos) ? 'Yes' : 'No',
-            'controles_analiticos_type' => gettype($analysis->controles_analiticos ?? 'null'),
-            'controles_analiticos_count' => is_array($analysis->controles_analiticos ?? null) 
-                ? count($analysis->controles_analiticos) 
-                : (is_object($analysis->controles_analiticos ?? null) 
-                    ? count((array)$analysis->controles_analiticos) 
-                    : 'N/A'),
-            'has_veracidad_analitica' => isset($analysis->veracidad_analitica) ? 'Yes' : 'No',
-            'veracidad_analitica_type' => gettype($analysis->veracidad_analitica ?? 'null'),
-            'veracidad_analitica_count' => is_array($analysis->veracidad_analitica ?? null)
-                ? count($analysis->veracidad_analitica)
-                : (is_object($analysis->veracidad_analitica ?? null)
-                    ? count((array)$analysis->veracidad_analitica)
-                    : 'N/A'),
-        ]);
         
         // Procesar muestra de referencia
         if (isset($analysis->muestra_referencia)) {
@@ -912,12 +749,6 @@ class ReviewController extends Controller
             'estadisticas' => $estadisticas,
             'controles_analiticos' => $controles_analiticos,
         ];
-            'technicianName' => $technicianName,
-            'effectiveConsecutivo' => $effectiveConsecutivo,
-            'type' => $type,
-            // Solo para fósforo: pasar controles analíticos a la vista si se cargaron
-            'analyticalControl' => isset($analyticalControl) ? $analyticalControl : null,
-        ]);
     }
 
     // Ver detalle en modo solo lectura
@@ -1024,7 +855,7 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['nullable', 'string', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,phosphorus,texture,boron,humidity,humidity,phosphorus,texture,boron'],
+            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron'],
         ]);
 
         // Buscar el análisis específico según el tipo
@@ -1032,7 +863,7 @@ class ReviewController extends Controller
             $analysis = PhAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'conductivity') {
             $analysis = ConductivityAnalysis::findOrFail($id);
-        } else {
+        } elseif ($validated['analysis_type'] === 'humidity') {
             $analysis = HumidityAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'phosphorus') {
             $analysis = PhosphorusAnalysis::findOrFail($id);
@@ -1158,6 +989,9 @@ class ReviewController extends Controller
             if ($detail->humidityAnalysis && $detail->humidityAnalysis->id != $analysis->id) {
                 if ($detail->humidityAnalysis->review_status !== 'approved') {
                     $allApproved = false;
+                }
+            }
+            
             // Verificar análisis de textura
             if ($validated['analysis_type'] === 'texture') {
                 // Para textura, verificar si hay otros análisis del mismo proceso
@@ -1176,7 +1010,7 @@ class ReviewController extends Controller
             // Verificar análisis de boro
             if ($validated['analysis_type'] === 'boron') {
                 // Para boro, verificar si hay otros análisis del mismo proceso
-                $otherBoronAnalyses = BoronAnalysis::where('process_id', $analysis->process_id)
+                $otherBoronAnalyses = BoronAnalysisDetail::where('process_id', $analysis->process_id)
                     ->where('id', '!=', $analysis->id)
                     ->get();
                 
@@ -1216,7 +1050,7 @@ class ReviewController extends Controller
             $analysis = PhAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'conductivity') {
             $analysis = ConductivityAnalysis::findOrFail($id);
-        } else {
+        } elseif ($validated['analysis_type'] === 'humidity') {
             $analysis = HumidityAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'phosphorus') {
             $analysis = PhosphorusAnalysis::findOrFail($id);
