@@ -65,14 +65,16 @@
                         'ph' => 'bg-primary',
                         'conductivity' => 'bg-info',
                         'turbidity' => 'bg-warning',
-                        'hardness' => 'bg-secondary'
+                        'hardness' => 'bg-secondary',
+                        'texture' => 'bg-success'
                     ];
                     
                     $typeTexts = [
                         'ph' => 'pH',
                         'conductivity' => 'Conductividad',
                         'turbidity' => 'Turbidez',
-                        'hardness' => 'Dureza'
+                        'hardness' => 'Dureza',
+                        'texture' => 'Textura'
                     ];
                     
                     // Contar ítems de ensayo
@@ -145,10 +147,17 @@
                                 @endif
                             </div>
                             <div class="col-md-4 text-right">
-                                <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}?type={{ $analysis->type ?? '' }}" 
-                                   class="btn btn-primary">
-                                    <i class="fas fa-eye mr-1"></i> Revisar
-                                </a>
+                                @if(isset($analysis->review_status) && $analysis->review_status === 'approved')
+                                    <a href="{{ route('lscefa.technical.analyses.texture.report', $analysis->id) }}" 
+                                       class="btn btn-success">
+                                        <i class="fas fa-download mr-1"></i> Descargar Reporte
+                                    </a>
+                                @else
+                                    <a href="{{ route('lscefa.quality.reviews.show', $analysis->id) }}?type={{ $analysis->type ?? '' }}" 
+                                       class="btn btn-primary">
+                                        <i class="fas fa-eye mr-1"></i> Revisar
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>

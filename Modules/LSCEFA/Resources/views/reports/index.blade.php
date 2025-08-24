@@ -42,9 +42,37 @@
                                 <td>{{ $process->process_id }}</td>
                                 <td>{{ optional(optional($process->quote)->customer)->applicant ?? optional($process->quote)->customer_name ?? 'N/D' }}</td>
                                 <td>
-                                    {{ $process->serviceProcessDetails->pluck('service.descripcion')->filter()->unique()->implode(', ') }}
+                                    @foreach($process->serviceProcessDetails as $spd)
+                                        <span class="badge badge-{{ $spd->status === 'approved' ? 'success' : ($spd->status === 'completed' ? 'warning' : 'secondary') }}">
+                                            {{ $spd->service->descripcion ?? 'N/A' }}
+                                        </span>
+                                    @endforeach
                                 </td>
-                                <td>{{ ucfirst($process->status) }}</td>
+                                <td>
+                                    @php
+                                        $hasApprovedReports = false;
+                                        
+                                        // Check if any service is approved
+                                        if ($process->serviceProcessDetails->where('status', 'approved')->count() > 0) {
+                                            $hasApprovedReports = true;
+                                        }
+                                        
+                                        // Check if there are approved boron analyses
+                                        $boronAnalyses = \Modules\LSCEFA\Entities\BoronAnalysisDetail::where('process_id', $process->process_id)
+                                            ->where('review_status', 'approved')
+                                            ->count();
+                                        
+                                        if ($boronAnalyses > 0) {
+                                            $hasApprovedReports = true;
+                                        }
+                                    @endphp
+                                    
+                                    @if($hasApprovedReports)
+                                        <span class="badge badge-success">Con informes disponibles</span>
+                                    @else
+                                        {{ ucfirst($process->status) }}
+                                    @endif
+                                </td>
                                 <td>
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('lscefa.quality.reports.show', $process->process_id) }}">Ver</a>
                                 </td>

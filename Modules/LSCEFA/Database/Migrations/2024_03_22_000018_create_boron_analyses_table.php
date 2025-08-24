@@ -33,10 +33,22 @@ return new class extends Migration
             $table->decimal('available_boron_mg_kg', 10, 4)->nullable();
             $table->text('item_observations')->nullable();
             
+            // Review fields
+            $table->enum('review_status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('review_observations')->nullable();
+            $table->unsignedBigInteger('reviewed_by')->nullable();
+            $table->timestamp('review_date')->nullable();
+            
             $table->timestamps();
 
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
             $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');
+            $table->foreign('reviewed_by')->references('id')->on('users')->onDelete('set null');
+            
+            // Índices para mejorar el rendimiento de las consultas de revisión
+            $table->index('review_status');
+            $table->index('reviewed_by');
+            $table->index('review_date');
         });
     }
 
@@ -45,6 +57,14 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop foreign key constraints and indexes first
+        Schema::table('boron_analyses', function (Blueprint $table) {
+            $table->dropIndex(['review_status']);
+            $table->dropIndex(['reviewed_by']);
+            $table->dropIndex(['review_date']);
+            $table->dropForeign(['reviewed_by']);
+        });
+
         Schema::dropIfExists('boron_analyses');
     }
 };

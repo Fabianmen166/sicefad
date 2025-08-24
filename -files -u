@@ -1,0 +1,9 @@
+warning: in the working copy of 'Modules/LSCEFA/Http/Controllers/ReviewController.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Modules/LSCEFA/Http/Controllers/TextureAnalysisController.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Modules/LSCEFA/Resources/views/analyses/boron/index.blade.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Modules/LSCEFA/Resources/views/reviews/index.blade.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Modules/LSCEFA/Routes/web.php', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/css/app.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/js/app.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'public/mix-manifest.json', LF will be replaced by CRLF the next time Git touches it
+Modules/LSCEFA/Http/Controllers/ReviewController.php

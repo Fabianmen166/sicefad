@@ -187,7 +187,7 @@
                                                 <tbody>
                                                     <tr>
                                                         <td rowspan="2" class="align-middle text-center"><strong>Curva de calibración</strong></td>
-                                                        <td rowspan="2" class="align-middle"><input type="number" class="form-control" value="0.995" readonly></td>
+                                                        <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" name="curva_valor" id="curva_valor" value="0.995" readonly></td>
                                                         <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_valor_leido"></td>
                                                         <td rowspan="2" class="align-middle"><input type="number" step="any" class="form-control" id="curva_error_porcentaje" readonly></td>
                                                         <td rowspan="2" class="align-middle"><input type="text" class="form-control" id="curva_aceptabilidad" readonly></td>

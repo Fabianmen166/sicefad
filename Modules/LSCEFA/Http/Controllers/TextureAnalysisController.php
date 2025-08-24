@@ -542,8 +542,135 @@ class TextureAnalysisController extends Controller
 
     public function report($id)
     {
-        $analysis = TextureAnalysis::with(['items', 'analyticalControls'])->findOrFail($id);
-        return view('lscefa::analyses.texture.report', compact('analysis'));
+        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['analyticalControls'])->findOrFail($id);
+        
+        // Generar reporte PDF
+        return $this->generateTextureReport($analysis);
+    }
+
+    /**
+     * Generar reporte PDF de análisis de textura
+     */
+    private function generateTextureReport($analysis)
+    {
+        // Crear el PDF usando TCPDF o similar
+        $pdf = new \TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        
+        // Configurar información del documento
+        $pdf->SetCreator('LSCEFA');
+        $pdf->SetAuthor('Laboratorio de Ciencias Básicas');
+        $pdf->SetTitle('Reporte de Análisis de Textura - ' . $analysis->consecutive_no);
+        $pdf->SetSubject('Análisis de Textura');
+        
+        // Configurar márgenes
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetHeaderMargin(5);
+        $pdf->SetFooterMargin(10);
+        
+        // Configurar auto page breaks
+        $pdf->SetAutoPageBreak(TRUE, 25);
+        
+        // Agregar página
+        $pdf->AddPage();
+        
+        // Contenido del reporte
+        $html = $this->generateTextureReportHTML($analysis);
+        $pdf->writeHTML($html, true, false, true, false, '');
+        
+        // Generar nombre del archivo
+        $filename = 'Reporte_Textura_' . $analysis->consecutive_no . '_' . date('Y-m-d') . '.pdf';
+        
+        // Descargar el PDF
+        return $pdf->Output($filename, 'D');
+    }
+
+    /**
+     * Generar HTML para el reporte de textura
+     */
+    private function generateTextureReportHTML($analysis)
+    {
+        $samples = is_string($analysis->samples) ? json_decode($analysis->samples, true) : $analysis->samples;
+        $analyticalControls = is_string($analysis->analytical_controls) ? json_decode($analysis->analytical_controls, true) : $analysis->analytical_controls;
+        
+        $html = '
+        <style>
+            body { font-family: Arial, sans-serif; font-size: 12px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+            .subtitle { font-size: 14px; margin-bottom: 20px; }
+            .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .info-table td { border: 1px solid #ddd; padding: 8px; }
+            .info-table .label { font-weight: bold; background-color: #f5f5f5; }
+            .results-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .results-table th, .results-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+            .results-table th { background-color: #f0f0f0; font-weight: bold; }
+            .footer { margin-top: 30px; font-size: 10px; text-align: center; }
+        </style>
+        
+        <div class="header">
+            <div class="title">LABORATORIO DE CIENCIAS BÁSICAS</div>
+            <div class="subtitle">REPORTE DE ANÁLISIS DE TEXTURA</div>
+        </div>
+        
+        <table class="info-table">
+            <tr>
+                <td class="label" width="30%">Consecutivo No.:</td>
+                <td width="70%">' . ($analysis->consecutive_no ?? 'N/A') . '</td>
+            </tr>
+            <tr>
+                <td class="label">Fecha del Análisis:</td>
+                <td>' . ($analysis->analysis_date ?? 'N/A') . '</td>
+            </tr>
+            <tr>
+                <td class="label">Analista:</td>
+                <td>' . ($analysis->analyst_name ?? 'N/A') . '</td>
+            </tr>
+            <tr>
+                <td class="label">Metodología:</td>
+                <td>' . ($analysis->methodology_used ?? 'Hidrómetro de Bouyoucos') . '</td>
+            </tr>
+        </table>
+        
+        <h3>Resultados de Análisis de Muestras</h3>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Código Interno</th>
+                    <th>Peso (g)</th>
+                    <th>% Arena</th>
+                    <th>% Arcilla</th>
+                    <th>% Limo</th>
+                    <th>Clase Textural</th>
+                </tr>
+            </thead>
+            <tbody>';
+        
+        if (is_array($samples)) {
+            foreach ($samples as $sample) {
+                if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
+                    $html .= '
+                    <tr>
+                        <td>' . ($sample['codigo_interno'] ?? 'N/A') . '</td>
+                        <td>' . ($sample['peso'] ?? 'N/A') . '</td>
+                        <td>' . ($sample['porcentaje_arena'] ?? 'N/A') . '</td>
+                        <td>' . ($sample['porcentaje_arcilla'] ?? 'N/A') . '</td>
+                        <td>' . ($sample['porcentaje_limo'] ?? 'N/A') . '</td>
+                        <td>' . ($sample['clase_textural'] ?? 'N/A') . '</td>
+                    </tr>';
+                }
+            }
+        }
+        
+        $html .= '
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <p>Reporte generado el ' . date('d/m/Y H:i:s') . '</p>
+            <p>Documento: NTC 5264:2023 - Determinación de Textura por Hidrómetro de Bouyoucos</p>
+        </div>';
+        
+        return $html;
     }
 
     /**
@@ -659,8 +786,17 @@ class TextureAnalysisController extends Controller
             'all_fillable_fields' => $analysis->toArray()
         ]);
 
+        // Cargar los datos del blanco del proceso si existen
+        $blancoData = null;
+        if (isset($analysis->samples)) {
+            $samples = is_string($analysis->samples) ? json_decode($analysis->samples, true) : $analysis->samples;
+            if (is_array($samples) && count($samples) > 0) {
+                $blancoData = $samples[0] ?? null; // El primer elemento es el blanco
+            }
+        }
+
         // Pasar el análisis rechazado y los datos extraídos para que se pueda editar
-        return view('lscefa::analyses.texture.batch_process', compact('processes', 'analysis', 'precisionData', 'accuracyData'));
+        return view('lscefa::analyses.texture.batch_process', compact('processes', 'analysis', 'precisionData', 'accuracyData', 'blancoData'));
     }
 
     /**
@@ -676,6 +812,9 @@ class TextureAnalysisController extends Controller
                 ->with('error', 'Este análisis no está rechazado o ya fue corregido.');
         }
 
+        // Log para debug - ver todos los datos que llegan
+        Log::info('Datos recibidos en updateRejected:', $request->all());
+
         try {
             DB::beginTransaction();
 
@@ -689,8 +828,9 @@ class TextureAnalysisController extends Controller
                 'codigo_hidrometro' => 'nullable|string',
                 'equipment_used' => 'nullable|string',
                 'method_interval' => 'nullable|string',
-                'samples' => 'required|array',
-                'analytical_controls' => 'required|array',
+                'analyses' => 'required|array',
+                'analyses.*.items' => 'required|array',
+                'analyses.*.analytical_controls' => 'nullable|array',
                 'duplicate_a_code' => 'nullable|string',
                 'duplicate_a_avg_sand' => 'nullable|numeric',
                 'duplicate_a_avg_clay' => 'nullable|numeric',
@@ -721,7 +861,26 @@ class TextureAnalysisController extends Controller
                 'general_observations' => 'nullable|string',
             ]);
 
-            // Actualizar el análisis con los nuevos datos (usando los nombres de campos del formulario)
+            // Extraer datos del formulario
+            $analysesInput = $request->input('analyses');
+            $firstAnalysis = $analysesInput[0] ?? null; // Tomar el primer análisis
+            
+            if (!$firstAnalysis) {
+                throw new \Exception('No se encontraron datos de análisis en el formulario.');
+            }
+
+            // Preparar datos de muestras y controles
+            $samples = isset($firstAnalysis['items']) ? $firstAnalysis['items'] : [];
+            $analyticalControls = isset($firstAnalysis['analytical_controls']) ? $firstAnalysis['analytical_controls'] : [];
+
+            // Log para debug
+            Log::info('Datos extraídos:', [
+                'samples_count' => count($samples),
+                'analytical_controls_count' => count($analyticalControls),
+                'first_analysis' => $firstAnalysis
+            ]);
+
+            // Actualizar el análisis con los nuevos datos
             $analysis->update([
                 'consecutive_no' => $request->consecutivo_no,
                 'analysis_date' => $request->fecha_analisis,
@@ -729,43 +888,61 @@ class TextureAnalysisController extends Controller
                 'methodology_used' => $request->metodologia_utilizada,
                 'thermometer_code' => $request->codigo_termometro,
                 'hydrometer_code' => $request->codigo_hidrometro,
-                'equipment_used' => $request->equipment_used,
-                'method_interval' => $request->method_interval,
-                'samples' => json_encode($request->samples),
-                'analytical_controls' => json_encode($request->analytical_controls),
-                'duplicate_a_code' => $request->duplicate_a_code,
-                'duplicate_a_avg_sand' => $request->duplicate_a_avg_sand,
-                'duplicate_a_avg_clay' => $request->duplicate_a_avg_clay,
-                'duplicate_a_avg_silt' => $request->duplicate_a_avg_silt,
-                'duplicate_a_dpr_sand' => $request->duplicate_a_dpr_sand,
-                'duplicate_a_dpr_clay' => $request->duplicate_a_dpr_clay,
-                'duplicate_a_dpr_silt' => $request->duplicate_a_dpr_silt,
-                'duplicate_a_acceptability' => $request->duplicate_a_acceptability,
-                'duplicate_a_observations' => $request->duplicate_a_observations,
-                'duplicate_b_code' => $request->duplicate_b_code,
-                'duplicate_b_avg_sand' => $request->duplicate_b_avg_sand,
-                'duplicate_b_avg_clay' => $request->duplicate_b_avg_clay,
-                'duplicate_b_avg_silt' => $request->duplicate_b_avg_silt,
-                'duplicate_b_dpr_sand' => $request->duplicate_b_dpr_sand,
-                'duplicate_b_dpr_clay' => $request->duplicate_b_dpr_clay,
-                'duplicate_b_dpr_silt' => $request->duplicate_b_dpr_silt,
-                'duplicate_b_acceptability' => $request->duplicate_b_acceptability,
-                'duplicate_b_observations' => $request->duplicate_b_observations,
-                'reference_material_expected_sand' => $request->reference_material_expected_sand,
-                'reference_material_expected_clay' => $request->reference_material_expected_clay,
-                'reference_material_expected_silt' => $request->reference_material_expected_silt,
-                'reference_material_obtained_sand' => $request->reference_material_obtained_sand,
-                'reference_material_obtained_clay' => $request->reference_material_obtained_clay,
-                'reference_material_obtained_silt' => $request->reference_material_obtained_silt,
-                'reference_material_error_percent' => $request->reference_material_error_percent,
-                'reference_material_acceptability' => $request->reference_material_acceptability,
-                'reference_material_observations' => $request->reference_material_observations,
-                'general_observations' => $request->general_observations,
+                'equipment_used' => $firstAnalysis['equipment_used'] ?? null,
+                'method_interval' => $firstAnalysis['method_interval'] ?? null,
+                'samples' => json_encode($samples),
+                'analytical_controls' => json_encode($analyticalControls),
+                'duplicate_a_code' => $firstAnalysis['duplicate_a_code'] ?? null,
+                'duplicate_a_avg_sand' => $firstAnalysis['duplicate_a_avg_sand'] ?? null,
+                'duplicate_a_avg_clay' => $firstAnalysis['duplicate_a_avg_clay'] ?? null,
+                'duplicate_a_avg_silt' => $firstAnalysis['duplicate_a_avg_silt'] ?? null,
+                'duplicate_a_dpr_sand' => $firstAnalysis['duplicate_a_dpr_sand'] ?? null,
+                'duplicate_a_dpr_clay' => $firstAnalysis['duplicate_a_dpr_clay'] ?? null,
+                'duplicate_a_dpr_silt' => $firstAnalysis['duplicate_a_dpr_silt'] ?? null,
+                'duplicate_a_acceptability' => $firstAnalysis['duplicate_a_acceptability'] ?? null,
+                'duplicate_a_observations' => $firstAnalysis['duplicate_a_observations'] ?? null,
+                'duplicate_b_code' => $firstAnalysis['duplicate_b_code'] ?? null,
+                'duplicate_b_avg_sand' => $firstAnalysis['duplicate_b_avg_sand'] ?? null,
+                'duplicate_b_avg_clay' => $firstAnalysis['duplicate_b_avg_clay'] ?? null,
+                'duplicate_b_avg_silt' => $firstAnalysis['duplicate_b_avg_silt'] ?? null,
+                'duplicate_b_dpr_sand' => $firstAnalysis['duplicate_b_dpr_sand'] ?? null,
+                'duplicate_b_dpr_clay' => $firstAnalysis['duplicate_b_dpr_clay'] ?? null,
+                'duplicate_b_dpr_silt' => $firstAnalysis['duplicate_b_dpr_silt'] ?? null,
+                'duplicate_b_acceptability' => $firstAnalysis['duplicate_b_acceptability'] ?? null,
+                'duplicate_b_observations' => $firstAnalysis['duplicate_b_observations'] ?? null,
+                'reference_material_expected_sand' => $firstAnalysis['reference_material_expected_sand'] ?? null,
+                'reference_material_expected_clay' => $firstAnalysis['reference_material_expected_clay'] ?? null,
+                'reference_material_expected_silt' => $firstAnalysis['reference_material_expected_silt'] ?? null,
+                'reference_material_obtained_sand' => $firstAnalysis['reference_material_obtained_sand'] ?? null,
+                'reference_material_obtained_clay' => $firstAnalysis['reference_material_obtained_clay'] ?? null,
+                'reference_material_obtained_silt' => $firstAnalysis['reference_material_obtained_silt'] ?? null,
+                'reference_material_error_percent' => $firstAnalysis['reference_material_error_percent'] ?? null,
+                'reference_material_acceptability' => $firstAnalysis['reference_material_acceptability'] ?? null,
+                'reference_material_observations' => $firstAnalysis['reference_material_observations'] ?? null,
+                'general_observations' => $firstAnalysis['general_observations'] ?? null,
                 'review_status' => 'pending', // Cambiar a pending para que vuelva a revisión
                 'review_observations' => null, // Limpiar observaciones anteriores
                 'reviewed_by' => null,
                 'review_date' => null,
             ]);
+
+            // Actualizar o crear controles analíticos en la tabla analytical_controls
+            if (!empty($analyticalControls)) {
+                // Eliminar controles analíticos existentes para este análisis
+                \Modules\LSCEFA\Entities\AnalyticalControl::where('analysis_id', $analysis->id)
+                    ->where('analysis_type', 'texture')
+                    ->delete();
+
+                // Crear nuevos controles analíticos
+                foreach ($analyticalControls as $control) {
+                    \Modules\LSCEFA\Entities\AnalyticalControl::create([
+                        'analysis_id' => $analysis->id,
+                        'process_id' => $analysis->process_id,
+                        'analysis_type' => 'texture',
+                        'controles_analiticos' => json_encode($control),
+                    ]);
+                }
+            }
 
             // Actualizar el estado del ServiceProcessDetail a completed
             $spd = \Modules\LSCEFA\Models\ServiceProcessDetail::where('process_id', $analysis->process_id)
@@ -777,6 +954,13 @@ class TextureAnalysisController extends Controller
             }
 
             DB::commit();
+
+            Log::info('Análisis de textura actualizado exitosamente', [
+                'analysis_id' => $analysis->id,
+                'new_status' => 'pending',
+                'samples_count' => count($samples),
+                'analytical_controls_count' => count($analyticalControls)
+            ]);
 
             return redirect()->route('lscefa.technical.analyses.texture.index')
                 ->with('success', 'Análisis de textura corregido exitosamente. Ha sido enviado nuevamente para revisión.');
@@ -791,5 +975,186 @@ class TextureAnalysisController extends Controller
 
             return back()->withInput()->with('error', 'Error al actualizar el análisis: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Descarga el informe de análisis de textura en formato Excel
+     */
+    public function downloadTextureReport($analysisId)
+    {
+        $textureAnalysis = BatchTextureAnalysis::findOrFail($analysisId);
+        
+        // Crear el archivo Excel usando PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Configurar encabezados del informe
+        $sheet->setCellValue('A1', 'LABORATORIO DE CIENCIAS BÁSICAS');
+        $sheet->setCellValue('A2', 'PROCEDIMIENTO DETERMINACIÓN DE TEXTURA EN SUELOS');
+        $sheet->setCellValue('A3', 'FORMATO REPORTE RESULTADOS TEXTURA EN SUELOS');
+        $sheet->setCellValue('D3', 'Versión: 1');
+        $sheet->setCellValue('D4', 'Código: F-TSS-001');
+        $sheet->setCellValue('D5', 'Página: 1 de 1');
+
+        // Información general del análisis
+        $sheet->setCellValue('A6', 'Consecutivo No.:');
+        $sheet->setCellValue('B6', $textureAnalysis->consecutive_no);
+        $sheet->setCellValue('A7', 'Fecha del análisis:');
+        $sheet->setCellValue('B7', $textureAnalysis->analysis_date);
+        $sheet->setCellValue('A8', 'Nombre Analista:');
+        $sheet->setCellValue('B8', $textureAnalysis->analyst_name);
+        $sheet->setCellValue('A9', 'Metodología Utilizada:');
+        $sheet->setCellValue('B9', $textureAnalysis->methodology_used);
+        $sheet->setCellValue('A10', 'Código Termómetro:');
+        $sheet->setCellValue('B10', $textureAnalysis->thermometer_code);
+        $sheet->setCellValue('A11', 'Código Hidrómetro:');
+        $sheet->setCellValue('B11', $textureAnalysis->hydrometer_code);
+
+        // Controles analíticos
+        $sheet->setCellValue('A13', 'Controles analíticos');
+        $sheet->setCellValue('A14', 'Identificación');
+        $sheet->setCellValue('B14', 'Valor esperado Arena (%)');
+        $sheet->setCellValue('C14', 'Valor leído Arena (%)');
+        $sheet->setCellValue('D14', 'Valor esperado Limo (%)');
+        $sheet->setCellValue('E14', 'Valor leído Limo (%)');
+        $sheet->setCellValue('F14', 'Valor esperado Arcilla (%)');
+        $sheet->setCellValue('G14', 'Valor leído Arcilla (%)');
+        $sheet->setCellValue('H14', '% Error');
+        $sheet->setCellValue('I14', 'Aceptabilidad del control');
+
+        $row = 15;
+        $analyticalControls = is_string($textureAnalysis->analytical_controls) ? 
+            json_decode($textureAnalysis->analytical_controls, true) : 
+            $textureAnalysis->analytical_controls;
+
+        if (is_array($analyticalControls)) {
+            foreach ($analyticalControls as $control) {
+                $sheet->setCellValue('A' . $row, $control['identificacion'] ?? '');
+                $sheet->setCellValue('B' . $row, $control['valor_esperado_arena'] ?? '');
+                $sheet->setCellValue('C' . $row, $control['valor_leido_arena'] ?? '');
+                $sheet->setCellValue('D' . $row, $control['valor_esperado_limo'] ?? '');
+                $sheet->setCellValue('E' . $row, $control['valor_leido_limo'] ?? '');
+                $sheet->setCellValue('F' . $row, $control['valor_esperado_arcilla'] ?? '');
+                $sheet->setCellValue('G' . $row, $control['valor_leido_arcilla'] ?? '');
+                $sheet->setCellValue('H' . $row, $control['porcentaje_error'] ?? '');
+                $sheet->setCellValue('I' . $row, $control['aceptabilidad_error'] ?? '');
+                $row++;
+            }
+        }
+
+        // Precisión analítica (duplicados)
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Precisión analítica');
+        $sheet->setCellValue('A' . ($row + 1), 'Identificación');
+        $sheet->setCellValue('B' . ($row + 1), 'Promedio Arena (%)');
+        $sheet->setCellValue('C' . ($row + 1), 'Promedio Limo (%)');
+        $sheet->setCellValue('D' . ($row + 1), 'Promedio Arcilla (%)');
+        $sheet->setCellValue('E' . ($row + 1), 'DPR Arena (%)');
+        $sheet->setCellValue('F' . ($row + 1), 'DPR Limo (%)');
+        $sheet->setCellValue('G' . ($row + 1), 'DPR Arcilla (%)');
+        $sheet->setCellValue('H' . ($row + 1), 'Aceptabilidad');
+
+        $row += 2;
+        // Duplicado A
+        $sheet->setCellValue('A' . $row, $textureAnalysis->duplicate_a_code ?? '');
+        $sheet->setCellValue('B' . $row, $textureAnalysis->duplicate_a_avg_sand ?? '');
+        $sheet->setCellValue('C' . $row, $textureAnalysis->duplicate_a_avg_silt ?? '');
+        $sheet->setCellValue('D' . $row, $textureAnalysis->duplicate_a_avg_clay ?? '');
+        $sheet->setCellValue('E' . $row, $textureAnalysis->duplicate_a_dpr_sand ?? '');
+        $sheet->setCellValue('F' . $row, $textureAnalysis->duplicate_a_dpr_silt ?? '');
+        $sheet->setCellValue('G' . $row, $textureAnalysis->duplicate_a_dpr_clay ?? '');
+        $sheet->setCellValue('H' . $row, $textureAnalysis->duplicate_a_acceptability ?? '');
+
+        $row++;
+        // Duplicado B
+        $sheet->setCellValue('A' . $row, $textureAnalysis->duplicate_b_code ?? '');
+        $sheet->setCellValue('B' . $row, $textureAnalysis->duplicate_b_avg_sand ?? '');
+        $sheet->setCellValue('C' . $row, $textureAnalysis->duplicate_b_avg_silt ?? '');
+        $sheet->setCellValue('D' . $row, $textureAnalysis->duplicate_b_avg_clay ?? '');
+        $sheet->setCellValue('E' . $row, $textureAnalysis->duplicate_b_dpr_sand ?? '');
+        $sheet->setCellValue('F' . $row, $textureAnalysis->duplicate_b_dpr_silt ?? '');
+        $sheet->setCellValue('G' . $row, $textureAnalysis->duplicate_b_dpr_clay ?? '');
+        $sheet->setCellValue('H' . $row, $textureAnalysis->duplicate_b_acceptability ?? '');
+
+        // Material de referencia
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Material de referencia');
+        $sheet->setCellValue('A' . ($row + 1), 'Valor esperado Arena (%)');
+        $sheet->setCellValue('B' . ($row + 1), 'Valor obtenido Arena (%)');
+        $sheet->setCellValue('C' . ($row + 1), 'Valor esperado Limo (%)');
+        $sheet->setCellValue('D' . ($row + 1), 'Valor obtenido Limo (%)');
+        $sheet->setCellValue('E' . ($row + 1), 'Valor esperado Arcilla (%)');
+        $sheet->setCellValue('F' . ($row + 1), 'Valor obtenido Arcilla (%)');
+        $sheet->setCellValue('G' . ($row + 1), '% Error');
+        $sheet->setCellValue('H' . ($row + 1), 'Aceptabilidad');
+
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Material de referencia');
+        $sheet->setCellValue('B' . $row, $textureAnalysis->reference_material_expected_sand ?? '');
+        $sheet->setCellValue('C' . $row, $textureAnalysis->reference_material_obtained_sand ?? '');
+        $sheet->setCellValue('D' . $row, $textureAnalysis->reference_material_expected_silt ?? '');
+        $sheet->setCellValue('E' . $row, $textureAnalysis->reference_material_obtained_silt ?? '');
+        $sheet->setCellValue('F' . $row, $textureAnalysis->reference_material_expected_clay ?? '');
+        $sheet->setCellValue('G' . $row, $textureAnalysis->reference_material_obtained_clay ?? '');
+        $sheet->setCellValue('H' . $row, $textureAnalysis->reference_material_error_percent ?? '');
+        $sheet->setCellValue('I' . $row, $textureAnalysis->reference_material_acceptability ?? '');
+
+        // Ítems de ensayo (muestras)
+        $row += 3;
+        $sheet->setCellValue('A' . $row, 'Ítems de ensayo');
+        $sheet->setCellValue('A' . ($row + 1), 'Código interno');
+        $sheet->setCellValue('B' . ($row + 1), 'Peso Arena (g)');
+        $sheet->setCellValue('C' . ($row + 1), 'Peso Limo (g)');
+        $sheet->setCellValue('D' . ($row + 1), 'Peso Arcilla (g)');
+        $sheet->setCellValue('E' . ($row + 1), 'Peso Total (g)');
+        $sheet->setCellValue('F' . ($row + 1), '% Arena');
+        $sheet->setCellValue('G' . ($row + 1), '% Limo');
+        $sheet->setCellValue('H' . ($row + 1), '% Arcilla');
+        $sheet->setCellValue('I' . ($row + 1), 'Clase Textural');
+        $sheet->setCellValue('J' . ($row + 1), 'Observaciones');
+
+        $row += 2;
+        $samples = is_string($textureAnalysis->samples) ? 
+            json_decode($textureAnalysis->samples, true) : 
+            $textureAnalysis->samples;
+
+        if (is_array($samples)) {
+            foreach ($samples as $sample) {
+                if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
+                    $sheet->setCellValue('A' . $row, $sample['codigo_interno'] ?? '');
+                    $sheet->setCellValue('B' . $row, $sample['peso_arena'] ?? '');
+                    $sheet->setCellValue('C' . $row, $sample['peso_limo'] ?? '');
+                    $sheet->setCellValue('D' . $row, $sample['peso_arcilla'] ?? '');
+                    $sheet->setCellValue('E' . $row, $sample['peso_total'] ?? '');
+                    $sheet->setCellValue('F' . $row, $sample['porcentaje_arena'] ?? '');
+                    $sheet->setCellValue('G' . $row, $sample['porcentaje_limo'] ?? '');
+                    $sheet->setCellValue('H' . $row, $sample['porcentaje_arcilla'] ?? '');
+                    $sheet->setCellValue('I' . $row, $sample['clase_textural'] ?? '');
+                    $sheet->setCellValue('J' . $row, $sample['observaciones'] ?? '');
+                    $row++;
+                }
+            }
+        }
+
+        // Observaciones generales
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Observaciones generales:');
+        $sheet->setCellValue('A' . ($row + 1), $textureAnalysis->general_observations ?? '');
+
+        // Auto-size columns
+        foreach (range('A', 'J') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Crear el archivo Excel
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'reporte_textura_' . $textureAnalysis->consecutive_no . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer->save('php://output');
+        exit;
     }
 }

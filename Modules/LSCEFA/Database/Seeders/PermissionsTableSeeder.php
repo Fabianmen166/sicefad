@@ -1516,5 +1516,42 @@ class PermissionsTableSeeder extends Seeder
             ]);
             $permissions_technical[] = $perm->id;
         }
+
+        // Permiso para ver el listado de análisis de boro (Técnico y Calidad y Admin)
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.boron.index'], [
+            'name' => 'Ver listado de Análisis de Boro',
+            'description' => 'Puede ver el listado de análisis de boro',
+            'description_english' => 'Can view the list of boron analyses',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+        
+        // Permisos adicionales de boro SOLO para técnico
+        $boron_permissions = [
+            ['slug' => 'lscefa.technical.analyses.boron.process', 'name' => 'Procesar análisis de boro individual', 'description' => 'Puede procesar análisis de boro individuales', 'description_english' => 'Can process individual boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.store', 'name' => 'Guardar análisis de boro', 'description' => 'Puede guardar análisis de boro', 'description_english' => 'Can store boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.batch', 'name' => 'Procesar lote de análisis de boro', 'description' => 'Puede procesar lotes de análisis de boro', 'description_english' => 'Can process batches of boron analyses'],
+            ['slug' => 'lscefa.technical.analyses.boron.batch.post', 'name' => 'Procesar lote de análisis de boro (POST)', 'description' => 'Puede procesar lotes de análisis de boro (POST)', 'description_english' => 'Can process batches of boron analyses (POST)'],
+            ['slug' => 'lscefa.technical.analyses.boron.batch_store', 'name' => 'Guardar lote de análisis de boro', 'description' => 'Puede guardar lotes de análisis de boro', 'description_english' => 'Can store batches of boron analyses'],
+            ['slug' => 'lscefa.technical.analyses.boron.show', 'name' => 'Ver detalle de análisis de boro', 'description' => 'Puede ver el detalle de análisis de boro', 'description_english' => 'Can view boron analysis detail'],
+            ['slug' => 'lscefa.technical.analyses.boron.edit', 'name' => 'Editar análisis de boro', 'description' => 'Puede editar análisis de boro', 'description_english' => 'Can edit boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.update', 'name' => 'Actualizar análisis de boro', 'description' => 'Puede actualizar análisis de boro', 'description_english' => 'Can update boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.destroy', 'name' => 'Eliminar análisis de boro', 'description' => 'Puede eliminar análisis de boro', 'description_english' => 'Can delete boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.report', 'name' => 'Descargar reporte de boro', 'description' => 'Puede descargar reportes de análisis de boro', 'description_english' => 'Can download boron analysis reports'],
+            ['slug' => 'lscefa.technical.analyses.boron.edit_rejected', 'name' => 'Editar análisis de boro rechazado', 'description' => 'Puede editar análisis de boro que han sido rechazados', 'description_english' => 'Can edit rejected boron analysis'],
+            ['slug' => 'lscefa.technical.analyses.boron.update_rejected', 'name' => 'Actualizar análisis de boro rechazado', 'description' => 'Puede actualizar análisis de boro que han sido rechazados', 'description_english' => 'Can update rejected boron analysis'],
+        ];
+        foreach ($boron_permissions as $bp) {
+            $perm = Permission::updateOrCreate(['slug' => $bp['slug']], [
+                'name' => $bp['name'],
+                'description' => $bp['description'],
+                'description_english' => $bp['description_english'],
+                'app_id' => $app->id
+            ]);
+            $permissions_technical[] = $perm->id;
+        }
+
+        // Asignar permisos de textura y boro al rol técnico
+        $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
     }
 }

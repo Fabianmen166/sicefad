@@ -85,16 +85,16 @@ class BoronAnalysisController2 extends Controller
                 'controles_analiticos.*.aceptabilidad_recuperacion' => 'nullable|string',
                 'controles_analiticos.*.porcentaje_dpr' => 'nullable|numeric',
                 'controles_analiticos.*.aceptabilidad_dpr' => 'nullable|string',
-                'items' => 'required|array',
-                'items.*.codigo_interno' => 'nullable|string',
-                'items.*.peso_muestra' => 'nullable|numeric|min:0',
-                'items.*.pw' => 'nullable|numeric|min:0',
-                'items.*.v_extractante' => 'nullable|numeric|min:0',
-                'items.*.lectura_blanco' => 'nullable|numeric|min:0',
-                'items.*.factor_dilucion' => 'nullable|numeric|min:0',
-                'items.*.boro_disponible_mg_l' => 'nullable|numeric|min:0',
-                'items.*.boro_disponible_mg_kg' => 'nullable|numeric',
-                'items.*.observaciones_item' => 'nullable|string',
+                'items_ensayo' => 'required|array',
+                'items_ensayo.*.codigo_interno' => 'nullable|string',
+                'items_ensayo.*.peso_muestra' => 'nullable|numeric|min:0',
+                'items_ensayo.*.pw' => 'nullable|numeric|min:0',
+                'items_ensayo.*.v_extractante' => 'nullable|numeric|min:0',
+                'items_ensayo.*.lectura_blanco' => 'nullable|numeric|min:0',
+                'items_ensayo.*.factor_dilucion' => 'nullable|numeric|min:0',
+                'items_ensayo.*.boro_disponible_mg_l' => 'nullable|numeric|min:0',
+                'items_ensayo.*.boro_disponible_mg_kg' => 'nullable|numeric',
+                'items_ensayo.*.observaciones' => 'nullable|string',
             ]);
 
             Log::info('Iniciando guardado de análisis de boro', [
@@ -113,14 +113,12 @@ class BoronAnalysisController2 extends Controller
                 ]);
             }
 
-            // Preparar datos de controles analíticos
-            $controlesAnaliticos = $request->input('controles_analiticos', []);
-            $standardA = $controlesAnaliticos[0] ?? [];
-            $standardB = $controlesAnaliticos[1] ?? [];
+            // Preparar datos de controles analíticos (enfoque robusto)
+            // No acceder directamente a índices que pueden no existir
 
             // Preparar datos de curva de calibración y duplicados
             $curvaData = [
-                'value' => 0.995, // Valor fijo de la curva
+                'value' => $request->input('curva_valor', 0.995), // Permitir entrada del usuario
                 'read_value' => $request->input('curva_valor_leido'),
                 'error_percentage' => $request->input('curva_error_porcentaje'),
                 'acceptability' => $request->input('curva_aceptabilidad')
@@ -135,7 +133,7 @@ class BoronAnalysisController2 extends Controller
 
             // Preparar items de ensayo
             $testItems = [];
-            $items = $request->input('items', []);
+            $items = $request->input('items_ensayo', []);
 
             foreach ($items as $item) {
                 $testItems[] = [
@@ -147,42 +145,71 @@ class BoronAnalysisController2 extends Controller
                     'dilution_factor' => $item['factor_dilucion'] ?? 0,
                     'available_boron_mg_l' => $item['boro_disponible_mg_l'] ?? 0,
                     'available_boron_mg_kg' => $item['boro_disponible_mg_kg'] ?? 0,
-                    'observations' => $item['observaciones_item'] ?? ''
+                    'observations' => $item['observaciones'] ?? ''
                 ];
+            }
+
+            // Obtener controles analíticos de manera segura
+            $controlesAnaliticos = $request->input('controles_analiticos', []);
+            
+            // Buscar Estándar A y B por identificación en lugar de por índice
+            $standardA = null;
+            $standardB = null;
+            
+            foreach ($controlesAnaliticos as $control) {
+                if (isset($control['identificacion'])) {
+                    if (stripos($control['identificacion'], 'estándar a') !== false || 
+                        stripos($control['identificacion'], 'standard a') !== false ||
+                        stripos($control['identificacion'], 'estandar a') !== false) {
+                        $standardA = $control;
+                    } elseif (stripos($control['identificacion'], 'estándar b') !== false || 
+                             stripos($control['identificacion'], 'standard b') !== false ||
+                             stripos($control['identificacion'], 'estandar b') !== false) {
+                        $standardB = $control;
+                    }
+                }
+            }
+            
+            // Si no se encontraron por identificación, usar los primeros dos controles disponibles
+            if (!$standardA && isset($controlesAnaliticos[0])) {
+                $standardA = $controlesAnaliticos[0];
+            }
+            if (!$standardB && isset($controlesAnaliticos[1])) {
+                $standardB = $controlesAnaliticos[1];
             }
 
             // Crear o actualizar el análisis de boro
             $analysisData = [
                 'process_id' => (string)$processId,
                 'service_id' => $serviceId,
-                'consecutivo_no' => $request->consecutivo_no,
-                'applied_methodology' => $request->metodologia_aplicada,
-                'method_interval' => $request->intervalo_metodo,
-                'analysis_date' => $request->fecha_analisis,
-                'equipment_used' => $request->equipo_utilizado,
-                'analyst_name' => $request->analista,
+                'consecutivo_no' => $request->input('consecutivo_no'),
+                'applied_methodology' => $request->input('metodologia_aplicada'),
+                'method_interval' => $request->input('intervalo_metodo'),
+                'analysis_date' => $request->input('fecha_analisis'),
+                'equipment_used' => $request->input('equipo_utilizado'),
+                'analyst_name' => $request->input('analista'),
                 
-                // Controles analíticos - Estándar A
-                'standard_a_identification' => $standardA['identificacion'] ?? '',
-                'standard_a_expected_value' => $standardA['valor_esperado'] ?? 0,
-                'standard_a_read_value' => $standardA['valor_leido'] ?? 0,
-                'standard_a_error_percentage' => $standardA['porcentaje_error'] ?? 0,
-                'standard_a_error_acceptability' => $standardA['aceptabilidad_error'] ?? '',
-                'standard_a_recovery_percentage' => $standardA['porcentaje_recuperacion'] ?? 0,
-                'standard_a_recovery_acceptability' => $standardA['aceptabilidad_recuperacion'] ?? '',
-                'standard_a_dpr_percentage' => $standardA['porcentaje_dpr'] ?? 0,
-                'standard_a_dpr_acceptability' => $standardA['aceptabilidad_dpr'] ?? '',
+                // Controles analíticos - Estándar A (enfoque robusto)
+                'standard_a_identification' => $standardA ? ($standardA['identificacion'] ?? 'Estándar A') : 'Estándar A',
+                'standard_a_expected_value' => $standardA ? ($standardA['valor_esperado'] ?? 0) : 0,
+                'standard_a_read_value' => $standardA ? ($standardA['valor_leido'] ?? 0) : 0,
+                'standard_a_error_percentage' => $standardA ? ($standardA['porcentaje_error'] ?? 0) : 0,
+                'standard_a_error_acceptability' => $standardA ? ($standardA['aceptabilidad_error'] ?? '') : '',
+                'standard_a_recovery_percentage' => $standardA ? ($standardA['porcentaje_recuperacion'] ?? 0) : 0,
+                'standard_a_recovery_acceptability' => $standardA ? ($standardA['aceptabilidad_recuperacion'] ?? '') : '',
+                'standard_a_dpr_percentage' => $standardA ? ($standardA['porcentaje_dpr'] ?? 0) : 0,
+                'standard_a_dpr_acceptability' => $standardA ? ($standardA['aceptabilidad_dpr'] ?? '') : '',
                 
-                // Controles analíticos - Estándar B
-                'standard_b_identification' => $standardB['identificacion'] ?? '',
-                'standard_b_expected_value' => $standardB['valor_esperado'] ?? 0,
-                'standard_b_read_value' => $standardB['valor_leido'] ?? 0,
-                'standard_b_error_percentage' => $standardB['porcentaje_error'] ?? 0,
-                'standard_b_error_acceptability' => $standardB['aceptabilidad_error'] ?? '',
-                'standard_b_recovery_percentage' => $standardB['porcentaje_recuperacion'] ?? 0,
-                'standard_b_recovery_acceptability' => $standardB['aceptabilidad_recuperacion'] ?? '',
-                'standard_b_dpr_percentage' => $standardB['porcentaje_dpr'] ?? 0,
-                'standard_b_dpr_acceptability' => $standardB['aceptabilidad_dpr'] ?? '',
+                // Controles analíticos - Estándar B (enfoque robusto)
+                'standard_b_identification' => $standardB ? ($standardB['identificacion'] ?? 'Estándar B') : 'Estándar B',
+                'standard_b_expected_value' => $standardB ? ($standardB['valor_esperado'] ?? 0) : 0,
+                'standard_b_read_value' => $standardB ? ($standardB['valor_leido'] ?? 0) : 0,
+                'standard_b_error_percentage' => $standardB ? ($standardB['porcentaje_error'] ?? 0) : 0,
+                'standard_b_error_acceptability' => $standardB ? ($standardB['aceptabilidad_error'] ?? '') : '',
+                'standard_b_recovery_percentage' => $standardB ? ($standardB['porcentaje_recuperacion'] ?? 0) : 0,
+                'standard_b_recovery_acceptability' => $standardB ? ($standardB['aceptabilidad_recuperacion'] ?? '') : '',
+                'standard_b_dpr_percentage' => $standardB ? ($standardB['porcentaje_dpr'] ?? 0) : 0,
+                'standard_b_dpr_acceptability' => $standardB ? ($standardB['aceptabilidad_dpr'] ?? '') : '',
                 
                 // Curva de calibración
                 'calibration_curve_value' => $curvaData['value'],
@@ -200,7 +227,10 @@ class BoronAnalysisController2 extends Controller
                 'test_items' => $testItems,
                 
                 // Observaciones generales
-                'general_observations' => $request->observaciones ?? ''
+                'general_observations' => $request->input('observaciones'),
+                
+                // Estado de revisión
+                'review_status' => 'pending'
             ];
 
             Log::info('Guardando análisis de boro detallado', [
@@ -345,8 +375,24 @@ class BoronAnalysisController2 extends Controller
 
     public function batchStore(Request $request)
     {
+        // LOGGING DETALLADO PARA DEBUGGING
+        Log::info('=== INICIO BATCHSTORE - DATOS COMPLETOS DEL REQUEST ===');
+        Log::info('Request completo:', $request->all());
+        Log::info('Controles analíticos:', $request->input('controles_analiticos'));
+        Log::info('Items ensayo:', $request->input('items_ensayo'));
+        Log::info('Process IDs:', $request->input('process_ids'));
+        Log::info('=== FIN DATOS DEL REQUEST ===');
+        
         try {
             DB::beginTransaction();
+
+            // LOGGING ANTES DE LA VALIDACIÓN
+            Log::info('=== ANTES DE VALIDACIÓN ===');
+            Log::info('Datos a validar:', [
+                'controles_analiticos' => $request->input('controles_analiticos'),
+                'items_ensayo' => $request->input('items_ensayo'),
+                'process_ids' => $request->input('process_ids')
+            ]);
 
             $request->validate([
                 'process_ids' => 'required|array',
@@ -358,8 +404,8 @@ class BoronAnalysisController2 extends Controller
                 'nombre_analista' => 'nullable|string',
                 'curva_valor_leido' => 'nullable|numeric',
                 'curva_error_porcentaje' => 'nullable|numeric',
-                'controles_analiticos' => 'required|array',
-                'controles_analiticos.*.identificacion' => 'required|string',
+                'controles_analiticos' => 'nullable|array', // Cambiar a nullable
+                'controles_analiticos.*.identificacion' => 'nullable|string',
                 'controles_analiticos.*.valor_esperado' => 'nullable|numeric|min:0',
                 'controles_analiticos.*.valor_leido' => 'nullable|numeric|min:0',
                 'controles_analiticos.*.porcentaje_error' => 'nullable|numeric',
@@ -381,8 +427,12 @@ class BoronAnalysisController2 extends Controller
                 'items_ensayo.*.factor_dilucion' => 'nullable|numeric|min:0',
                 'items_ensayo.*.boro_disponible_mg_l' => 'nullable|numeric|min:0',
                 'items_ensayo.*.boro_disponible_mg_kg' => 'nullable|numeric',
-                'items_ensayo.*.observaciones_item' => 'nullable|string',
+                'items_ensayo.*.observaciones' => 'nullable|string',
             ]);
+            
+            // LOGGING DESPUÉS DE LA VALIDACIÓN
+            Log::info('=== DESPUÉS DE VALIDACIÓN ===');
+            Log::info('Validación exitosa', ['status' => 'success']);
 
             Log::info('Iniciando guardado de análisis de boro por lotes', [
                 'user_id' => Auth::id(),
@@ -391,8 +441,12 @@ class BoronAnalysisController2 extends Controller
             ]);
 
             // Proporcionar valores por defecto para campos requeridos
-            $consecutivoNo = $request->consecutivo_no ?: 'BATCH-' . date('Ymd-His');
-            $fechaAnalisis = $request->fecha_analisis ?: date('Y-m-d');
+            // Usar el consecutivo del formulario si está disponible
+            $consecutivoNo = $request->input('consecutivo_no');
+            if (empty($consecutivoNo)) {
+                $consecutivoNo = 'BATCH-' . date('Ymd-His');
+            }
+            $fechaAnalisis = $request->input('fecha_analisis') ?: date('Y-m-d');
 
             $savedCount = 0;
             $errors = [];
@@ -426,7 +480,7 @@ class BoronAnalysisController2 extends Controller
                         ]);
                         // En lugar de bloquear, actualizar el control existente
                         $existingControl->update([
-                            'controles_analiticos' => $request->controles_analiticos,
+                            'controles_analiticos' => $request->input('controles_analiticos', []),
                             'curva_valor_leido' => $request->input('curva_valor_leido') ?? 0,
                             'curva_error_porcentaje' => $request->input('curva_error_porcentaje') ?? 0,
                             'dpr_duplicado_a' => $request->input('duplicado_a') ?? 0,
@@ -440,7 +494,7 @@ class BoronAnalysisController2 extends Controller
                         // Guardar control analítico (usando los datos del formulario de lote)
                         $controlData = [
                             'process_id' => $processId,
-                            'controles_analiticos' => $request->controles_analiticos,
+                            'controles_analiticos' => $request->input('controles_analiticos', []),
                             'curva_valor_leido' => $request->input('curva_valor_leido') ?? 0,
                             'curva_error_porcentaje' => $request->input('curva_error_porcentaje') ?? 0,
                             'dpr_duplicado_a' => $request->input('duplicado_a') ?? 0,
@@ -459,43 +513,331 @@ class BoronAnalysisController2 extends Controller
                         Log::info('Control analítico creado con ID: ' . $analyticalControl->id);
                     }
 
-                    // Guardar múltiples análisis de boro (uno por cada fila de resultados)
-                    $boronAnalyses = [];
-                    $items = $request->input("items_ensayo.{$index}", []);
+                                         // Obtener items de ensayo - LÓGICA CORREGIDA
+                     // El formulario envía items_ensayo como array simple, no como items_ensayo.{index}
+                     $items = $request->input('items_ensayo', []);
+                     
+                     // Logging para debug
+                     Log::info('Items de ensayo recibidos:', [
+                         'items_ensayo_raw' => $items,
+                         'tipo' => gettype($items),
+                         'es_array' => is_array($items),
+                         'count' => is_array($items) ? count($items) : 'NO_ARRAY'
+                     ]);
+                     
+                     // Asegurar que items sea un array
+                     if (!is_array($items)) {
+                         $items = [];
+                     }
+                     
+                     // Si no hay items, crear uno por defecto para evitar testItems vacío
+                     if (empty($items)) {
+                         Log::warning('No se recibieron items de ensayo, creando item por defecto');
+                         $items = [
+                             [
+                                 'codigo_interno' => 'MUESTRA-DEFAULT',
+                                 'peso_muestra' => 0,
+                                 'pw' => 0,
+                                 'v_extractante' => 0,
+                                 'lectura_blanco' => 0,
+                                 'factor_dilucion' => 0,
+                                 'boro_disponible_mg_l' => 0,
+                                 'boro_disponible_mg_kg' => 0,
+                                 'observaciones' => 'Item creado automáticamente'
+                             ]
+                         ];
+                     }
 
                     Log::info('Guardando análisis de boro para proceso', [
                         'process_id' => $processId,
                         'total_rows' => count($items),
-                        'items' => $items
-                    ]);
+                         'items' => $items,
+                         'index_usado' => $index
+                     ]);
 
-                    foreach ($items as $itemIndex => $item) {
+                                         // Preparar datos para BoronAnalysisDetail (análisis completo con controles)
+                     $testItems = [];
+                     if (is_array($items)) {
+                         foreach ($items as $item) {
+                             if (is_array($item)) {
+                                 $testItems[] = [
+                                     'internal_code' => $item['codigo_interno'] ?? '',
+                                     'sample_weight' => $item['peso_muestra'] ?? 0,
+                                     'pw' => $item['pw'] ?? 0,
+                                     'extractant_volume' => $item['v_extractante'] ?? 0,
+                                     'blank_reading' => $item['lectura_blanco'] ?? 0,
+                                     'dilution_factor' => $item['factor_dilucion'] ?? 0,
+                                     'available_boron_mg_l' => $item['boro_disponible_mg_l'] ?? 0,
+                                     'available_boron_mg_kg' => $item['boro_disponible_mg_kg'] ?? 0,
+                                     'observations' => $item['observaciones'] ?? ''
+                                 ];
+                             }
+                         }
+                     } else {
+                         // Si items no es un array, crear un item por defecto
+                         $testItems[] = [
+                             'internal_code' => $items['codigo_interno'] ?? 'MUESTRA-DEFAULT',
+                             'sample_weight' => $items['peso_muestra'] ?? 0,
+                             'pw' => $items['pw'] ?? 0,
+                             'extractant_volume' => $items['v_extractante'] ?? 0,
+                             'blank_reading' => $items['lectura_blanco'] ?? 0,
+                             'dilution_factor' => $items['factor_dilucion'] ?? 0,
+                             'available_boron_mg_l' => $items['boro_disponible_mg_l'] ?? 0,
+                             'available_boron_mg_kg' => $items['boro_disponible_mg_kg'] ?? 0,
+                             'observations' => $items['observaciones'] ?? 'Item por defecto'
+                         ];
+                     }
+                     
+                                         // LOGGING CRÍTICO PARA TESTITEMS
+                    Log::info('=== TESTITEMS CREADOS ===');
+                    Log::info('TestItems count:', ['count' => count($testItems)]);
+                    Log::info('TestItems content:', ['testItems' => $testItems]);
+                    Log::info('=== FIN TESTITEMS ===');
+                    
+                    // Definir observaciones del primer item AQUÍ para evitar error de variable indefinida
+                    $firstItemObservations = !empty($testItems) ? ($testItems[0]['observations'] ?? '') : '';
+
+                                         // LOGGING ESPECÍFICO PARA CONTROLES ANALÍTICOS (ENFOQUE SEGURO)
+                     Log::info("=== PROCESANDO PROCESO {$processId} ===");
+                     
+                     // Obtener controles de manera segura para logging
+                     $controlesParaLog = $request->input('controles_analiticos', []);
+                     $controlesCount = count($controlesParaLog);
+                     
+                     Log::info("Controles analíticos completos:", [
+                         'total_controles' => $controlesCount,
+                         'data' => $controlesParaLog
+                     ]);
+                     
+                     // Logging seguro sin acceso directo por índice
+                     if ($controlesCount > 0) {
+                         $primerControl = $controlesParaLog[0] ?? null;
+                         $segundoControl = $controlesCount > 1 ? ($controlesParaLog[1] ?? null) : null;
+                         
+                         Log::info("Primer control:", [
+                             'existe' => $primerControl ? 'SÍ' : 'NO',
+                             'identificacion' => $primerControl ? ($primerControl['identificacion'] ?? 'NO_IDENTIFICACION') : 'NO_EXISTE'
+                         ]);
+                         
+                         if ($segundoControl) {
+                             Log::info("Segundo control:", [
+                                 'existe' => 'SÍ',
+                                 'identificacion' => $segundoControl['identificacion'] ?? 'NO_IDENTIFICACION'
+                             ]);
+                         } else {
+                             Log::info("Segundo control: NO EXISTE");
+                         }
+                     } else {
+                         Log::info("No hay controles analíticos disponibles");
+                     }
+                     
+                     // LOG ADICIONAL PARA DEBUGGING CRÍTICO (ENFOQUE SEGURO)
+                     Log::info("=== DEBUG CRÍTICO: ANTES DE CREAR BORONANALYSISDETAIL ===");
+                     Log::info("Tipo de controles_analiticos:", [
+                         'type' => gettype($controlesParaLog),
+                         'is_array' => is_array($controlesParaLog),
+                         'is_null' => is_null($controlesParaLog),
+                         'count' => $controlesCount
+                     ]);
+                     Log::info("Verificación de existencia:", [
+                         'has_controles_analiticos' => $request->has('controles_analiticos'),
+                         'total_controles' => $controlesCount
+                     ]);
+                     Log::info("=== FIN DEBUG CRÍTICO ===");
+                     
+                     // Crear o actualizar BoronAnalysisDetail (análisis completo)
+                     $boronAnalysisDetailData = [
+                         'process_id' => $processId,
+                         'service_id' => $serviceId,
+                         'consecutive_no' => $request->input('consecutivo_no'),
+                         'applied_methodology' => $request->input('metodologia_aplicada'),
+                         'method_interval' => $request->input('intervalo_metodo'),
+                         'analysis_date' => $fechaAnalisis,
+                         'equipment_used' => $request->input('equipo_utilizado'),
+                         'analyst_name' => $request->input('nombre_analista'), // Corregido: nombre_analista en lugar de analista
+                     ];
+                     
+                     // LOGGING CRÍTICO PARA DEBUGGEAR EL PROBLEMA
+                     Log::info("=== DEBUG CRÍTICO: ANTES DE CREAR BORONANALYSISDETAIL ===");
+                     Log::info("process_id:", ['value' => $processId, 'type' => gettype($processId)]);
+                     Log::info("service_id:", ['value' => $serviceId, 'type' => gettype($serviceId)]);
+                     Log::info("consecutive_no:", ['value' => $request->input('consecutivo_no'), 'type' => gettype($request->input('consecutivo_no'))]);
+                     Log::info("metodologia_aplicada:", ['value' => $request->input('metodologia_aplicada'), 'type' => gettype($request->input('metodologia_aplicada'))]);
+                     Log::info("intervalo_metodo:", ['value' => $request->input('intervalo_metodo'), 'type' => gettype($request->input('intervalo_metodo'))]);
+                     Log::info("equipo_utilizado:", ['value' => $request->input('equipo_utilizado'), 'type' => gettype($request->input('equipo_utilizado'))]);
+                     Log::info("nombre_analista:", ['value' => $request->input('nombre_analista'), 'type' => gettype($request->input('nombre_analista'))]);
+                     Log::info("=== FIN DEBUG CRÍTICO ===");
+                     
+                     // LOGGING PARA DEBUGGEAR CAMPOS
+                     Log::info("=== DEBUG CAMPOS BORONANALYSISDETAIL ===");
+                     Log::info("consecutive_no:", ['value' => $request->input('consecutivo_no')]);
+                     Log::info("metodologia_aplicada:", ['value' => $request->input('metodologia_aplicada')]);
+                     Log::info("intervalo_metodo:", ['value' => $request->input('intervalo_metodo')]);
+                     Log::info("equipo_utilizado:", ['value' => $request->input('equipo_utilizado')]);
+                     Log::info("nombre_analista:", ['value' => $request->input('nombre_analista')]); // Corregido
+                     Log::info("observaciones_item:", ['value' => $firstItemObservations]); // CORREGIDO
+                     Log::info("=== FIN DEBUG CAMPOS ===");
+                     
+                     // LOG CRÍTICO: JUSTO ANTES DE LA ASIGNACIÓN PROBLEMÁTICA
+                     Log::info("=== MOMENTO CRÍTICO: ANTES DE standard_a_identification ===");
+                     Log::info("Intentando acceder a controles_analiticos de manera segura");
+                     
+                     // Obtener controles analíticos de manera segura
+                     $controlesAnaliticos = $request->input('controles_analiticos', []);
+                     
+                     // Buscar Estándar A y B por identificación en lugar de por índice
+                     $standardA = null;
+                     $standardB = null;
+                     
+                     if (is_array($controlesAnaliticos) && !empty($controlesAnaliticos)) {
+                         foreach ($controlesAnaliticos as $control) {
+                             if (is_array($control) && isset($control['identificacion'])) {
+                                 if (stripos($control['identificacion'], 'estándar a') !== false || 
+                                     stripos($control['identificacion'], 'standard a') !== false ||
+                                     stripos($control['identificacion'], 'estandar a') !== false) {
+                                     $standardA = $control;
+                                 } elseif (stripos($control['identificacion'], 'estándar b') !== false || 
+                                          stripos($control['identificacion'], 'standard b') !== false ||
+                                          stripos($control['identificacion'], 'estandar b') !== false) {
+                                     $standardB = $control;
+                                 }
+                             }
+                         }
+                         
+                         // Si no se encontraron por identificación, usar los primeros dos controles disponibles
+                         if (!$standardA && isset($controlesAnaliticos[0]) && is_array($controlesAnaliticos[0])) {
+                             $standardA = $controlesAnaliticos[0];
+                         }
+                         if (!$standardB && isset($controlesAnaliticos[1]) && is_array($controlesAnaliticos[1])) {
+                             $standardB = $controlesAnaliticos[1];
+                         }
+                     }
+                     
+                     // Controles analíticos - Estándar A (enfoque robusto)
+                     $boronAnalysisDetailData['standard_a_identification'] = $standardA ? ($standardA['identificacion'] ?? 'Estándar A') : 'Estándar A';
+                     $boronAnalysisDetailData['standard_a_expected_value'] = $standardA ? ($standardA['valor_esperado'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_a_read_value'] = $standardA ? ($standardA['valor_leido'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_a_error_percentage'] = $standardA ? ($standardA['porcentaje_error'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_a_error_acceptability'] = $standardA ? ($standardA['aceptabilidad_error'] ?? '') : '';
+                     $boronAnalysisDetailData['standard_a_recovery_percentage'] = $standardA ? ($standardA['porcentaje_recuperacion'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_a_recovery_acceptability'] = $standardA ? ($standardA['aceptabilidad_recuperacion'] ?? '') : '';
+                     $boronAnalysisDetailData['standard_a_dpr_percentage'] = $standardA ? ($standardA['porcentaje_dpr'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_a_dpr_acceptability'] = $standardA ? ($standardA['aceptabilidad_dpr'] ?? '') : '';
+                     
+                     // Controles analíticos - Estándar B (enfoque robusto)
+                     $boronAnalysisDetailData['standard_b_identification'] = $standardB ? ($standardB['identificacion'] ?? 'Estándar B') : 'Estándar B';
+                     $boronAnalysisDetailData['standard_b_expected_value'] = $standardB ? ($standardB['valor_esperado'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_b_read_value'] = $standardB ? ($standardB['valor_leido'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_b_error_percentage'] = $standardB ? ($standardB['porcentaje_error'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_b_error_acceptability'] = $standardB ? ($standardB['aceptabilidad_error'] ?? '') : '';
+                     $boronAnalysisDetailData['standard_b_recovery_percentage'] = $standardB ? ($standardB['porcentaje_recuperacion'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_b_recovery_acceptability'] = $standardB ? ($standardB['aceptabilidad_recuperacion'] ?? '') : '';
+                     $boronAnalysisDetailData['standard_b_dpr_percentage'] = $standardB ? ($standardB['porcentaje_dpr'] ?? 0) : 0;
+                     $boronAnalysisDetailData['standard_b_dpr_acceptability'] = $standardB ? ($standardB['aceptabilidad_dpr'] ?? '') : '';
+                     
+                     // Curva de calibración
+                     $boronAnalysisDetailData['calibration_curve_value'] = 0.995; // Valor fijo
+                     $boronAnalysisDetailData['calibration_curve_read_value'] = $request->input("curva_valor_leido") ?? 0;
+                     $boronAnalysisDetailData['calibration_curve_error_percentage'] = $request->input("curva_error_porcentaje") ?? 0;
+                     $boronAnalysisDetailData['calibration_curve_acceptability'] = $request->input("curva_aceptabilidad") ?? '';
+                     
+                     // Duplicados
+                     $boronAnalysisDetailData['duplicate_a_value'] = $request->input("duplicado_a") ?? 0;
+                     $boronAnalysisDetailData['duplicate_b_value'] = $request->input("duplicado_b") ?? 0;
+                     $boronAnalysisDetailData['duplicate_dpr_percentage'] = $request->input("dpr_resultado") ?? 0;
+                     $boronAnalysisDetailData['duplicate_dpr_acceptability'] = $request->input("dpr_aceptabilidad") ?? '';
+                     
+                     // Items de ensayo
+                     $boronAnalysisDetailData['test_items'] = $testItems;
+                     
+                     // Observaciones generales - CORREGIDO: usar observaciones_item del primer item
+                     $boronAnalysisDetailData['general_observations'] = $firstItemObservations;
+                     
+                     // Estado de revisión
+                     $boronAnalysisDetailData['review_status'] = 'pending';
+                     
+                     // LOGGING PARA DEBUGGEAR CAMPOS
+                     Log::info("=== DEBUG CAMPOS BORONANALYSISDETAIL ===");
+                     Log::info("consecutive_no:", ['value' => $request->input('consecutivo_no')]);
+                     Log::info("metodologia_aplicada:", ['value' => $request->input('metodologia_aplicada')]);
+                     Log::info("intervalo_metodo:", ['value' => $request->input('intervalo_metodo')]);
+                     Log::info("equipo_utilizado:", ['value' => $request->input('equipo_utilizado')]);
+                     Log::info("nombre_analista:", ['value' => $request->input('nombre_analista')]); // Corregido
+                     Log::info("observaciones_item:", ['value' => $firstItemObservations]); // CORREGIDO
+                     Log::info("=== FIN DEBUG CAMPOS ===");
+
+                    // Verificar si es un análisis rechazado que se está actualizando
+                    $rejectedAnalysisId = $request->input('rejected_analysis_id');
+                    
+                    if ($rejectedAnalysisId) {
+                        // Es un análisis rechazado, actualizarlo
+                        $boronAnalysisDetail = BoronAnalysisDetail::findOrFail($rejectedAnalysisId);
+                        $boronAnalysisDetail->update($boronAnalysisDetailData);
+                        
+                        // Cambiar el estado de revisión a 'pending' para que vuelva a revisión
+                        $boronAnalysisDetail->update([
+                            'review_status' => 'pending',
+                            'review_observations' => null,
+                            'reviewed_by' => null,
+                            'review_date' => null,
+                        ]);
+                        
+                        Log::info('Análisis de boro rechazado actualizado: ' . $rejectedAnalysisId);
+                    } else {
+                        // Verificar si ya existe un BoronAnalysisDetail para este proceso
+                        $existingBoronDetail = BoronAnalysisDetail::where('process_id', $processId)->first();
+                        
+                        if ($existingBoronDetail) {
+                            $existingBoronDetail->update($boronAnalysisDetailData);
+                            $boronAnalysisDetail = $existingBoronDetail;
+                            Log::info('BoronAnalysisDetail actualizado para proceso: ' . $processId);
+                        } else {
+                            $boronAnalysisDetail = BoronAnalysisDetail::create($boronAnalysisDetailData);
+                            Log::info('BoronAnalysisDetail creado para proceso: ' . $processId . ' con ID: ' . $boronAnalysisDetail->id);
+                        }
+                    }
+
+                    // Crear solo 1 registro individual en BoronAnalysis por proceso (usando el primer item)
+                    if (!empty($testItems)) {
+                        $firstItem = $testItems[0];
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'service_id' => $serviceId,
-                            'consecutive_no' => $consecutivoNo,
+                            'consecutive_no' => $request->input('consecutivo_no'),
                             'analysis_date' => $fechaAnalisis,
-                            'equipment_used' => $request->equipo_utilizado ?? '',
-                            'method_interval' => $request->intervalo_metodo ?? '',
-                            'analyst_name' => $request->nombre_analista ?? '',
-                            'observations' => $request->observaciones ?? '',
-                            'internal_code' => $item['codigo_interno'] ?? '',
-                            'sample_weight' => $item['peso_muestra'] ?? 0,
-                            'pw' => $item['pw'] ?? 0,
-                            'extractant_volume' => $item['v_extractante'] ?? 0,
-                            'blank_reading' => $item['lectura_blanco'] ?? 0,
-                            'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                            'available_boron_mg_l' => $item['boro_disponible_mg_l'] ?? 0,
-                            'available_boron_mg_kg' => $item['boro_disponible_mg_kg'] ?? 0,
-                            'item_observations' => $item['observaciones_item'] ?? '',
+                            'equipment_used' => $request->input('equipo_utilizado'),
+                            'method_interval' => $request->input('intervalo_metodo'),
+                            'analyst_name' => $request->input('nombre_analista'), // Corregido: nombre_analista en lugar de analista
+                            'observations' => $firstItemObservations, // CORREGIDO: usar observaciones del primer item
+                            'internal_code' => $firstItem['internal_code'] ?? '',
+                            'sample_weight' => $firstItem['sample_weight'] ?? 0,
+                            'pw' => $firstItem['pw'] ?? 0,
+                            'extractant_volume' => $firstItem['extractant_volume'] ?? 0,
+                            'blank_reading' => $firstItem['blank_reading'] ?? 0,
+                            'dilution_factor' => $firstItem['dilution_factor'] ?? 0,
+                            'available_boron_mg_l' => $firstItem['available_boron_mg_l'] ?? 0,
+                            'available_boron_mg_kg' => $firstItem['available_boron_mg_kg'] ?? 0,
+                            'item_observations' => $firstItem['observations'] ?? '',
+                            'review_status' => 'pending', // Estado inicial de revisión
                         ];
 
-                        Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);
+                        Log::info("Creando análisis individual para proceso {$processId}", $analysisData);
+                        
+                        // LOGGING PARA DEBUGGEAR CAMPOS BORONANALYSIS
+                        Log::info("=== DEBUG CAMPOS BORONANALYSIS ===");
+                        Log::info("consecutive_no:", ['value' => $request->input('consecutivo_no')]);
+                        Log::info("equipment_used:", ['value' => $request->input('equipo_utilizado')]);
+                        Log::info("method_interval:", ['value' => $request->input('intervalo_metodo')]);
+                        Log::info("nombre_analista:", ['value' => $request->input('nombre_analista')]); // Corregido
+                        Log::info("observations:", ['value' => $firstItemObservations]); // CORREGIDO
+                        Log::info("=== FIN DEBUG CAMPOS BORONANALYSIS ===");
 
                         $boronAnalysis = BoronAnalysis::create($analysisData);
-                        $boronAnalyses[] = $boronAnalysis;
+                        $boronAnalyses = [$boronAnalysis]; // Solo 1 análisis por proceso
                         
-                        Log::info("Análisis {$itemIndex} creado con ID: {$boronAnalysis->id}");
+                        Log::info("Análisis individual creado con ID: {$boronAnalysis->id}");
+                    } else {
+                        $boronAnalyses = [];
                     }
 
                     // Actualizar el estado del servicio a 'completed'
@@ -553,7 +895,8 @@ class BoronAnalysisController2 extends Controller
                 } catch (\Exception $e) {
                     Log::error('Error al guardar análisis de boro en lote', [
                         'process_id' => $processId,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                     $errors[] = "Error en proceso {$processId}: " . $e->getMessage();
                 }
@@ -579,7 +922,8 @@ class BoronAnalysisController2 extends Controller
             DB::rollBack();
             Log::error('Error al guardar análisis de boro por lotes', [
                 'user_id' => Auth::id(),
-                'error' => $e->getMessage()
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
             ]);
 
             return back()->withInput()->with('error', 'Error al guardar análisis de boro por lotes: ' . $e->getMessage());
@@ -596,6 +940,28 @@ class BoronAnalysisController2 extends Controller
     {
         $boronAnalysis = BoronAnalysis::findOrFail($id);
         return view('lscefa::analyses.boron.edit', compact('boronAnalysis'));
+    }
+
+    public function editRejected($id)
+    {
+        $boronAnalysis = BoronAnalysisDetail::findOrFail($id);
+        
+        // Verificar que el análisis esté rechazado
+        if ($boronAnalysis->review_status !== 'rejected') {
+            return redirect()->route('lscefa.technical.analyses.boron.index')
+                ->with('error', 'Solo se pueden editar análisis rechazados.');
+        }
+        
+        // Obtener el proceso y servicio asociados
+        $process = \Modules\LSCEFA\Models\Process::find($boronAnalysis->process_id);
+        $service = \Modules\LSCEFA\Models\Service::find($boronAnalysis->service_id);
+
+        // Crear un array de procesos con el proceso del análisis rechazado
+        // La vista espera $pendingProcesses, no $processes
+        $pendingProcesses = collect([$process]);
+
+        // Pasar el análisis rechazado para que se pueda editar
+        return view('lscefa::analyses.boron.batch_process', compact('pendingProcesses', 'boronAnalysis'));
     }
 
     public function update(Request $request, $id)
@@ -626,6 +992,71 @@ class BoronAnalysisController2 extends Controller
             ->with('success', 'Análisis de boro actualizado exitosamente.');
     }
 
+    public function updateRejected(Request $request, $id)
+    {
+        $boronAnalysis = BoronAnalysis::findOrFail($id);
+        
+        // Verificar que el análisis esté rechazado
+        if ($boronAnalysis->review_status !== 'rejected') {
+            return redirect()->route('lscefa.technical.analyses.boron.index')
+                ->with('error', 'Solo se pueden actualizar análisis rechazados.');
+        }
+        
+        $request->validate([
+            'consecutive_no' => 'required|string',
+            'analysis_date' => 'required|date',
+            'equipment_used' => 'nullable|string',
+            'method_interval' => 'nullable|string',
+            'analyst_name' => 'nullable|string',
+            'observations' => 'nullable|string',
+            'internal_code' => 'nullable|string',
+            'sample_weight' => 'nullable|numeric|min:0',
+            'pw' => 'nullable|numeric|min:0',
+            'extractant_volume' => 'nullable|numeric|min:0',
+            'blank_reading' => 'nullable|numeric|min:0',
+            'dilution_factor' => 'nullable|numeric|min:0',
+            'available_boron_mg_l' => 'nullable|numeric|min:0',
+            'available_boron_mg_kg' => 'nullable|numeric',
+            'item_observations' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Actualizar el análisis
+            $boronAnalysis->update($request->all());
+            
+            // Cambiar el estado de revisión a 'pending' para que vuelva a revisión
+            $boronAnalysis->update([
+                'review_status' => 'pending',
+                'review_observations' => null,
+                'reviewed_by' => null,
+                'review_date' => null,
+            ]);
+
+            DB::commit();
+
+            Log::info('Análisis de boro rechazado corregido exitosamente', [
+                'analysis_id' => $boronAnalysis->id,
+                'user_id' => Auth::id(),
+                'new_status' => 'pending'
+            ]);
+
+            return redirect()->route('lscefa.technical.analyses.boron.index')
+                ->with('success', 'Análisis de boro corregido exitosamente. Ha sido enviado nuevamente para revisión.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al corregir análisis de boro rechazado', [
+                'analysis_id' => $boronAnalysis->id,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->withInput()->with('error', 'Error al corregir el análisis: ' . $e->getMessage());
+        }
+    }
+
     public function destroy($id)
     {
         $boronAnalysis = BoronAnalysis::findOrFail($id);
@@ -639,5 +1070,160 @@ class BoronAnalysisController2 extends Controller
     {
         $boronAnalysis = BoronAnalysis::findOrFail($id);
         return view('lscefa::analyses.boron.report', compact('boronAnalysis'));
+    }
+
+    /**
+     * Descarga el informe de análisis de boro en formato Excel
+     */
+    public function downloadBoronReport($analysisId)
+    {
+        $boronAnalysis = BoronAnalysisDetail::findOrFail($analysisId);
+        
+        // Crear el archivo Excel usando PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Configurar encabezados del informe
+        $sheet->setCellValue('A1', 'LABORATORIO DE CIENCIAS BÁSICAS');
+        $sheet->setCellValue('A2', 'PROCEDIMIENTO DETERMINACIÓN DE BORO DISPONIBLE EN SUELOS');
+        $sheet->setCellValue('A3', 'FORMATO REPORTE RESULTADOS BORO DISPONIBLE EN SUELOS');
+        $sheet->setCellValue('D3', 'Versión: 1');
+        $sheet->setCellValue('D4', 'Código: F-BOR-001');
+        $sheet->setCellValue('D5', 'Página: 1 de 1');
+
+        // Información general del análisis
+        $sheet->setCellValue('A6', 'Consecutivo No.:');
+        $sheet->setCellValue('B6', $boronAnalysis->consecutive_no);
+        $sheet->setCellValue('A7', 'Fecha del análisis:');
+        $sheet->setCellValue('B7', $boronAnalysis->analysis_date);
+        $sheet->setCellValue('A8', 'Nombre Analista:');
+        $sheet->setCellValue('B8', $boronAnalysis->analyst_name);
+        $sheet->setCellValue('A9', 'Metodología Utilizada:');
+        $sheet->setCellValue('B9', $boronAnalysis->applied_methodology);
+        $sheet->setCellValue('A10', 'Equipo Utilizado:');
+        $sheet->setCellValue('B10', $boronAnalysis->equipment_used);
+        $sheet->setCellValue('A11', 'Intervalo del Método:');
+        $sheet->setCellValue('B11', $boronAnalysis->method_interval);
+
+        // Controles analíticos - Estándar A
+        $sheet->setCellValue('A13', 'Controles analíticos - Estándar A');
+        $sheet->setCellValue('A14', 'Identificación');
+        $sheet->setCellValue('B14', 'Valor esperado');
+        $sheet->setCellValue('C14', 'Valor leído');
+        $sheet->setCellValue('D14', '% Error');
+        $sheet->setCellValue('E14', 'Aceptabilidad del error');
+        $sheet->setCellValue('F14', '% Recuperación');
+        $sheet->setCellValue('G14', 'Aceptabilidad de recuperación');
+        $sheet->setCellValue('H14', '% DPR');
+        $sheet->setCellValue('I14', 'Aceptabilidad DPR');
+
+        $sheet->setCellValue('A15', $boronAnalysis->standard_a_identification ?? 'Estándar A');
+        $sheet->setCellValue('B15', $boronAnalysis->standard_a_expected_value ?? '');
+        $sheet->setCellValue('C15', $boronAnalysis->standard_a_read_value ?? '');
+        $sheet->setCellValue('D15', $boronAnalysis->standard_a_error_percentage ?? '');
+        $sheet->setCellValue('E15', $boronAnalysis->standard_a_error_acceptability ?? '');
+        $sheet->setCellValue('F15', $boronAnalysis->standard_a_recovery_percentage ?? '');
+        $sheet->setCellValue('G15', $boronAnalysis->standard_a_recovery_acceptability ?? '');
+        $sheet->setCellValue('H15', $boronAnalysis->standard_a_dpr_percentage ?? '');
+        $sheet->setCellValue('I15', $boronAnalysis->standard_a_dpr_acceptability ?? '');
+
+        // Controles analíticos - Estándar B
+        $sheet->setCellValue('A17', 'Controles analíticos - Estándar B');
+        $sheet->setCellValue('A18', 'Identificación');
+        $sheet->setCellValue('B18', 'Valor esperado');
+        $sheet->setCellValue('C18', 'Valor leído');
+        $sheet->setCellValue('D18', '% Error');
+        $sheet->setCellValue('E18', 'Aceptabilidad del error');
+        $sheet->setCellValue('F18', '% Recuperación');
+        $sheet->setCellValue('G18', 'Aceptabilidad de recuperación');
+        $sheet->setCellValue('H18', '% DPR');
+        $sheet->setCellValue('I18', 'Aceptabilidad DPR');
+
+        $sheet->setCellValue('A19', $boronAnalysis->standard_b_identification ?? 'Estándar B');
+        $sheet->setCellValue('B19', $boronAnalysis->standard_b_expected_value ?? '');
+        $sheet->setCellValue('C19', $boronAnalysis->standard_b_read_value ?? '');
+        $sheet->setCellValue('D19', $boronAnalysis->standard_b_error_percentage ?? '');
+        $sheet->setCellValue('E19', $boronAnalysis->standard_b_error_acceptability ?? '');
+        $sheet->setCellValue('F19', $boronAnalysis->standard_b_recovery_percentage ?? '');
+        $sheet->setCellValue('G19', $boronAnalysis->standard_b_recovery_acceptability ?? '');
+        $sheet->setCellValue('H19', $boronAnalysis->standard_b_dpr_percentage ?? '');
+        $sheet->setCellValue('I19', $boronAnalysis->standard_b_dpr_acceptability ?? '');
+
+        // Curva de calibración
+        $sheet->setCellValue('A21', 'Curva de calibración');
+        $sheet->setCellValue('A22', 'Valor esperado');
+        $sheet->setCellValue('B22', $boronAnalysis->calibration_curve_value ?? '0.995');
+        $sheet->setCellValue('A23', 'Valor leído');
+        $sheet->setCellValue('B23', $boronAnalysis->calibration_curve_read_value ?? '');
+        $sheet->setCellValue('A24', '% Error');
+        $sheet->setCellValue('B24', $boronAnalysis->calibration_curve_error_percentage ?? '');
+        $sheet->setCellValue('A25', 'Aceptabilidad');
+        $sheet->setCellValue('B25', $boronAnalysis->calibration_curve_acceptability ?? '');
+
+        // Duplicados
+        $sheet->setCellValue('A27', 'Duplicados');
+        $sheet->setCellValue('A28', 'Duplicado A');
+        $sheet->setCellValue('B28', $boronAnalysis->duplicate_a_value ?? '');
+        $sheet->setCellValue('A29', 'Duplicado B');
+        $sheet->setCellValue('B29', $boronAnalysis->duplicate_b_value ?? '');
+        $sheet->setCellValue('A30', '% DPR');
+        $sheet->setCellValue('B30', $boronAnalysis->duplicate_dpr_percentage ?? '');
+        $sheet->setCellValue('A31', 'Aceptabilidad DPR');
+        $sheet->setCellValue('B31', $boronAnalysis->duplicate_dpr_acceptability ?? '');
+
+        // Ítems de ensayo (muestras)
+        $sheet->setCellValue('A33', 'Ítems de ensayo');
+        $sheet->setCellValue('A34', 'Código interno');
+        $sheet->setCellValue('B34', 'Peso muestra (g)');
+        $sheet->setCellValue('C34', 'pW');
+        $sheet->setCellValue('D34', 'V. Extractante (mL)');
+        $sheet->setCellValue('E34', 'Lectura blanco');
+        $sheet->setCellValue('F34', 'Factor de dilución (fd)');
+        $sheet->setCellValue('G34', 'Boro disponible (mg/L)');
+        $sheet->setCellValue('H34', 'Boro disponible (mg/kg)');
+        $sheet->setCellValue('I34', 'Observaciones');
+
+        $row = 35;
+        $testItems = is_string($boronAnalysis->test_items) ? 
+            json_decode($boronAnalysis->test_items, true) : 
+            $boronAnalysis->test_items;
+
+        if (is_array($testItems)) {
+            foreach ($testItems as $testItem) {
+                if (is_array($testItem)) {
+                    $sheet->setCellValue('A' . $row, $testItem['internal_code'] ?? '');
+                    $sheet->setCellValue('B' . $row, $testItem['sample_weight'] ?? '');
+                    $sheet->setCellValue('C' . $row, $testItem['pw'] ?? '');
+                    $sheet->setCellValue('D' . $row, $testItem['extractant_volume'] ?? '');
+                    $sheet->setCellValue('E' . $row, $testItem['blank_reading'] ?? '');
+                    $sheet->setCellValue('F' . $row, $testItem['dilution_factor'] ?? '');
+                    $sheet->setCellValue('G' . $row, $testItem['available_boron_mg_l'] ?? '');
+                    $sheet->setCellValue('H' . $row, $testItem['available_boron_mg_kg'] ?? '');
+                    $sheet->setCellValue('I' . $row, $testItem['observations'] ?? '');
+                    $row++;
+                }
+            }
+        }
+
+        // Observaciones generales
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Observaciones generales:');
+        $sheet->setCellValue('A' . ($row + 1), $boronAnalysis->general_observations ?? '');
+
+        // Auto-size columns
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Crear el archivo Excel
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'reporte_boro_' . $boronAnalysis->consecutive_no . '.xlsx';
+        
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        $writer->save('php://output');
+        exit;
     }
 }

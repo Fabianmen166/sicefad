@@ -48,10 +48,17 @@ return new class extends Migration
             $table->decimal('available_phosphorus_mg_kg', 8, 4)->nullable();
             $table->text('item_observations')->nullable();
             
+            // Review fields
+            $table->string('review_status')->nullable()->default('pending');
+            $table->unsignedBigInteger('reviewed_by')->nullable();
+            $table->dateTime('review_date')->nullable();
+            $table->text('review_observations')->nullable();
+            
             $table->timestamps();
 
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
             $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');
+            $table->foreign('reviewed_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 
@@ -60,6 +67,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop foreign key constraints first
+        Schema::table('phosphorus_analyses', function (Blueprint $table) {
+            $table->dropForeign(['reviewed_by']);
+        });
+
         Schema::dropIfExists('phosphorus_analyses');
     }
 }; 

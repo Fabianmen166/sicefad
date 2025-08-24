@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Illuminate\Support\Facades\Schema;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
+use Modules\LSCEFA\Entities\BoronAnalysisDetail;
 
 class TechnicalAnalysisController extends Controller
 {
@@ -62,6 +63,29 @@ class TechnicalAnalysisController extends Controller
             })
             ->get();
 
+        // Incluir análisis de Boro devueltos/rechazados (tabla independiente)
+        $boronReturned = collect();
+        try {
+            $boronReturned = BoronAnalysisDetail::with(['service'])
+                ->whereIn('review_status', ['returned', 'rejected'])
+                ->get();
+            
+            \Log::info('Boron returned query result', [
+                'count' => $boronReturned->count(),
+                'items' => $boronReturned->map(function($ba) {
+                    return [
+                        'id' => $ba->id,
+                        'process_id' => $ba->process_id,
+                        'service_id' => $ba->service_id,
+                        'review_status' => $ba->review_status,
+                        'review_date' => $ba->review_date,
+                    ];
+                })->toArray()
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudieron cargar análisis de boro devueltos: ' . $e->getMessage());
+        }
+
         // Incluir análisis de Fósforo devueltos/rechazados (tabla independiente)
         $phosphorusReturned = collect();
         try {
@@ -78,6 +102,7 @@ class TechnicalAnalysisController extends Controller
             'processes_page_count' => $processes->count(),
             'returned_total_ph_cond' => $returnedQuery->count(),
             'returned_total_phosphorus' => $phosphorusReturned->count(),
+            'returned_total_boron' => $boronReturned->count(),
         ]);
 
         foreach ($returnedQuery as $spd) {
@@ -90,6 +115,7 @@ class TechnicalAnalysisController extends Controller
             $returned[$pa->process_id] = $returned[$pa->process_id] ?? [];
             // Empaquetar un objeto con los campos esperados por la vista
             $returned[$pa->process_id][] = (object) [
+                'id' => $pa->id, // Agregar ID para las rutas de acción
                 'process_id' => $pa->process_id,
                 'service_id' => $pa->service_id,
                 'service' => $pa->service ?? null,
@@ -99,6 +125,32 @@ class TechnicalAnalysisController extends Controller
                 'review_date' => $pa->review_date ?? $pa->updated_at ?? null,
                 'review_observations' => $pa->review_observations ?? null,
             ];
+        }
+
+        // Agregar boro al arreglo de devueltos (objetos simplificados compatibles con la vista)
+        foreach ($boronReturned as $ba) {
+            $returned[$ba->process_id] = $returned[$ba->process_id] ?? [];
+            // Empaquetar un objeto con los campos esperados por la vista
+            $returned[$ba->process_id][] = (object) [
+                'id' => $ba->id, // Agregar ID para las rutas de acción
+                'process_id' => $ba->process_id,
+                'service_id' => $ba->service_id,
+                'service' => $ba->service ?? null,
+                'service_name' => optional($ba->service)->descripcion ?? 'Servicio',
+                'type' => 'boron',
+                'consecutivo_no' => $ba->consecutive_no ?? null,
+                'review_date' => $ba->review_date ?? $ba->updated_at ?? null,
+                'review_observations' => $ba->review_observations ?? null,
+            ];
+            
+            \Log::info('Boron analysis added to returned array', [
+                'boron_id' => $ba->id,
+                'process_id' => $ba->process_id,
+                'service_id' => $ba->service_id,
+                'type' => 'boron',
+                'review_status' => $ba->review_status,
+                'review_date' => $ba->review_date,
+            ]);
         }
 
         // Log per-process returned counts

@@ -368,39 +368,91 @@
                                                                 <td>
                                                                     <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][codigo_interno]" value="Blanco del proceso" readonly>
                                                                 </td>
-                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][0][peso]" placeholder="0.0000"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][0][lecturas_40s]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][0][temperatura_40s]" placeholder="0.0"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][0][lecturas_2h]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][0][temperatura_2h]" placeholder="0.0"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][0][lecturas_corregidas_40s]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][0][lecturas_corregidas_2h]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][0][humedad]" placeholder="0.00"></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][0][porcentaje_arena]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][0][porcentaje_arcilla]" placeholder="0.00" readonly></td>
-                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][0][porcentaje_limo]" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][0][peso]" value="{{ isset($blancoData) ? ($blancoData['peso'] ?? '') : '' }}" placeholder="0.0000"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][0][lecturas_40s]" value="{{ isset($blancoData) ? ($blancoData['lecturas_40s'] ?? '') : '' }}" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][0][temperatura_40s]" value="{{ isset($blancoData) ? ($blancoData['temperatura_40s'] ?? '') : '' }}" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][0][lecturas_2h]" value="{{ isset($blancoData) ? ($blancoData['lecturas_2h'] ?? '') : '' }}" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][0][temperatura_2h]" value="{{ isset($blancoData) ? ($blancoData['temperatura_2h'] ?? '') : '' }}" placeholder="0.0"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][0][lecturas_corregidas_40s]" value="{{ isset($blancoData) ? ($blancoData['lecturas_corregidas_40s'] ?? '') : '' }}" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][0][lecturas_corregidas_2h]" value="{{ isset($blancoData) ? ($blancoData['lecturas_corregidas_2h'] ?? '') : '' }}" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][0][humedad]" value="{{ isset($blancoData) ? ($blancoData['humedad'] ?? '') : '' }}" placeholder="0.00"></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][0][porcentaje_arena]" value="{{ isset($blancoData) ? ($blancoData['porcentaje_arena'] ?? '') : '' }}" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][0][porcentaje_arcilla]" value="{{ isset($blancoData) ? ($blancoData['porcentaje_arcilla'] ?? '') : '' }}" placeholder="0.00" readonly></td>
+                                                                <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][0][porcentaje_limo]" value="{{ isset($blancoData) ? ($blancoData['porcentaje_limo'] ?? '') : '' }}" placeholder="0.00" readonly></td>
                                                                 <td>
                                                                     <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][0][clase_textural]">
                                                                         <option value="">Seleccionar</option>
-                                                                        <option value="Arena">Arena</option>
-                                                                        <option value="Arena Limosa">Arena Limosa</option>
-                                                                        <option value="Arena Arcillosa">Arena Arcillosa</option>
-                                                                        <option value="Limo">Limo</option>
-                                                                        <option value="Limo Arenoso">Limo Arenoso</option>
-                                                                        <option value="Limo Arcilloso">Limo Arcilloso</option>
-                                                                        <option value="Arcilla">Arcilla</option>
-                                                                        <option value="Arcilla Arenosa">Arcilla Arenosa</option>
-                                                                        <option value="Arcilla Limosa">Arcilla Limosa</option>
-                                                                        <option value="Franco Arenoso">Franco Arenoso</option>
-                                                                        <option value="Franco Limoso">Franco Limoso</option>
-                                                                        <option value="Franco Arcilloso">Franco Arcilloso</option>
-                                                                        <option value="Franco">Franco</option>
+                                                                        <option value="Arena" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arena') ? 'selected' : '' }}>Arena</option>
+                                                                        <option value="Arena Limosa" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arena Limosa') ? 'selected' : '' }}>Arena Limosa</option>
+                                                                        <option value="Arena Arcillosa" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arena Arcillosa') ? 'selected' : '' }}>Arena Arcillosa</option>
+                                                                        <option value="Limo" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Limo') ? 'selected' : '' }}>Limo</option>
+                                                                        <option value="Limo Arenoso" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Limo Arenoso') ? 'selected' : '' }}>Limo Arenoso</option>
+                                                                        <option value="Limo Arcilloso" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Limo Arcilloso') ? 'selected' : '' }}>Limo Arcilloso</option>
+                                                                        <option value="Arcilla" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arcilla') ? 'selected' : '' }}>Arcilla</option>
+                                                                        <option value="Arcilla Arenosa" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arcilla Arenosa') ? 'selected' : '' }}>Arcilla Arenosa</option>
+                                                                        <option value="Arcilla Limosa" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Arcilla Limosa') ? 'selected' : '' }}>Arcilla Limosa</option>
+                                                                        <option value="Franco Arenoso" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Franco Arenoso') ? 'selected' : '' }}>Franco Arenoso</option>
+                                                                        <option value="Franco Limoso" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Franco Limoso') ? 'selected' : '' }}>Franco Limoso</option>
+                                                                        <option value="Franco Arcilloso" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Franco Arcilloso') ? 'selected' : '' }}>Franco Arcilloso</option>
+                                                                        <option value="Franco" {{ (isset($blancoData) && ($blancoData['clase_textural'] ?? '') === 'Franco') ? 'selected' : '' }}>Franco</option>
                                                                     </select>
                                                                 </td>
-                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][observaciones]" rows="2" placeholder="Observaciones"></textarea></td>
+                                                                <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][0][observaciones]" rows="2" placeholder="Observaciones">{{ isset($blancoData) ? ($blancoData['observaciones'] ?? '') : '' }}</textarea></td>
                                                                 <td></td>
                                                             </tr>
-                                                            <!-- Duplicado A -->
+                                                            
+                                                            @if(isset($analysis) && $analysis->samples)
+                                                                @php
+                                                                    $samples = is_string($analysis->samples) ? json_decode($analysis->samples, true) : $analysis->samples;
+                                                                    $samples = is_array($samples) ? $samples : [];
+                                                                @endphp
+                                                                @foreach($samples as $sampleIndex => $sample)
+                                                                    @if($sampleIndex > 0) {{-- Saltar el primer elemento (blanco) --}}
+                                                                    <tr class="muestra-row">
+                                                                        <td>{{ $process->quote_id ?? '' }}</td>
+                                                                        <td>
+                                                                            <input type="text" class="form-control form-control-sm" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][codigo_interno]" value="{{ $sample['codigo_interno'] ?? 'Muestra ' . $sampleIndex }}">
+                                                                        </td>
+                                                                        <td><input type="number" step="0.0001" class="form-control form-control-sm peso-muestra" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][peso]" value="{{ $sample['peso'] ?? '' }}" placeholder="0.0000"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm lectura-40s" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][lecturas_40s]" value="{{ $sample['lecturas_40s'] ?? '' }}" placeholder="0.00"></td>
+                                                                        <td><input type="number" step="0.1" class="form-control form-control-sm temp-40s" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][temperatura_40s]" value="{{ $sample['temperatura_40s'] ?? '' }}" placeholder="0.0"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm lectura-2h" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][lecturas_2h]" value="{{ $sample['lecturas_2h'] ?? '' }}" placeholder="0.00"></td>
+                                                                        <td><input type="number" step="0.1" class="form-control form-control-sm temp-2h" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][temperatura_2h]" value="{{ $sample['temperatura_2h'] ?? '' }}" placeholder="0.0"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-40s" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][lecturas_corregidas_40s]" value="{{ $sample['lecturas_corregidas_40s'] ?? '' }}" placeholder="0.00" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm lectura-corregida-2h" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][lecturas_corregidas_2h]" value="{{ $sample['lecturas_corregidas_2h'] ?? '' }}" placeholder="0.00" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm humedad" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][humedad]" value="{{ $sample['humedad'] ?? '' }}" placeholder="0.00"></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arena" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][porcentaje_arena]" value="{{ $sample['porcentaje_arena'] ?? '' }}" placeholder="0.00" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-arcilla" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][porcentaje_arcilla]" value="{{ $sample['porcentaje_arcilla'] ?? '' }}" placeholder="0.00" readonly></td>
+                                                                        <td><input type="number" step="0.01" class="form-control form-control-sm porcentaje-limo" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][porcentaje_limo]" value="{{ $sample['porcentaje_limo'] ?? '' }}" placeholder="0.00" readonly></td>
+                                                                        <td>
+                                                                            <select class="form-control form-control-sm clase-textural" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][clase_textural]">
+                                                                                <option value="">Seleccionar</option>
+                                                                                <option value="Arena" {{ ($sample['clase_textural'] ?? '') === 'Arena' ? 'selected' : '' }}>Arena</option>
+                                                                                <option value="Arena Limosa" {{ ($sample['clase_textural'] ?? '') === 'Arena Limosa' ? 'selected' : '' }}>Arena Limosa</option>
+                                                                                <option value="Arena Arcillosa" {{ ($sample['clase_textural'] ?? '') === 'Arena Arcillosa' ? 'selected' : '' }}>Arena Arcillosa</option>
+                                                                                <option value="Limo" {{ ($sample['clase_textural'] ?? '') === 'Limo' ? 'selected' : '' }}>Limo</option>
+                                                                                <option value="Limo Arenoso" {{ ($sample['clase_textural'] ?? '') === 'Limo Arenoso' ? 'selected' : '' }}>Limo Arenoso</option>
+                                                                                <option value="Limo Arcilloso" {{ ($sample['clase_textural'] ?? '') === 'Limo Arcilloso' ? 'selected' : '' }}>Limo Arcilloso</option>
+                                                                                <option value="Arcilla" {{ ($sample['clase_textural'] ?? '') === 'Arcilla' ? 'selected' : '' }}>Arcilla</option>
+                                                                                <option value="Arcilla Arenosa" {{ ($sample['clase_textural'] ?? '') === 'Arcilla Arenosa' ? 'selected' : '' }}>Arcilla Arenosa</option>
+                                                                                <option value="Arcilla Limosa" {{ ($sample['clase_textural'] ?? '') === 'Arcilla Limosa' ? 'selected' : '' }}>Arcilla Limosa</option>
+                                                                                <option value="Franco Arenoso" {{ ($sample['clase_textural'] ?? '') === 'Franco Arenoso' ? 'selected' : '' }}>Franco Arenoso</option>
+                                                                                <option value="Franco Limoso" {{ ($sample['clase_textural'] ?? '') === 'Franco Limoso' ? 'selected' : '' }}>Franco Limoso</option>
+                                                                                <option value="Franco Arcilloso" {{ ($sample['clase_textural'] ?? '') === 'Franco Arcilloso' ? 'selected' : '' }}>Franco Arcilloso</option>
+                                                                                <option value="Franco" {{ ($sample['clase_textural'] ?? '') === 'Franco' ? 'selected' : '' }}>Franco</option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td><textarea class="form-control form-control-sm" name="analyses[{{ $index }}][items][{{ $sampleIndex }}][observaciones]" rows="2" placeholder="Observaciones">{{ $sample['observaciones'] ?? '' }}</textarea></td>
+                                                                        <td>
+                                                                            <button type="button" class="btn btn-danger btn-sm remove-muestra" title="Eliminar muestra">
+                                                                                <i class="fas fa-trash"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                    @endif
+                                                                @endforeach
+                                                            @else
+                                                                <!-- Duplicado A (solo para análisis nuevos) -->
                                                             <tr class="muestra-row">
                                                                 <td></td>
                                                                 <td>
@@ -442,7 +494,7 @@
                                                                     </button>
                                                                 </td>
                                                             </tr>
-                                                            <!-- Duplicado B -->
+                                                                <!-- Duplicado B (solo para análisis nuevos) -->
                                                             @php $quoteIds = $processes->pluck('quote_id')->toArray(); @endphp
                                                             @foreach($processes as $pIndex => $proc)
                                                                 @if($pIndex >= 2)
@@ -489,6 +541,7 @@
                                                                 </tr>
                                                                 @endif
                                                             @endforeach
+                                                            @endif
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -640,7 +693,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body text-center">
-                                <button type="submit" class="btn btn-primary btn-lg">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
                                     <i class="fas fa-save me-2"></i>{{ isset($analysis) ? 'Actualizar Análisis Rechazado' : 'Guardar Todos los Análisis' }}
                                 </button>
                                 <a href="{{ route('lscefa.technical.analyses.texture.index') }}" class="btn btn-secondary btn-lg">
@@ -2055,7 +2108,15 @@ $(document).ready(function() {
 
     $(document).ready(function() {
         // Antes de enviar el formulario, copiar los valores generales a cada proceso
-        $('#textureBatchForm').on('submit', function() {
+        $('#textureBatchForm').on('submit', function(e) {
+            // Si es un análisis rechazado, mostrar confirmación
+            @if(isset($analysis))
+            if (!confirm('¿Está seguro de que desea actualizar este análisis rechazado? El análisis será enviado nuevamente para revisión.')) {
+                e.preventDefault();
+                return false;
+            }
+            @endif
+            
             const fields = [
                 'consecutivo_no',
                 'fecha_analisis',

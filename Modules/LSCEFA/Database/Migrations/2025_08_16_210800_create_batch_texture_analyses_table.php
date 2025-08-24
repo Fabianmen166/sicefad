@@ -69,8 +69,19 @@ class CreateBatchTextureAnalysesTable extends Migration
             // General Observations
             $table->text('general_observations')->nullable();
 
+            // Review fields
+            $table->string('review_status')->nullable()->default('pending');
+            $table->unsignedBigInteger('reviewed_by')->nullable();
+            $table->dateTime('review_date')->nullable();
+            $table->text('review_observations')->nullable();
+
             // Any additional fields for batch process
             $table->json('extra_data')->nullable();
+        });
+
+        // Add foreign key constraints
+        Schema::table('batch_texture_analyses', function (Blueprint $table) {
+            $table->foreign('reviewed_by')->references('id')->on('users')->onDelete('set null');
         });
     }
 
@@ -81,6 +92,11 @@ class CreateBatchTextureAnalysesTable extends Migration
      */
     public function down()
     {
+        // Drop foreign key constraints first
+        Schema::table('batch_texture_analyses', function (Blueprint $table) {
+            $table->dropForeign(['reviewed_by']);
+        });
+
         Schema::dropIfExists('batch_texture_analyses');
     }
 }

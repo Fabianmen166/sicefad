@@ -42,7 +42,13 @@
                 <!-- Información General del Proceso -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Información del Proceso</h3>
+                        <h3 class="card-title">
+                            @if(isset($boronAnalysis) && $boronAnalysis->review_status === 'rejected')
+                                <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Análisis Rechazado - Edición</span>
+                            @else
+                                Información del Proceso
+                            @endif
+                        </h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -52,38 +58,49 @@
                             <div class="col-md-6">
                                 <p><strong>Fecha de Solicitud:</strong> {{ $firstProcess->created_at ? $firstProcess->created_at->format('d/m/Y') : 'N/A' }}</p>
                                 <p><strong>Servicio:</strong> Boro</p>
+                                @if(isset($boronAnalysis) && $boronAnalysis->review_status === 'rejected')
+                                    <p><strong>Estado:</strong> <span class="badge badge-warning">Rechazado</span></p>
+                                    @if($boronAnalysis->review_observations)
+                                        <p><strong>Observaciones de Rechazo:</strong> <span class="text-danger">{{ $boronAnalysis->review_observations }}</span></p>
+                                    @endif
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Tabla de Datos del Análisis (antes de la tarjeta) -->
-                <div class="table-responsive mb-4">
-                    <table class="table table-borderless align-middle" style="background: #f8f9fa; border-radius: 8px;">
-                        <tr>
-                            <td class="fw-bold" style="width: 10%">Consecutivo:</td>
-                            <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no') }}"></td>
-                            <td class="fw-bold" style="width: 16%">Metodología aplicada:</td>
-                            <td colspan="2" style="width: 30%"><input type="text" class="form-control" name="metodologia_aplicada" value="{{ old('metodologia_aplicada', 'Extracción por Bray (II) y cuantificación por ácido ascórbico') }}"></td>
-                            <td class="fw-bold" style="width: 10%">Intervalo:</td>
-                            <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo') }}"></td>
-                        </tr>
-                        <tr style="height: 10px;"></tr>
-                        <tr>
-                            <td class="fw-bold">Fecha:</td>
-                            <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis') }}"></td>
-                            <td class="fw-bold">Equipo:</td>
-                            <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado') }}"></td>
-                            <td></td>
-                            <td class="fw-bold">Analista:</td>
-                            <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista') }}"></td>
-                        </tr>
-                    </table>
-                </div>
+                
                 <form action="{{ route('lscefa.technical.analyses.boron.batch_store') }}" method="POST" id="boronBatchForm">
                     @csrf
+                    @if(isset($boronAnalysis) && $boronAnalysis->review_status === 'rejected')
+                        <input type="hidden" name="rejected_analysis_id" value="{{ $boronAnalysis->id }}">
+                    @endif
                     @foreach ($pendingProcesses as $index => $process)
                         <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
                     @endforeach
+                    
+                    <!-- Tabla de Datos del Análisis (DENTRO DEL FORMULARIO) -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-borderless align-middle" style="background: #f8f9fa; border-radius: 8px;">
+                            <tr>
+                                <td class="fw-bold" style="width: 10%">Consecutivo:</td>
+                                <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no', isset($boronAnalysis) ? $boronAnalysis->consecutive_no : '') }}"></td>
+                                <td class="fw-bold" style="width: 16%">Metodología aplicada:</td>
+                                <td colspan="2" style="width: 30%"><input type="text" class="form-control" name="metodologia_aplicada" value="{{ old('metodologia_aplicada', isset($boronAnalysis) ? $boronAnalysis->applied_methodology : 'Extracción por Bray (II) y cuantificación por ácido ascórbico') }}"></td>
+                                <td class="fw-bold" style="width: 10%">Intervalo:</td>
+                                <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo', isset($boronAnalysis) ? $boronAnalysis->method_interval : '') }}"></td>
+                            </tr>
+                            <tr style="height: 10px;"></tr>
+                            <tr>
+                                <td class="fw-bold">Fecha:</td>
+                                <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis', isset($boronAnalysis) ? $boronAnalysis->analysis_date : '') }}"></td>
+                                <td class="fw-bold">Equipo:</td>
+                                <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado', isset($boronAnalysis) ? $boronAnalysis->equipment_used : '') }}"></td>
+                                <td></td>
+                                <td class="fw-bold">Analista:</td>
+                                <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista', isset($boronAnalysis) ? $boronAnalysis->analyst_name : '') }}"></td>
+                            </tr>
+                        </table>
+                    </div>
 
                     <!-- Horizontal Navigation Bar -->
                     <div class="mt-4 mb-3">
@@ -129,8 +146,8 @@
                                     <tbody>
                                         <tr>
                                             <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
+                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]" value="{{ isset($boronAnalysis) ? $boronAnalysis->standard_a_expected_value : '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]" value="{{ isset($boronAnalysis) ? $boronAnalysis->standard_a_read_value : '' }}"></td>
                                             <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
                                             <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
                                             <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
@@ -140,8 +157,8 @@
                                         </tr>
                                         <tr>
                                             <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
+                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]" value="{{ isset($boronAnalysis) ? $boronAnalysis->standard_b_expected_value : '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]" value="{{ isset($boronAnalysis) ? $boronAnalysis->standard_b_read_value : '' }}"></td>
                                             <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
                                             <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
                                             <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
@@ -174,17 +191,17 @@
                                 <tr>
                                     <td rowspan="2">Curva de calibración</td>
                                     <td rowspan="2"><input type="number" class="form-control" value="0.995" readonly></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido"></td>
+                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido" value="{{ isset($boronAnalysis) ? $boronAnalysis->calibration_curve_read_value : '' }}"></td>
                                     <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_error_porcentaje" id="curva_error_porcentaje" readonly></td>
                                     <td rowspan="2"><input type="text" class="form-control" name="curva_aceptabilidad" id="curva_aceptabilidad" readonly></td>
                                     <td>Duplicado A</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a"></td>
+                                    <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a" value="{{ isset($boronAnalysis) ? $boronAnalysis->duplicate_a_value : '' }}"></td>
                                     <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" readonly></td>
                                     <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" readonly></td>
                                 </tr>
                                 <tr>
                                     <td>Duplicado B</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b"></td>
+                                    <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b" value="{{ isset($boronAnalysis) ? $boronAnalysis->duplicate_b_value : '' }}"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -221,17 +238,33 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($pendingProcesses as $index => $process)
+                                        @php
+                                            $testItem = null;
+                                            if (isset($boronAnalysis) && isset($boronAnalysis->test_items) && is_array($boronAnalysis->test_items) && isset($boronAnalysis->test_items[$index])) {
+                                                $testItem = $boronAnalysis->test_items[$index];
+                                            }
+                                            // Debug: mostrar qué datos tenemos
+                                            if (isset($boronAnalysis) && $boronAnalysis->review_status === 'rejected') {
+                                                \Log::info('Debug test_items en vista:', [
+                                                    'index' => $index,
+                                                    'test_items_exists' => isset($boronAnalysis->test_items),
+                                                    'test_items_type' => gettype($boronAnalysis->test_items),
+                                                    'test_items_count' => is_array($boronAnalysis->test_items) ? count($boronAnalysis->test_items) : 'NO_ARRAY',
+                                                    'current_testItem' => $testItem
+                                                ]);
+                                            }
+                                        @endphp
                                         <tr>
                                             <td>{{ $process->process_id }}</td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][boro_disponible_mg_l]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][boro_disponible_mg_kg]" readonly></td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]"></td>
+                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]" value="{{ $testItem['internal_code'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]" value="{{ $testItem['sample_weight'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]" value="{{ $testItem['pw'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]" value="{{ $testItem['extractant_volume'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]" value="{{ $testItem['blank_reading'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]" value="{{ $testItem['dilution_factor'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][boro_disponible_mg_l]" value="{{ $testItem['available_boron_mg_l'] ?? '' }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][boro_disponible_mg_kg]" readonly value="{{ $testItem['available_boron_mg_kg'] ?? '' }}"></td>
+                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]" value="{{ $testItem['observations'] ?? '' }}"></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -241,7 +274,13 @@
                         </div>
                         <!-- End of Tab Content -->
 
-                        <button type="submit" class="btn btn-primary">Guardar Análisis de Boro (Lote)</button>
+                        <button type="submit" class="btn btn-primary">
+                            @if(isset($boronAnalysis) && $boronAnalysis->review_status === 'rejected')
+                                <i class="fas fa-save"></i> Actualizar Análisis de Boro Rechazado
+                            @else
+                                <i class="fas fa-save"></i> Guardar Análisis de Boro (Lote)
+                            @endif
+                        </button>
                 </form>
             @endif
         </div>

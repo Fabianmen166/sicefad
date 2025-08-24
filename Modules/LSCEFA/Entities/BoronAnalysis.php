@@ -29,6 +29,11 @@ class BoronAnalysis extends Model
         'available_boron_mg_l',
         'available_boron_mg_kg',
         'item_observations',
+        // Campos de revisión
+        'review_status',
+        'review_observations',
+        'reviewed_by',
+        'review_date',
         'created_at',
         'updated_at'
     ];
@@ -41,7 +46,8 @@ class BoronAnalysis extends Model
         'blank_reading' => 'decimal:4',
         'dilution_factor' => 'decimal:4',
         'available_boron_mg_l' => 'decimal:4',
-        'available_boron_mg_kg' => 'decimal:4'
+        'available_boron_mg_kg' => 'decimal:4',
+        'review_date' => 'datetime'
     ];
 
     public function process()
@@ -52,6 +58,27 @@ class BoronAnalysis extends Model
     public function service()
     {
         return $this->belongsTo(\Modules\LSCEFA\Models\Service::class, 'service_id', 'services_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'reviewed_by');
+    }
+
+    // Scopes para consultas de revisión
+    public function scopePendingReview($query)
+    {
+        return $query->where('review_status', 'pending');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('review_status', 'approved');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('review_status', 'rejected');
     }
 
     protected static function newFactory()
