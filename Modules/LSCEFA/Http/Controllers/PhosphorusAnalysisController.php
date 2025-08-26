@@ -112,6 +112,7 @@ class PhosphorusAnalysisController extends Controller
                 ]);
                 // En lugar de bloquear, actualizar el control existente
                 $existingControl->update([
+                    'analysis_type' => 'phosphorus',
                     'controles_analiticos' => $request->controles_analiticos,
                     'dpr_duplicado_a' => $request->input('duplicado_a'),
                     'dpr_duplicado_b' => $request->input('duplicado_b'),
@@ -124,6 +125,7 @@ class PhosphorusAnalysisController extends Controller
                 // Guardar controles analíticos
                 $controlData = [
                     'process_id' => $processId,
+                    'analysis_type' => 'phosphorus',
                     'controles_analiticos' => $request->controles_analiticos,
                     'dpr_duplicado_a' => $request->input('duplicado_a'),
                     'dpr_duplicado_b' => $request->input('duplicado_b'),
@@ -141,6 +143,8 @@ class PhosphorusAnalysisController extends Controller
             // Guardar múltiples análisis de fósforo (uno por cada fila de resultados)
             $phosphorusAnalyses = [];
             $items = $request->input('items', []);
+            $valuesKg = [];
+            $valuesL = [];
 
             Log::info('Guardando análisis de fósforo', [
                 'total_rows' => count($items),
@@ -148,12 +152,34 @@ class PhosphorusAnalysisController extends Controller
             ]);
 
             foreach ($items as $index => $item) {
+                // Saltar filas vacías (sin datos relevantes)
+                $hasMeaningfulData = false;
+                if (is_array($item)) {
+                    $checkFields = [
+                        'codigo_interno','peso_muestra','pw','v_extractante',
+                        'lectura_blanco','factor_dilucion','fosforo_disponible_mg_l',
+                        'fosforo_disponible_mg_kg','observaciones_item'
+                    ];
+                    foreach ($checkFields as $f) {
+                        if (isset($item[$f]) && $item[$f] !== '' && $item[$f] !== null) {
+                            $hasMeaningfulData = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!$hasMeaningfulData) {
+                    Log::info("Fila de ítem {$index} omitida por no contener datos.", ['item' => $item]);
+                    continue;
+                }
+
                 $analysisData = [
                     'process_id' => (string)$processId,
                     'service_id' => $serviceId,
                 ];
 
                 // Map fields to whichever column exists (EN preferred)
+                // Usar exactamente el consecutivo ingresado en el formulario
                 $consecValue = $request->input('consecutivo_no');
                 if (Schema::hasColumn('phosphorus_analyses', 'consecutive_no')) {
                     $analysisData['consecutive_no'] = $consecValue;
@@ -197,7 +223,7 @@ class PhosphorusAnalysisController extends Controller
                 }
 
                 // Items mapping
-                $internalCode = $item['codigo_interno'] ?? '';
+                $internalCode = isset($item['codigo_interno']) ? trim($item['codigo_interno']) : '';
                 if (Schema::hasColumn('phosphorus_analyses', 'internal_code')) {
                     $analysisData['internal_code'] = $internalCode;
                 } elseif (Schema::hasColumn('phosphorus_analyses', 'codigo_interno')) {
@@ -263,6 +289,15 @@ class PhosphorusAnalysisController extends Controller
                 $phosphorusAnalysis = PhosphorusAnalysis::create($analysisData);
                 
                 $phosphorusAnalyses[] = $phosphorusAnalysis;
+                // Acumular valores para resultado (preferir mg/kg)
+                $valKg = $analysisData['available_phosphorus_mg_kg']
+                    ?? $analysisData['fosforo_disponible_mg_kg']
+                    ?? null;
+                $valL = $analysisData['available_phosphorus_mg_l']
+                    ?? $analysisData['fosforo_disponible_mg_l']
+                    ?? null;
+                if ($valKg !== null && $valKg !== '') { $valuesKg[] = (float)$valKg; }
+                if ($valL !== null && $valL !== '') { $valuesL[] = (float)$valL; }
                 
                 Log::info("Análisis {$index} creado con ID: {$phosphorusAnalysis->id}");
             }
@@ -273,11 +308,18 @@ class PhosphorusAnalysisController extends Controller
                 ->first();
 
             if ($serviceProcessDetail) {
+                // Calcular resultado a guardar en SPD (promedio). Preferir mg/kg.
+                $resultValue = null;
+                if (count($valuesKg) > 0) {
+                    $resultValue = round(array_sum($valuesKg) / count($valuesKg), 2);
+                } elseif (count($valuesL) > 0) {
+                    $resultValue = round(array_sum($valuesL) / count($valuesL), 2);
+                }
                 $updatedRows = ServiceProcessDetail::where('process_id', $processId)
                     ->where('service_id', $serviceId)
                     ->update([
                         'status' => 'completed',
-                        'result' => 'Análisis de fósforo completado',
+                        'result' => $resultValue !== null ? (string)$resultValue : 'Análisis de fósforo completado',
                         'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
                     ]);
 
@@ -457,6 +499,7 @@ class PhosphorusAnalysisController extends Controller
                         ]);
                         // En lugar de bloquear, actualizar el control existente
                         $existingControl->update([
+                            'analysis_type' => 'phosphorus',
                             'controles_analiticos' => $request->controles_analiticos,
                             'curva_valor_leido' => $request->input('curva_valor_leido') ?? 0,
                             'curva_error_porcentaje' => $request->input('curva_error_porcentaje') ?? 0,
@@ -471,6 +514,7 @@ class PhosphorusAnalysisController extends Controller
                         // Guardar control analítico (usando los datos del formulario de lote)
                         $controlData = [
                             'process_id' => $processId,
+                            'analysis_type' => 'phosphorus',
                             'controles_analiticos' => $request->controles_analiticos,
                             'curva_valor_leido' => $request->input('curva_valor_leido') ?? 0,
                             'curva_error_porcentaje' => $request->input('curva_error_porcentaje') ?? 0,
@@ -490,43 +534,190 @@ class PhosphorusAnalysisController extends Controller
                         Log::info('Control analítico creado con ID: ' . $analyticalControl->id);
                     }
 
-                    // Guardar múltiples análisis de fósforo (uno por cada fila de resultados)
+                    // Guardar análisis de fósforo (una fila por proceso en el formulario)
                     $phosphorusAnalyses = [];
-                    $items = $request->input("items_ensayo.{$index}", []);
+                    $item = $request->input("items_ensayo.{$index}", []);
 
                     Log::info('Guardando análisis de fósforo para proceso', [
                         'process_id' => $processId,
-                        'total_rows' => count($items),
-                        'items' => $items
+                        'item' => $item
                     ]);
 
-                    foreach ($items as $itemIndex => $item) {
+                    // Saltar si el ítem no contiene datos relevantes
+                    $hasMeaningfulData = false;
+                    $hasPositiveNumeric = false;
+                    if (is_array($item)) {
+                        $checkFields = [
+                            'codigo_interno','peso_muestra','pw','v_extractante',
+                            'lectura_blanco','factor_dilucion','fosforo_disponible_mg_l',
+                            'fosforo_disponible_mg_kg','observaciones_item'
+                        ];
+                        foreach ($checkFields as $f) {
+                            if (isset($item[$f]) && $item[$f] !== '' && $item[$f] !== null) {
+                                $hasMeaningfulData = true;
+                                if (in_array($f, ['peso_muestra','pw','v_extractante','lectura_blanco','factor_dilucion','fosforo_disponible_mg_l','fosforo_disponible_mg_kg'], true)) {
+                                    $val = (float)str_replace(',', '.', (string)$item[$f]);
+                                    if ($val > 0) { $hasPositiveNumeric = true; }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!$hasMeaningfulData || !$hasPositiveNumeric) {
+                        Log::info("Ítem del proceso {$processId} omitido por no contener datos.", ['item' => $item]);
+                        // No crear análisis vacío para este proceso
+                    } else {
+                        // Mapear dinámicamente a columnas ES/EN existentes y poblar ambas si existen
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'service_id' => $serviceId,
-                            'consecutive_no' => $consecutivoNo,
-                            'analysis_date' => $fechaAnalisis,
-                            'equipment_used' => $request->equipo_utilizado ?? '',
-                            'method_interval' => $request->intervalo_metodo ?? '',
-                            'analyst_name' => $request->nombre_analista ?? '',
-                            'observations' => $request->observaciones ?? '',
-                            'internal_code' => $item['codigo_interno'] ?? '',
-                            'sample_weight' => $item['peso_muestra'] ?? 0,
-                            'pw' => $item['pw'] ?? 0,
-                            'extractant_volume' => $item['v_extractante'] ?? 0,
-                            'blank_reading' => $item['lectura_blanco'] ?? 0,
-                            'dilution_factor' => $item['factor_dilucion'] ?? 0,
-                            'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                            'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                            'item_observations' => $item['observaciones_item'] ?? '',
                         ];
 
-                        Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);
+                        // consecutivo/consecutive
+                        if (Schema::hasColumn('phosphorus_analyses', 'consecutivo_no')) {
+                            $analysisData['consecutivo_no'] = $consecutivoNo;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'consecutive_no')) {
+                            $analysisData['consecutive_no'] = $consecutivoNo;
+                        }
+
+                        // fecha/analysis_date
+                        if (Schema::hasColumn('phosphorus_analyses', 'fecha_analisis')) {
+                            $analysisData['fecha_analisis'] = $fechaAnalisis;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'analysis_date')) {
+                            $analysisData['analysis_date'] = $fechaAnalisis;
+                        }
+
+                        // equipo/equipment
+                        $equipValue = $request->equipo_utilizado ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'equipo_utilizado')) {
+                            $analysisData['equipo_utilizado'] = $equipValue;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'equipment_used')) {
+                            $analysisData['equipment_used'] = $equipValue;
+                        }
+
+                        // intervalo/method_interval
+                        $intervalValue = $request->intervalo_metodo ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'intervalo_metodo')) {
+                            $analysisData['intervalo_metodo'] = $intervalValue;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'method_interval')) {
+                            $analysisData['method_interval'] = $intervalValue;
+                        }
+
+                        // analista/analyst
+                        $analystValue = $request->nombre_analista ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'nombre_analista')) {
+                            $analysisData['nombre_analista'] = $analystValue;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'analyst_name')) {
+                            $analysisData['analyst_name'] = $analystValue;
+                        }
+
+                        // observaciones
+                        $obsValue = $request->observaciones ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'observaciones')) {
+                            $analysisData['observaciones'] = $obsValue;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'observations')) {
+                            $analysisData['observations'] = $obsValue;
+                        }
+
+                        // Ítems
+                        $internalCode = $item['codigo_interno'] ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'codigo_interno')) {
+                            $analysisData['codigo_interno'] = $internalCode;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'internal_code')) {
+                            $analysisData['internal_code'] = $internalCode;
+                        }
+
+                        $sampleWeight = $item['peso_muestra'] ?? 0;
+                        if (Schema::hasColumn('phosphorus_analyses', 'peso_muestra')) {
+                            $analysisData['peso_muestra'] = $sampleWeight;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'sample_weight')) {
+                            $analysisData['sample_weight'] = $sampleWeight;
+                        }
+
+                        if (Schema::hasColumn('phosphorus_analyses', 'pw')) {
+                            $analysisData['pw'] = $item['pw'] ?? 0;
+                        }
+
+                        $extractVol = $item['v_extractante'] ?? 0;
+                        if (Schema::hasColumn('phosphorus_analyses', 'v_extractante')) {
+                            $analysisData['v_extractante'] = $extractVol;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'extractant_volume')) {
+                            $analysisData['extractant_volume'] = $extractVol;
+                        }
+
+                        $blankRead = $item['lectura_blanco'] ?? 0;
+                        if (Schema::hasColumn('phosphorus_analyses', 'lectura_blanco')) {
+                            $analysisData['lectura_blanco'] = $blankRead;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'blank_reading')) {
+                            $analysisData['blank_reading'] = $blankRead;
+                        }
+
+                        $dilFactor = $item['factor_dilucion'] ?? 0;
+                        if (Schema::hasColumn('phosphorus_analyses', 'factor_dilucion')) {
+                            $analysisData['factor_dilucion'] = $dilFactor;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'dilution_factor')) {
+                            $analysisData['dilution_factor'] = $dilFactor;
+                        }
+
+                        // Valores base
+                        $availMgL = $item['fosforo_disponible_mg_l']
+                            ?? $item['available_phosphorus_mg_l']
+                            ?? 0;
+                        if (Schema::hasColumn('phosphorus_analyses', 'fosforo_disponible_mg_l')) {
+                            $analysisData['fosforo_disponible_mg_l'] = $availMgL;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'available_phosphorus_mg_l')) {
+                            $analysisData['available_phosphorus_mg_l'] = $availMgL;
+                        }
+
+                        // Calcular mg/kg en servidor si no viene: ((mg/L * fd) - blanco) * Vext / peso * (100 + pw)/100
+                        $availMgKg = $item['fosforo_disponible_mg_kg']
+                            ?? $item['available_phosphorus_mg_kg']
+                            ?? null;
+                        if ($availMgKg === null || $availMgKg === '' || (float)$availMgKg == 0.0) {
+                            $pesoMuestra    = (float)str_replace(',', '.', (string)($item['peso_muestra'] ?? 0));
+                            $vExtractante   = (float)str_replace(',', '.', (string)($item['v_extractante'] ?? 0));
+                            $factorDilucion = (float)str_replace(',', '.', (string)($item['factor_dilucion'] ?? 0));
+                            $pw             = (float)str_replace(',', '.', (string)($item['pw'] ?? 0));
+                            $lecturaBlanco  = (float)str_replace(',', '.', (string)($item['lectura_blanco'] ?? 0));
+                            $mgL            = (float)str_replace(',', '.', (string)$availMgL);
+                            if ($mgL > 0 && $pesoMuestra > 0) {
+                                $calc = (($mgL * $factorDilucion) - $lecturaBlanco) * $vExtractante / $pesoMuestra * (100 + $pw) / 100;
+                                $availMgKg = round($calc, 2);
+                            }
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'fosforo_disponible_mg_kg')) {
+                            $analysisData['fosforo_disponible_mg_kg'] = $availMgKg ?? 0;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'available_phosphorus_mg_kg')) {
+                            $analysisData['available_phosphorus_mg_kg'] = $availMgKg ?? 0;
+                        }
+
+                        $itemObs = $item['observaciones_item'] ?? '';
+                        if (Schema::hasColumn('phosphorus_analyses', 'observaciones_item')) {
+                            $analysisData['observaciones_item'] = $itemObs;
+                        }
+                        if (Schema::hasColumn('phosphorus_analyses', 'item_observations')) {
+                            $analysisData['item_observations'] = $itemObs;
+                        }
+
+                        Log::info("Creando análisis para proceso {$processId}", $analysisData);
 
                         $phosphorusAnalysis = PhosphorusAnalysis::create($analysisData);
                         $phosphorusAnalyses[] = $phosphorusAnalysis;
-                        
-                        Log::info("Análisis {$itemIndex} creado con ID: {$phosphorusAnalysis->id}");
+
+                        Log::info("Análisis creado con ID: {$phosphorusAnalysis->id}");
                     }
 
                     // Actualizar el estado del servicio a 'completed'
@@ -535,11 +726,53 @@ class PhosphorusAnalysisController extends Controller
                         ->first();
 
                     if ($serviceProcessDetail) {
+                        // Determinar resultado a guardar para este proceso (preferir mg/kg)
+                        $batchResultValue = null;
+                        $valKgKeys = ['fosforo_disponible_mg_kg', 'available_phosphorus_mg_kg'];
+                        $valLKeys  = ['fosforo_disponible_mg_l',  'available_phosphorus_mg_l'];
+                        foreach ($valKgKeys as $k) {
+                            if (isset($item[$k]) && $item[$k] !== '' && $item[$k] !== null) {
+                                $batchResultValue = (float)str_replace(',', '.', (string)$item[$k]);
+                                break;
+                            }
+                        }
+                        if ($batchResultValue === null) {
+                            foreach ($valLKeys as $k) {
+                                if (isset($item[$k]) && $item[$k] !== '' && $item[$k] !== null) {
+                                    $batchResultValue = (float)str_replace(',', '.', (string)$item[$k]);
+                                    break;
+                                }
+                            }
+                        }
+                        // Si aún es null, intenta usar el valor calculado en analysisData
+                        if ($batchResultValue === null && isset($analysisData)) {
+                            $fromData = $analysisData['available_phosphorus_mg_kg']
+                                ?? $analysisData['fosforo_disponible_mg_kg']
+                                ?? $analysisData['available_phosphorus_mg_l']
+                                ?? $analysisData['fosforo_disponible_mg_l']
+                                ?? null;
+                            if ($fromData !== null && $fromData !== '') {
+                                $batchResultValue = (float)$fromData;
+                            }
+                        }
+                        // Fallback: si no vino en request, tomar del análisis creado
+                        if ($batchResultValue === null && !empty($phosphorusAnalyses)) {
+                            $created = $phosphorusAnalyses[0] ?? null;
+                            if ($created) {
+                                $createdKg = $created->available_phosphorus_mg_kg ?? $created->fosforo_disponible_mg_kg ?? null;
+                                $createdL  = $created->available_phosphorus_mg_l  ?? $created->fosforo_disponible_mg_l  ?? null;
+                                if ($createdKg !== null && $createdKg !== '') {
+                                    $batchResultValue = (float)$createdKg;
+                                } elseif ($createdL !== null && $createdL !== '') {
+                                    $batchResultValue = (float)$createdL;
+                                }
+                            }
+                        }
                         $updatedRows = ServiceProcessDetail::where('process_id', $processId)
                             ->where('service_id', $phosphorusService->services_id)
                             ->update([
                                 'status' => 'completed',
-                                'result' => 'Análisis de fósforo completado',
+                                'result' => $batchResultValue !== null ? (string)round($batchResultValue, 2) : 'Análisis de fósforo completado',
                                 'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
                             ]);
 
