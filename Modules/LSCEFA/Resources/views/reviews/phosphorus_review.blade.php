@@ -35,12 +35,15 @@
 
             @php
                 $process = $process ?? ($analysis->process ?? null);
-                $customer = $customer ?? ($process->customer ?? null);
+                $quote = $quote ?? ($process->quote ?? null);
+                $customer = $customer ?? ($process->customer ?? ($quote->customer ?? null));
                 $service = $service ?? ($analysis->service ?? null);
                 $type = $type ?? 'phosphorus';
                 $technicianName = $technicianName
                     ?? ($analysis->nombre_analista ?? null)
-                    ?? ($analysis->analista ?? null);
+                    ?? ($analysis->analista ?? null)
+                    ?? ($analysis->analyst_name ?? null);
+                $phDate = $analysis->fecha_analisis ?? $analysis->analysis_date ?? null;
             @endphp
 
             <div class="card">
@@ -49,11 +52,17 @@
                     <div class="row">
                         <div class="col-md-3">
                             <label class="mb-0">Consecutivo</label>
-                            <div class="value-display p-2">{{ $effectiveConsecutivo ?? ($analysis->consecutivo_no ?? 'N/A') }}</div>
+                            <div class="value-display p-2">{{ $effectiveConsecutivo ?? ($analysis->consecutivo_no ?? ($detail->consecutivo_no ?? 'N/A')) }}</div>
                         </div>
                         <div class="col-md-3">
                             <label class="mb-0">Fecha de Análisis</label>
-                            <div class="value-display p-2">{{ $analysis->fecha_analisis ? \Carbon\Carbon::parse($analysis->fecha_analisis)->format('d/m/Y') : 'N/A' }}</div>
+                            <div class="value-display p-2">
+                                @if($phDate)
+                                    {{ \Carbon\Carbon::parse($phDate)->format('d/m/Y') }}
+                                @else
+                                    N/A
+                                @endif
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label class="mb-0">Técnico Responsable</label>
@@ -67,11 +76,11 @@
                     <div class="row mt-3">
                         <div class="col-md-4">
                             <label class="mb-0">Equipo Utilizado</label>
-                            <div class="value-display p-2">{{ $analysis->equipo_utilizado ?? 'N/A' }}</div>
+                            <div class="value-display p-2">{{ $analysis->equipo_utilizado ?? $analysis->equipment_used ?? 'N/A' }}</div>
                         </div>
                         <div class="col-md-4">
                             <label class="mb-0">Intervalo del Método</label>
-                            <div class="value-display p-2">{{ $analysis->intervalo_metodo ?? 'N/A' }}</div>
+                            <div class="value-display p-2">{{ $analysis->intervalo_metodo ?? $analysis->method_interval ?? 'N/A' }}</div>
                         </div>
                         <div class="col-md-4">
                             <label class="mb-0">Cliente</label>
@@ -101,15 +110,15 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{{ $analysis->codigo_interno ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->peso_muestra ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->codigo_interno ?? $analysis->internal_code ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->peso_muestra ?? $analysis->sample_weight ?? 'N/A' }}</td>
                                     <td>{{ $analysis->pw ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->v_extractante ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->lectura_blanco ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->factor_dilucion ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->fosforo_disponible_mg_l ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->fosforo_disponible_mg_kg ?? 'N/A' }}</td>
-                                    <td>{{ $analysis->observaciones_item ?? '' }}</td>
+                                    <td>{{ $analysis->v_extractante ?? $analysis->extractant_volume ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->lectura_blanco ?? $analysis->blank_reading ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->factor_dilucion ?? $analysis->dilution_factor ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->fosforo_disponible_mg_l ?? $analysis->available_phosphorus_mg_l ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->fosforo_disponible_mg_kg ?? $analysis->available_phosphorus_mg_kg ?? 'N/A' }}</td>
+                                    <td>{{ $analysis->observaciones_item ?? $analysis->item_observations ?? '' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -123,7 +132,9 @@
                     @php
                         $controls = [];
                         if(isset($analyticalControl) && $analyticalControl){
-                            $controls = $analyticalControl->controles_analiticos ?? [];
+                            $controls = $analyticalControl->controles_analiticos
+                                ?? $analyticalControl->analytical_controls
+                                ?? [];
                         }
                     @endphp
                     <div class="table-responsive">

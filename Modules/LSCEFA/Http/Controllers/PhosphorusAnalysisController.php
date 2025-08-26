@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Modules\LSCEFA\Models\Process;
 use Modules\LSCEFA\Models\Service;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
@@ -150,22 +151,112 @@ class PhosphorusAnalysisController extends Controller
                 $analysisData = [
                     'process_id' => (string)$processId,
                     'service_id' => $serviceId,
-                    'consecutivo_no' => $request->consecutivo_no,
-                    'fecha_analisis' => $request->fecha_analisis,
-                    'equipo_utilizado' => $request->equipo_utilizado,
-                    'intervalo_metodo' => $request->intervalo_metodo,
-                    'nombre_analista' => $request->analista,
-                    'observaciones' => $request->observaciones ?? '',
-                    'codigo_interno' => $item['codigo_interno'] ?? '',
-                    'peso_muestra' => $item['peso_muestra'] ?? 0,
-                    'pw' => $item['pw'] ?? 0,
-                    'v_extractante' => $item['v_extractante'] ?? 0,
-                    'lectura_blanco' => $item['lectura_blanco'] ?? 0,
-                    'factor_dilucion' => $item['factor_dilucion'] ?? 0,
-                    'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                    'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                    'observaciones_item' => $item['observaciones_item'] ?? '',
                 ];
+
+                // Map fields to whichever column exists (EN preferred)
+                $consecValue = $request->input('consecutivo_no');
+                if (Schema::hasColumn('phosphorus_analyses', 'consecutive_no')) {
+                    $analysisData['consecutive_no'] = $consecValue;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'consecutivo_no')) {
+                    $analysisData['consecutivo_no'] = $consecValue;
+                }
+
+                $dateValue = $request->input('fecha_analisis');
+                if (Schema::hasColumn('phosphorus_analyses', 'analysis_date')) {
+                    $analysisData['analysis_date'] = $dateValue;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'fecha_analisis')) {
+                    $analysisData['fecha_analisis'] = $dateValue;
+                }
+
+                $equipValue = $request->input('equipo_utilizado');
+                if (Schema::hasColumn('phosphorus_analyses', 'equipment_used')) {
+                    $analysisData['equipment_used'] = $equipValue;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'equipo_utilizado')) {
+                    $analysisData['equipo_utilizado'] = $equipValue;
+                }
+
+                $intervalValue = $request->input('intervalo_metodo');
+                if (Schema::hasColumn('phosphorus_analyses', 'method_interval')) {
+                    $analysisData['method_interval'] = $intervalValue;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'intervalo_metodo')) {
+                    $analysisData['intervalo_metodo'] = $intervalValue;
+                }
+
+                $analystValue = $request->input('analista');
+                if (Schema::hasColumn('phosphorus_analyses', 'analyst_name')) {
+                    $analysisData['analyst_name'] = $analystValue;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'nombre_analista')) {
+                    $analysisData['nombre_analista'] = $analystValue;
+                }
+
+                $observationsMain = $request->input('observaciones', '');
+                if (Schema::hasColumn('phosphorus_analyses', 'observations')) {
+                    $analysisData['observations'] = $observationsMain;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'observaciones')) {
+                    $analysisData['observaciones'] = $observationsMain;
+                }
+
+                // Items mapping
+                $internalCode = $item['codigo_interno'] ?? '';
+                if (Schema::hasColumn('phosphorus_analyses', 'internal_code')) {
+                    $analysisData['internal_code'] = $internalCode;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'codigo_interno')) {
+                    $analysisData['codigo_interno'] = $internalCode;
+                }
+
+                $sampleWeight = $item['peso_muestra'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'sample_weight')) {
+                    $analysisData['sample_weight'] = $sampleWeight;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'peso_muestra')) {
+                    $analysisData['peso_muestra'] = $sampleWeight;
+                }
+
+                // pw has same name in both schemas
+                if (Schema::hasColumn('phosphorus_analyses', 'pw')) {
+                    $analysisData['pw'] = $item['pw'] ?? 0;
+                }
+
+                $extractVol = $item['v_extractante'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'extractant_volume')) {
+                    $analysisData['extractant_volume'] = $extractVol;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'v_extractante')) {
+                    $analysisData['v_extractante'] = $extractVol;
+                }
+
+                $blankRead = $item['lectura_blanco'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'blank_reading')) {
+                    $analysisData['blank_reading'] = $blankRead;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'lectura_blanco')) {
+                    $analysisData['lectura_blanco'] = $blankRead;
+                }
+
+                $dilFactor = $item['factor_dilucion'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'dilution_factor')) {
+                    $analysisData['dilution_factor'] = $dilFactor;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'factor_dilucion')) {
+                    $analysisData['factor_dilucion'] = $dilFactor;
+                }
+
+                $availMgL = $item['fosforo_disponible_mg_l'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'available_phosphorus_mg_l')) {
+                    $analysisData['available_phosphorus_mg_l'] = $availMgL;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'fosforo_disponible_mg_l')) {
+                    $analysisData['fosforo_disponible_mg_l'] = $availMgL;
+                }
+
+                $availMgKg = $item['fosforo_disponible_mg_kg'] ?? 0;
+                if (Schema::hasColumn('phosphorus_analyses', 'available_phosphorus_mg_kg')) {
+                    $analysisData['available_phosphorus_mg_kg'] = $availMgKg;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'fosforo_disponible_mg_kg')) {
+                    $analysisData['fosforo_disponible_mg_kg'] = $availMgKg;
+                }
+
+                $itemObs = $item['observaciones_item'] ?? '';
+                if (Schema::hasColumn('phosphorus_analyses', 'item_observations')) {
+                    $analysisData['item_observations'] = $itemObs;
+                } elseif (Schema::hasColumn('phosphorus_analyses', 'observaciones_item')) {
+                    $analysisData['observaciones_item'] = $itemObs;
+                }
 
                 Log::info("Creando análisis {$index}", $analysisData);
 
@@ -176,65 +267,48 @@ class PhosphorusAnalysisController extends Controller
                 Log::info("Análisis {$index} creado con ID: {$phosphorusAnalysis->id}");
             }
 
-            // Actualizar el estado del servicio a 'completed'
-            $phosphorusService = Service::whereRaw('LOWER(descripcion) LIKE ?', ['%fósforo%'])
-                                    ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%fosforo%'])
-                                    ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%phosphorus%'])
-                                    ->first();
+            // Actualizar el estado del servicio a 'completed' usando el mismo service_id del análisis
+            $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
+                ->where('service_id', $serviceId)
+                ->first();
 
-            Log::info('Buscando servicio de fósforo', [
-                'process_id' => $processId,
-                'phosphorus_service_found' => $phosphorusService ? true : false,
-                'service_id' => $phosphorusService ? $phosphorusService->services_id : null,
-                'service_descripcion' => $phosphorusService ? $phosphorusService->descripcion : null
-            ]);
-
-            if ($phosphorusService) {
-                // Verificar que el ServiceProcessDetail existe antes de actualizar
-                $serviceProcessDetail = ServiceProcessDetail::where('process_id', $processId)
-                    ->where('service_id', $phosphorusService->services_id)
-                    ->first();
-
-                if ($serviceProcessDetail) {
-                    $updatedRows = ServiceProcessDetail::where('process_id', $processId)
-                        ->where('service_id', $phosphorusService->services_id)
-                        ->update([
-                            'status' => 'completed',
-                            'result' => 'Análisis de fósforo completado',
-                            'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
-                        ]);
-
-                    Log::info('Actualización del estado del servicio', [
-                        'process_id' => $processId,
-                        'service_id' => $phosphorusService->services_id,
-                        'rows_updated' => $updatedRows,
-                        'service_process_detail_id' => $serviceProcessDetail->id
+            if ($serviceProcessDetail) {
+                $updatedRows = ServiceProcessDetail::where('process_id', $processId)
+                    ->where('service_id', $serviceId)
+                    ->update([
+                        'status' => 'completed',
+                        'result' => 'Análisis de fósforo completado',
+                        'observations' => 'Análisis guardado exitosamente con ' . count($phosphorusAnalyses) . ' muestras'
                     ]);
-                    
-                    // Verificar si todos los servicios del proceso están completados
-                    $allServicesCompleted = ServiceProcessDetail::where('process_id', $processId)
-                        ->where('status', '!=', 'completed')
-                        ->count() === 0;
-                    
-                    // Si todos los servicios están completados, actualizar el estado del proceso
-                    if ($allServicesCompleted) {
-                        $processUpdated = Process::where('process_id', $processId)
-                            ->update(['status' => 'completed']);
-                        
-                        Log::info('Actualización del estado del proceso', [
-                            'process_id' => $processId,
-                            'process_updated' => $processUpdated,
-                            'all_services_completed' => $allServicesCompleted
-                        ]);
-                    }
-                } else {
-                    Log::warning('ServiceProcessDetail no encontrado para actualizar', [
+
+                Log::info('Actualización del estado del servicio', [
+                    'process_id' => $processId,
+                    'service_id' => $serviceId,
+                    'rows_updated' => $updatedRows,
+                    'service_process_detail_id' => $serviceProcessDetail->id
+                ]);
+
+                // Verificar si todos los servicios del proceso están completados
+                $allServicesCompleted = ServiceProcessDetail::where('process_id', $processId)
+                    ->where('status', '!=', 'completed')
+                    ->count() === 0;
+
+                // Si todos los servicios están completados, actualizar el estado del proceso
+                if ($allServicesCompleted) {
+                    $processUpdated = Process::where('process_id', $processId)
+                        ->update(['status' => 'completed']);
+
+                    Log::info('Actualización del estado del proceso', [
                         'process_id' => $processId,
-                        'service_id' => $phosphorusService->services_id
+                        'process_updated' => $processUpdated,
+                        'all_services_completed' => $allServicesCompleted
                     ]);
                 }
             } else {
-                Log::warning('No se encontró el servicio de fósforo para actualizar estado');
+                Log::warning('ServiceProcessDetail no encontrado para actualizar', [
+                    'process_id' => $processId,
+                    'service_id' => $serviceId
+                ]);
             }
 
             DB::commit();
@@ -430,21 +504,21 @@ class PhosphorusAnalysisController extends Controller
                         $analysisData = [
                             'process_id' => (string)$processId,
                             'service_id' => $serviceId,
-                            'consecutivo_no' => $consecutivoNo,
-                            'fecha_analisis' => $fechaAnalisis,
-                            'equipo_utilizado' => $request->equipo_utilizado ?? '',
-                            'intervalo_metodo' => $request->intervalo_metodo ?? '',
-                            'nombre_analista' => $request->nombre_analista ?? '',
-                            'observaciones' => $request->observaciones ?? '',
-                            'codigo_interno' => $item['codigo_interno'] ?? '',
-                            'peso_muestra' => $item['peso_muestra'] ?? 0,
+                            'consecutive_no' => $consecutivoNo,
+                            'analysis_date' => $fechaAnalisis,
+                            'equipment_used' => $request->equipo_utilizado ?? '',
+                            'method_interval' => $request->intervalo_metodo ?? '',
+                            'analyst_name' => $request->nombre_analista ?? '',
+                            'observations' => $request->observaciones ?? '',
+                            'internal_code' => $item['codigo_interno'] ?? '',
+                            'sample_weight' => $item['peso_muestra'] ?? 0,
                             'pw' => $item['pw'] ?? 0,
-                            'v_extractante' => $item['v_extractante'] ?? 0,
-                            'lectura_blanco' => $item['lectura_blanco'] ?? 0,
-                            'factor_dilucion' => $item['factor_dilucion'] ?? 0,
-                            'fosforo_disponible_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
-                            'fosforo_disponible_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
-                            'observaciones_item' => $item['observaciones_item'] ?? '',
+                            'extractant_volume' => $item['v_extractante'] ?? 0,
+                            'blank_reading' => $item['lectura_blanco'] ?? 0,
+                            'dilution_factor' => $item['factor_dilucion'] ?? 0,
+                            'available_phosphorus_mg_l' => $item['fosforo_disponible_mg_l'] ?? 0,
+                            'available_phosphorus_mg_kg' => $item['fosforo_disponible_mg_kg'] ?? 0,
+                            'item_observations' => $item['observaciones_item'] ?? '',
                         ];
 
                         Log::info("Creando análisis {$itemIndex} para proceso {$processId}", $analysisData);

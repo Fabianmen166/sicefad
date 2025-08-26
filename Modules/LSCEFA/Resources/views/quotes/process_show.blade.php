@@ -8,10 +8,9 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <strong>ID del Proceso:</strong> {{ $process->process_id }}<br>
+                    <strong>Código de Item:</strong> {{ $process->item_code }}<br>
                     <strong>Estado:</strong> {{ $process->status }}<br>
                     <strong>Fecha de Inicio:</strong> {{ $process->reception_date }}<br>
-                    <strong>Item Code:</strong> {{ $process->item_code }}<br>
                     <strong>Comunicación con el Cliente:</strong> {{ $process->client_communication }}<br>
                     <strong>Días para Procesar:</strong> {{ $process->processing_days }}<br>
                     <strong>Fecha de Recepción:</strong> {{ $process->reception_date }}<br>

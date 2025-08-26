@@ -92,25 +92,25 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Equipo Utilizado</label>
-                                    <input type="text" name="equipo_utilizado" class="form-control">
+                                    <input type="text" name="equipo_utilizado" class="form-control" value="{{ old('equipo_utilizado') }}">
                             </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Resolución Instrumental</label>
-                                    <input type="text" name="resolucion_instrumental" class="form-control">
+                                    <input type="text" name="resolucion_instrumental" class="form-control" value="{{ old('resolucion_instrumental') }}">
                         </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Unidades de Reporte Equipo</label>
-                                    <input type="text" name="unidades_reporte" class="form-control">
+                                    <input type="text" name="unidades_reporte" class="form-control" value="{{ old('unidades_reporte') }}">
                             </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>Intervalo del Método</label>
-                                    <input type="text" name="intervalo_metodo" class="form-control">
+                                    <input type="text" name="intervalo_metodo" class="form-control" value="{{ old('intervalo_metodo') }}">
                             </div>
                             </div>
                         </div>
@@ -135,9 +135,9 @@
                             <tbody>
                                 <tr>
                                     <td><input type="text" class="form-control" name="blanco_identificacion" value="Blanco del proceso" readonly></td>
-                                    <td><input type="number" step="0.01" name="blanco_valor_leido" id="blanco_valor_leido" class="form-control"></td>
+                                    <td><input type="number" step="0.01" name="blanco_valor_leido" id="blanco_valor_leido" class="form-control" value="{{ old('blanco_valor_leido') }}"></td>
                                     <td><span id="blanco_aceptable"></span></td>
-                                    <td><textarea name="blanco_observaciones" class="form-control"></textarea></td>
+                                    <td><textarea name="blanco_observaciones" class="form-control">{{ old('blanco_observaciones') }}</textarea></td>
                                     </tr>
                             </tbody>
                         </table>
@@ -155,7 +155,7 @@
                                 <td colspan="9">
                                     <div class="form-group mb-0">
                                         <label for="duplicado_identificacion" class="mb-0">Identificación de la Muestra (Aplicable a ambas réplicas)</label>
-                                        <input type="text" class="form-control" id="duplicado_identificacion" name="duplicado_identificacion" value="">
+                                        <input type="text" class="form-control" id="duplicado_identificacion" name="duplicado_identificacion" value="{{ old('duplicado_identificacion') }}">
                                     </div>
                                 </td>
                             </tr>
@@ -175,19 +175,19 @@
                                 <td><strong>A</strong></td>
                                 <td>
                                     <input type="number" step="0.0001" name="duplicado_peso" 
-                                           class="form-control" value="">
+                                           class="form-control" value="{{ old('duplicado_peso') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" name="duplicado_volumen_agua" 
-                                           class="form-control" value="">
+                                           class="form-control" value="{{ old('duplicado_volumen_agua') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.1" name="duplicado_temperatura" 
-                                           class="form-control" value="">
+                                           class="form-control" value="{{ old('duplicado_temperatura') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" name="duplicado_a_valor_leido" 
-                                           id="duplicado_a_valor_leido" class="form-control">
+                                           id="duplicado_a_valor_leido" class="form-control" value="{{ old('duplicado_a_valor_leido') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" id="duplicado_a_valor_leido_msm" 
@@ -203,23 +203,23 @@
                                     <span class="form-control-plaintext" id="precision_aceptable">-</span>
                                 </td>
                                 <td rowspan="2">
-                                    <textarea name="duplicado_observaciones" class="form-control" rows="3"></textarea>
+                                    <textarea name="duplicado_observaciones" class="form-control" rows="3">{{ old('duplicado_observaciones') }}</textarea>
                                 </td>
                             </tr>
                             <tr>
                                 <td><strong>B</strong></td>
                                 <td>
-                                    <input type="number" step="0.0001" name="duplicado_b_peso" class="form-control">
+                                    <input type="number" step="0.0001" name="duplicado_b_peso" class="form-control" value="{{ old('duplicado_b_peso') }}">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" name="duplicado_b_volumen_agua" class="form-control">
+                                    <input type="number" step="0.01" name="duplicado_b_volumen_agua" class="form-control" value="{{ old('duplicado_b_volumen_agua') }}">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.1" name="duplicado_b_temperatura" class="form-control">
+                                    <input type="number" step="0.1" name="duplicado_b_temperatura" class="form-control" value="{{ old('duplicado_b_temperatura') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" name="duplicado_b_valor_leido" 
-                                           id="duplicado_b_valor_leido" class="form-control">
+                                           id="duplicado_b_valor_leido" class="form-control" value="{{ old('duplicado_b_valor_leido') }}">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" id="duplicado_b_valor_leido_msm" 
@@ -251,12 +251,12 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" name="veracidad[0][identificacion]" class="form-control" placeholder="Ingrese identificación"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_esperado]" id="veracidad_0_valor_esperado" class="form-control"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_leido]" id="veracidad_0_valor_leido" class="form-control"></td>
+                                    <td><input type="text" name="veracidad[0][identificacion]" class="form-control" placeholder="Ingrese identificación" value="{{ old('veracidad.0.identificacion') }}"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_esperado]" id="veracidad_0_valor_esperado" class="form-control" value="{{ old('veracidad.0.valor_esperado') }}"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[0][valor_leido]" id="veracidad_0_valor_leido" class="form-control" value="{{ old('veracidad.0.valor_leido') }}"></td>
                                     <td><span id="veracidad_0_recuperacion"></span></td>
                                     <td><span id="veracidad_0_aceptable"></span></td>
-                                    <td><textarea name="veracidad[0][observaciones]" class="form-control"></textarea></td>
+                                    <td><textarea name="veracidad[0][observaciones]" class="form-control">{{ old('veracidad.0.observaciones') }}</textarea></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -279,15 +279,15 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" name="veracidad[1][identificacion]" class="form-control" placeholder="Ingrese identificación"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[1][peso]" class="form-control"></td>
-                                    <td><input type="number" step="0.01" name="veracidad[1][volumen_agua]" class="form-control"></td>
-                                    <td><input type="number" step="0.1" name="veracidad[1][temperatura]" class="form-control"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_esperado]" id="veracidad_1_valor_esperado" class="form-control"></td>
-                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_leido]" id="veracidad_1_valor_leido" class="form-control"></td>
+                                    <td><input type="text" name="veracidad[1][identificacion]" class="form-control" placeholder="Ingrese identificación" value="{{ old('veracidad.1.identificacion') }}"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][peso]" class="form-control" value="{{ old('veracidad.1.peso') }}"></td>
+                                    <td><input type="number" step="0.01" name="veracidad[1][volumen_agua]" class="form-control" value="{{ old('veracidad.1.volumen_agua') }}"></td>
+                                    <td><input type="number" step="0.1" name="veracidad[1][temperatura]" class="form-control" value="{{ old('veracidad.1.temperatura') }}"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_esperado]" id="veracidad_1_valor_esperado" class="form-control" value="{{ old('veracidad.1.valor_esperado') }}"></td>
+                                    <td><input type="number" step="0.0001" name="veracidad[1][valor_leido]" id="veracidad_1_valor_leido" class="form-control" value="{{ old('veracidad.1.valor_leido') }}"></td>
                                     <td><span id="veracidad_1_recuperacion"></span></td>
                                     <td><span id="veracidad_1_aceptable"></span></td>
-                                    <td><textarea name="veracidad[1][observaciones]" class="form-control"></textarea></td>
+                                    <td><textarea name="veracidad[1][observaciones]" class="form-control">{{ old('veracidad.1.observaciones') }}</textarea></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -376,7 +376,7 @@
                     </div>
                     <div class="card-body">
                         <div class="form-group">
-                            <textarea name="observaciones_analista" class="form-control"></textarea>
+                            <textarea name="observaciones_analista" class="form-control">{{ old('observaciones_analista') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -448,17 +448,20 @@
 // Blanco del proceso
 const blancoInput = document.getElementById('blanco_valor_leido');
 const blancoAceptable = document.getElementById('blanco_aceptable');
+function actualizarBlanco() {
+    if (!(blancoInput && blancoAceptable)) return;
+    const valor = parseFloat(blancoInput.value);
+    if (!isNaN(valor)) {
+        blancoAceptable.textContent = valor <= 0.1 ? 'Aceptable' : 'No aceptable';
+        blancoAceptable.className = valor <= 0.1 ? 'text-success' : 'text-danger';
+    } else {
+        blancoAceptable.textContent = '';
+        blancoAceptable.className = '';
+    }
+}
 if (blancoInput && blancoAceptable) {
-    blancoInput.addEventListener('input', function() {
-        const valor = parseFloat(blancoInput.value);
-        if (!isNaN(valor)) {
-            blancoAceptable.textContent = valor <= 0.1 ? 'Aceptable' : 'No aceptable';
-            blancoAceptable.className = valor <= 0.1 ? 'text-success' : 'text-danger';
-        } else {
-            blancoAceptable.textContent = '';
-            blancoAceptable.className = '';
-        }
-    });
+    blancoInput.addEventListener('input', actualizarBlanco);
+    document.addEventListener('DOMContentLoaded', actualizarBlanco);
 }
 
 // Precisión (Duplicados)
@@ -500,6 +503,7 @@ function actualizarPrecision() {
 }
 document.getElementById('duplicado_a_valor_leido').addEventListener('input', actualizarPrecision);
 document.getElementById('duplicado_b_valor_leido').addEventListener('input', actualizarPrecision);
+document.addEventListener('DOMContentLoaded', actualizarPrecision);
 
 // Veracidad (Controles de calidad)
 document.addEventListener('DOMContentLoaded', function() {
@@ -508,6 +512,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('veracidad_0_valor_leido')?.addEventListener('input', function() { actualizarVeracidad(0); });
     document.getElementById('veracidad_1_valor_esperado')?.addEventListener('input', function() { actualizarVeracidad(1); });
     document.getElementById('veracidad_1_valor_leido')?.addEventListener('input', function() { actualizarVeracidad(1); });
+    // Inicializar con valores precargados
+    actualizarVeracidad(0);
+    actualizarVeracidad(1);
 });
 
 function actualizarVeracidad(index) {

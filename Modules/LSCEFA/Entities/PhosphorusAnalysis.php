@@ -14,6 +14,8 @@ class PhosphorusAnalysis extends Model
     protected $fillable = [
         'process_id',
         'service_id',
+        // English schema primary consecutive field
+        'consecutive_no',
         'consecutivo_no',
         'fecha_analisis',
         'equipo_utilizado',

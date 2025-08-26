@@ -3,6 +3,7 @@
 namespace Modules\LSCEFA\Http\Controllers;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Modules\LSCEFA\Models\Process;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
@@ -63,13 +64,17 @@ class ProcessHistoryController extends Controller
                 ];
             }
             // Map phosphorus by process/service
-            $pa = PhosphorusAnalysis::where('process_id', $process->process_id)
-                ->where('service_id', $spd->service_id)
-                ->latest('fecha_analisis')
-                ->first();
+            $paQuery = PhosphorusAnalysis::where('process_id', $process->process_id)
+                ->where('service_id', $spd->service_id);
+
+            // Prefer English column names when present
+            $dateColumn = Schema::hasColumn('phosphorus_analyses', 'analysis_date') ? 'analysis_date' : 'fecha_analisis';
+
+            $pa = $paQuery->orderBy($dateColumn, 'desc')->first();
             if ($pa) {
                 $entry['phosphorus'] = [
-                    'fecha_analisis' => $pa->fecha_analisis ?? null,
+                    // Expose as fecha_analisis for legacy view key, but prefer analysis_date value if present
+                    'fecha_analisis' => $pa->analysis_date ?? $pa->fecha_analisis ?? null,
                     'review_status' => $pa->review_status ?? null,
                     'fosforo_disponible_mg_kg' => $pa->fosforo_disponible_mg_kg ?? null,
                 ];

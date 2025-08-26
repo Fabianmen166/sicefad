@@ -74,7 +74,12 @@
                         <h5>Unidades</h5>
                         <div id="unit-container">
                             <div class="unit-row mb-4 border p-3" data-index="0">
-                                <h6>Unidad 1</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Unidad 1</h6>
+                                    <button type="button" class="btn btn-outline-danger btn-sm delete-unit-btn" style="display:none;">
+                                        <i class="fas fa-trash"></i> Eliminar unidad
+                                    </button>
+                                </div>
                                 <!-- Servicios de la Unidad -->
                                 <h6>Servicios</h6>
                                 <div class="service-container">
@@ -214,6 +219,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         totalDisplay.textContent = total.toFixed(2);
     }
+
+    // Reindex all units and their fields after any structural change
+    function reindexUnits() {
+        const unitRows = unitContainer.querySelectorAll('.unit-row');
+        unitRows.forEach((row, idx) => {
+            row.dataset.index = idx;
+            const title = row.querySelector('h6');
+            if (title) { title.textContent = `Unidad ${idx + 1}`; }
+            // Enable delete button if more than 1 unit exists
+            const delBtn = row.querySelector('.delete-unit-btn');
+            if (delBtn) {
+                delBtn.style.display = (unitRows.length > 1) ? 'inline-block' : 'none';
+            }
+            // Update names and ids inside this unit
+            const namedInputs = row.querySelectorAll('[name]');
+            namedInputs.forEach(el => {
+                const name = el.getAttribute('name');
+                if (name) {
+                    el.setAttribute('name', name.replace(/units\[\d+\]/, `units[${idx}]`));
+                }
+            });
+            // Update "for" labels and ids that contain the index pattern
+            const idEls = row.querySelectorAll('[id]');
+            idEls.forEach(el => {
+                const id = el.getAttribute('id');
+                if (id) {
+                    el.setAttribute('id', id.replace(/units_\d+_/g, `units_${idx}_`));
+                }
+            });
+            const labels = row.querySelectorAll('label[for]');
+            labels.forEach(lb => {
+                const f = lb.getAttribute('for');
+                if (f) lb.setAttribute('for', f.replace(/units_\d+_/g, `units_${idx}_`));
+            });
+        });
+        // Keep unitIndex consistent for adding new units
+        unitIndex = unitContainer.querySelectorAll('.unit-row').length;
+        calculateTotal();
+    }
+
+    function attachUnitHandlers(unitRow) {
+        const delBtn = unitRow.querySelector('.delete-unit-btn');
+        if (delBtn) {
+            delBtn.addEventListener('click', () => {
+                const unitRows = unitContainer.querySelectorAll('.unit-row');
+                if (unitRows.length <= 1) {
+                    Swal.fire('Aviso', 'Debe existir al menos una unidad.', 'info');
+                    return;
+                }
+                unitRow.remove();
+                reindexUnits();
+            });
+        }
+    }
     // Add new service row
     function addServiceRow(unitRow, unitIndex, serviceIndex) {
         const serviceContainer = unitRow.querySelector('.service-container');
@@ -306,7 +365,12 @@ document.addEventListener('DOMContentLoaded', () => {
         newUnitRow.className = 'unit-row mb-4 border p-3';
         newUnitRow.dataset.index = unitIndex;
         newUnitRow.innerHTML = `
-            <h6>Unidad ${unitIndex + 1}</h6>
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Unidad ${unitIndex + 1}</h6>
+                <button type="button" class="btn btn-outline-danger btn-sm delete-unit-btn">
+                    <i class="fas fa-trash"></i> Eliminar unidad
+                </button>
+            </div>
             <h6>Servicios</h6>
             <div class="service-container">
                 <div class="service-row mb-3" data-service-index="0">
@@ -368,6 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const addPackageBtn = newUnitRow.querySelector('.add-package-btn');
         let serviceIndex = 1;
         let packageIndex = 1;
+        // Attach delete unit handler
+        attachUnitHandlers(newUnitRow);
         addServiceBtn.addEventListener('click', () => {
             addServiceRow(newUnitRow, unitIndex, serviceIndex);
             serviceIndex++;
@@ -400,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateTotal();
         });
         unitIndex++;
-        calculateTotal();
+        reindexUnits();
     });
     // Initialize first unit
     const initialUnitRow = unitContainer.querySelector('.unit-row');
@@ -408,6 +474,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const addPackageBtn = initialUnitRow.querySelector('.add-package-btn');
     let serviceIndex = 1;
     let packageIndex = 1;
+    // Attach delete handler and visibility for initial unit
+    attachUnitHandlers(initialUnitRow);
+    reindexUnits();
     addServiceBtn.addEventListener('click', () => {
         addServiceRow(initialUnitRow, 0, serviceIndex);
         serviceIndex++;

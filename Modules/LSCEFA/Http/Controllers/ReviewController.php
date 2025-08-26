@@ -49,18 +49,32 @@ class ReviewController extends Controller
                 'analysis.process.quote.customer',
                 'analysis.service',
                 'user'
-            ])
-            ->whereHas('analysis', function($q) {
-                $q->where('status', 'completed');
-            })
-            ->where('review_status', '!=', 'approved')
-            ->where('review_status', '!=', 'rejected');
+            ]);
+
+            // Solo filtrar por relación 'analysis' si existe la columna analysis_id
+            if (Schema::hasColumn('humidity_analyses', 'analysis_id')) {
+                $humidityAnalyses = $humidityAnalyses->whereHas('analysis', function($q) {
+                    $q->where('status', 'completed');
+                });
+            }
+
+            $humidityAnalyses = $humidityAnalyses
+                ->where('review_status', '!=', 'approved')
+                ->where('review_status', '!=', 'rejected');
                 
             // Fósforo: registros por ítem (no items_ensayo), relación directa a process/service
             $phosphorusAnalyses = PhosphorusAnalysis::with([
                     'process.quote.customer',
                     'service',
-                ]);
+                ])
+                // Solo mostrar si el detalle de proceso está completado
+                ->whereExists(function($sub){
+                    $sub->selectRaw('1')
+                        ->from('service_process_details as spd')
+                        ->whereColumn('spd.process_id', 'phosphorus_analyses.process_id')
+                        ->whereColumn('spd.service_id', 'phosphorus_analyses.service_id')
+                        ->where('spd.status', 'completed');
+                });
 
             // Evitar error si aún no se ha ejecutado la migración que agrega review_status
             if (Schema::hasColumn('phosphorus_analyses', 'review_status')) {
@@ -80,7 +94,10 @@ class ReviewController extends Controller
             });
 
             // Transformar resultados de textura
-            $textureResults = $textureAnalyses->map(function($item) {
+            $textureResults = (is_object($textureAnalyses) && method_exists($textureAnalyses, 'map')
+                ? $textureAnalyses
+                : collect($textureAnalyses))
+                ->map(function($item) {
                 return $this->transformTextureAnalysis($item, 'texture');
             });
 
@@ -88,17 +105,15 @@ class ReviewController extends Controller
             $boronAnalyses = BoronAnalysisDetail::with(['process.quote.customer', 'service'])
                 ->whereHas('process.serviceProcessDetails', function($query) {
                     $query->where('status', 'completed');
-                })
-                ->where(function($q) {
+                });
+
+            // Evitar error si la columna review_status no existe aún
+            if (Schema::hasColumn('boron_analysis_details', 'review_status')) {
+                $boronAnalyses = $boronAnalyses->where(function($q) {
                     $q->whereNull('review_status')
                       ->orWhereNotIn('review_status', ['approved','rejected']);
-                })
-                ->get();
-
-            // Transformar resultados de boro
-            $boronResults = $boronAnalyses->map(function($item) {
-                return $this->transformBoronAnalysis($item, 'boron');
-            });
+                });
+            }
 
             // Aplicar filtro de búsqueda si existe
             if ($request->filled('q')) {
@@ -112,13 +127,41 @@ class ReviewController extends Controller
 
                 $phAnalyses->where($searchCallback);
                 $conductivityAnalyses->where($searchCallback);
-                $humidityAnalyses->where($searchCallback);
+                // Humedad: aplicar búsqueda segura según esquema
+                $humidityAnalyses->where(function($q) use ($search) {
+                    $q->where('consecutivo_no', 'like', "%{$search}%");
+                    if (Schema::hasColumn('humidity_analyses', 'analysis_id')) {
+                        $q->orWhereHas('analysis.process.quote.customer', function($qq) use ($search) {
+                            $qq->where('applicant', 'like', "%{$search}%");
+                        });
+                    }
+                });
                 // Búsqueda para fósforo usando su relación process->quote->customer
                 $phosphorusAnalyses->where(function($q) use ($search){
-                    $q->where('consecutivo_no', 'like', "%{$search}%")
-                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
-                          $qq->where('applicant', 'like', "%{$search}%");
-                      });
+                    // Buscar por consecutivo en ES/EN
+                    $q->where(function($qq) use ($search){
+                        $qq->where('consecutive_no', 'like', "%{$search}%")
+                           ->orWhere('consecutivo_no', 'like', "%{$search}%");
+                    })
+                    // Código interno
+                    ->orWhere(function($qq) use ($search){
+                        $qq->where('codigo_interno', 'like', "%{$search}%")
+                           ->orWhere('internal_code', 'like', "%{$search}%");
+                    })
+                    // Consecutivo desde ServiceProcessDetail
+                    ->orWhereExists(function($sub) use ($search){
+                        $sub->selectRaw('1')
+                            ->from('service_process_details as spd')
+                            ->whereColumn('spd.process_id', 'phosphorus_analyses.process_id')
+                            ->whereColumn('spd.service_id', 'phosphorus_analyses.service_id')
+                            ->where('spd.consecutivo_no', 'like', "%{$search}%");
+                    })
+                    // Buscar por cliente (applicant/nombre)
+                    ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                        $qq->where('applicant', 'like', "%{$search}%")
+                           ->orWhere('nombre', 'like', "%{$search}%")
+                           ->orWhere('name', 'like', "%{$search}%");
+                    });
                 });
                 // Búsqueda para boro
                 $boronAnalyses->where(function($q) use ($search){
@@ -127,6 +170,20 @@ class ReviewController extends Controller
                           $qq->where('applicant', 'like', "%{$search}%");
                       });
                 });
+            }
+
+            // Si se especifica un tipo, deshabilitar los demás para facilitar el filtrado/diagnóstico
+            $typeFilter = $request->get('type');
+            if ($typeFilter) {
+                $validTypes = ['ph','conductivity','humidity','phosphorus','texture','boron'];
+                if (in_array($typeFilter, $validTypes, true)) {
+                    if ($typeFilter !== 'ph') { $phAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'conductivity') { $conductivityAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'humidity') { $humidityAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'phosphorus') { $phosphorusAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'texture') { $textureAnalyses = collect(); }
+                    if ($typeFilter !== 'boron') { $boronAnalyses->whereRaw('1=0'); }
+                }
             }
 
             // Obtener resultados de cada tipo
@@ -146,14 +203,29 @@ class ReviewController extends Controller
                 return $this->transformAnalysis($item, 'phosphorus');
             });
 
-            $phosphorusResults = $phosphorusAnalyses->get()->map(function($item) {
-                return $this->transformAnalysis($item, 'phosphorus');
+            // Transformar resultados de boro (después de aplicar filtros)
+            $boronResults = $boronAnalyses->get()->map(function($item) {
+                return $this->transformBoronAnalysis($item, 'boron');
             });
 
+            // Log de depuración de conteos
+            \Log::debug('ReviewController@index counts', [
+                'search' => $request->get('q'),
+                'ph' => $phResults->count(),
+                'conductivity' => $conductivityResults->count(),
+                'humidity' => $humidityResults->count(),
+                'phosphorus' => $phosphorusResults->count(),
+                'texture' => $textureResults->count(),
+                'boron' => null // se calcula luego
+            ]);
+
             // Combinar todos los resultados
-            $allResults = $phResults->concat($conductivityResults)
-                               ->concat($humidityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults);
-            $allResults = $phResults->concat($conductivityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults);
+            $allResults = $phResults
+                ->concat($conductivityResults)
+                ->concat($humidityResults)
+                ->concat($phosphorusResults)
+                ->concat($textureResults)
+                ->concat($boronResults);
 
             // Agrupar por servicio para humedad, por consecutivo para otros
             $groupedResults = $allResults->groupBy(function($item) {
@@ -214,8 +286,63 @@ class ReviewController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error en ReviewController@index: ' . $e->getMessage());
             \Log::error($e->getTraceAsString());
-            return back()->with('error', 'Ocurrió un error al cargar los análisis. Por favor, intente nuevamente.');
+            return back()->with('error', 'Ocurrió un error al cargar los análisis. Por favor, intente nuevamente. Detalle: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Prepara datos para vista de Fósforo (analytical controls, consecutivo, etc.)
+     */
+    protected function preparePhosphorusData($analysis): array
+    {
+        $data = [];
+        try {
+            $processId = $analysis->process_id ?? null;
+            $serviceId = $analysis->service_id ?? null;
+            if ($processId) {
+                // Buscar AnalyticalControl por process y tipo (aceptar variantes de nombre)
+                $control = AnalyticalControl::where('process_id', $processId)
+                    ->whereIn('analysis_type', ['phosphorus', 'fosforo'])
+                    ->orderByDesc('id')
+                    ->first();
+                if ($control) {
+                    $data['analyticalControl'] = $control;
+                    try {
+                        \Log::debug('preparePhosphorusData: AnalyticalControl found', [
+                            'process_id' => $processId,
+                            'analysis_type' => $control->analysis_type,
+                            'has_controles_analiticos' => !empty($control->controles_analiticos),
+                            'has_analytical_controls' => !empty($control->analytical_controls ?? null),
+                            'curve_measured' => $control->curve_measured_value ?? $control->curva_valor_leido ?? null,
+                            'dpr_a' => $control->dpr_duplicate_a ?? $control->dpr_duplicado_a ?? null,
+                            'dpr_b' => $control->dpr_duplicate_b ?? $control->dpr_duplicado_b ?? null,
+                        ]);
+                    } catch (\Throwable $e) {}
+                }
+            }
+
+            // Efectivo consecutivo: considerar campos en ES/EN con fallback
+            $effective = $analysis->consecutivo_no
+                ?? $analysis->consecutive_no
+                ?? ($analysis->consecutivo ?? null)
+                ?? null;
+            if ($effective === null && $processId && $serviceId) {
+                try {
+                    $spd = ServiceProcessDetail::where('process_id', $processId)
+                        ->where('service_id', $serviceId)
+                        ->first();
+                    if ($spd && !empty($spd->consecutivo_no)) {
+                        $effective = $spd->consecutivo_no;
+                    }
+                } catch (\Throwable $e) {
+                    \Log::debug('preparePhosphorusData SPD consecutivo fallback error: '.$e->getMessage());
+                }
+            }
+            $data['effectiveConsecutivo'] = $effective;
+        } catch (\Throwable $e) {
+            \Log::warning('preparePhosphorusData error: '.$e->getMessage());
+        }
+        return $data;
     }
 
     /**
@@ -228,25 +355,50 @@ class ReviewController extends Controller
             $process = $analysis->process ?? null;
             $quote = $process->quote ?? null;
             $customer = $quote->customer ?? null;
+            // Fallback de consecutivo desde ServiceProcessDetail si no existe en la fila
+            $spdConsecutivo = null;
+            try {
+                if (!($analysis->consecutivo_no ?? null) && !($analysis->consecutive_no ?? null)) {
+                    $spd = ServiceProcessDetail::where('process_id', $analysis->process_id)
+                        ->where('service_id', $analysis->service_id)
+                        ->first();
+                    $spdConsecutivo = $spd->consecutivo_no ?? null;
+                }
+            } catch (\Throwable $e) {
+                \Log::debug('transformAnalysis phosphorus SPD fallback error: '.$e->getMessage());
+            }
 
             $item = [
-                'identificacion' => $analysis->codigo_interno ?? 'N/A',
+                'identificacion' => $analysis->codigo_interno
+                    ?? $analysis->internal_code
+                    ?? 'N/A',
                 'valor_leido' => $analysis->fosforo_disponible_mg_kg
                     ?? $analysis->available_phosphorus_mg_kg
                     ?? $analysis->available_phosphorus_mg_l
                     ?? $analysis->fosforo_disponible_mg_l
                     ?? null,
-                'observaciones' => $analysis->observaciones_item ?? '',
+                'observaciones' => $analysis->observaciones_item
+                    ?? $analysis->item_observations
+                    ?? '',
             ];
 
             return (object) [
                 'id' => $analysis->id,
                 'type' => $type,
                 'analysis_id' => null,
-                'consecutivo_no' => $analysis->consecutivo_no,
-                'fecha_analisis' => $analysis->fecha_analisis,
+                // Fallback entre nombres en ES/EN
+                'consecutivo_no' => $analysis->consecutivo_no
+                    ?? $analysis->consecutive_no
+                    ?? ($analysis->consecutivo ?? null)
+                    ?? $spdConsecutivo
+                    ?? null,
+                'fecha_analisis' => $analysis->fecha_analisis
+                    ?? $analysis->analysis_date
+                    ?? null,
                 'codigo_probeta' => null,
-                'codigo_equipo' => $analysis->equipo_utilizado ?? null,
+                'codigo_equipo' => $analysis->equipo_utilizado
+                    ?? $analysis->equipment_used
+                    ?? null,
                 'review_status' => $analysis->review_status ?? 'pending',
                 'user' => null,
                 'process' => $process,
@@ -365,82 +517,129 @@ class ReviewController extends Controller
     public function show($id)
     {
         try {
-            // Primero intentamos encontrar el análisis en cualquiera de las tablas
+            // Permitir forzar el tipo por query param, igual que en accept()/reject()
+            $requestedType = request()->get('type');
             $analysis = null;
             $type = null;
-            
-            // Buscar en análisis de pH
-            $phAnalysis = PhAnalysis::with([
-                'analysis.process.quote', 
-                'analysis.service',
-                'analysis.process.customer',
-                'analysis.process.quote.customer',
-                'user'
-            ])->find($id);
-            
-            if ($phAnalysis) {
-                $analysis = $phAnalysis;
-                $type = 'ph';
-            } else {
-                // Buscar en análisis de conductividad
-                $conductivityAnalysis = ConductivityAnalysis::with([
-                    'analysis.process.quote',
+
+            // Si viene el tipo, consultar directamente el modelo correspondiente
+            if ($requestedType) {
+                switch ($requestedType) {
+                    case 'ph':
+                        $analysis = PhAnalysis::with([
+                            'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
+                        ])->find($id);
+                        $type = $analysis ? 'ph' : null;
+                        break;
+                    case 'conductivity':
+                        $analysis = ConductivityAnalysis::with([
+                            'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
+                        ])->find($id);
+                        $type = $analysis ? 'conductivity' : null;
+                        break;
+                    case 'humidity':
+                        $analysis = HumidityAnalysis::with([
+                            'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
+                        ])->find($id);
+                        $type = $analysis ? 'humidity' : null;
+                        break;
+                    case 'phosphorus':
+                        $analysis = PhosphorusAnalysis::with(['process.quote.customer','service'])->find($id);
+                        $type = $analysis ? 'phosphorus' : null;
+                        // Fallback: si no existe un fósforo con ese ID, intentar resolver por process/service
+                        if (!$analysis) {
+                            // Intentar encontrar un análisis de pH o conductividad con este ID para obtener process/service
+                            $phTmp = PhAnalysis::with(['analysis'])->find($id);
+                            $condTmp = $phTmp ? null : ConductivityAnalysis::with(['analysis'])->find($id);
+                            $procId = $phTmp->analysis->process_id ?? $phTmp->process_id ?? ($condTmp->analysis->process_id ?? $condTmp->process_id ?? null);
+                            $servId = $phTmp->analysis->service_id ?? $phTmp->service_id ?? ($condTmp->analysis->service_id ?? $condTmp->service_id ?? null);
+                            if ($procId && $servId) {
+                                $analysis = PhosphorusAnalysis::with(['process.quote.customer','service'])
+                                    ->where('process_id', $procId)
+                                    ->where('service_id', $servId)
+                                    ->orderByDesc('id')
+                                    ->first();
+                                if ($analysis) { $type = 'phosphorus'; }
+                            }
+                        }
+                        break;
+                    case 'texture':
+                        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer','service'])->find($id);
+                        $type = $analysis ? 'texture' : null;
+                        break;
+                    case 'boron':
+                        $analysis = BoronAnalysisDetail::with(['process.quote.customer','service'])->find($id);
+                        $type = $analysis ? 'boron' : null;
+                        if (!$analysis) {
+                            $phTmp = PhAnalysis::with(['analysis'])->find($id);
+                            $condTmp = $phTmp ? null : ConductivityAnalysis::with(['analysis'])->find($id);
+                            $procId = $phTmp->analysis->process_id ?? $phTmp->process_id ?? ($condTmp->analysis->process_id ?? $condTmp->process_id ?? null);
+                            $servId = $phTmp->analysis->service_id ?? $phTmp->service_id ?? ($condTmp->analysis->service_id ?? $condTmp->service_id ?? null);
+                            if ($procId && $servId) {
+                                $analysis = BoronAnalysisDetail::with(['process.quote.customer','service'])
+                                    ->where('process_id', $procId)
+                                    ->where('service_id', $servId)
+                                    ->orderByDesc('id')
+                                    ->first();
+                                if ($analysis) { $type = 'boron'; }
+                            }
+                        }
+                        break;
+                }
+            }
+
+            // Fallback: autodetección por ID si no vino tipo o no se encontró el registro del tipo indicado
+            if (!$analysis) {
+                // Buscar en análisis de pH
+                $phAnalysis = PhAnalysis::with([
+                    'analysis.process.quote', 
                     'analysis.service',
                     'analysis.process.customer',
                     'analysis.process.quote.customer',
                     'user'
                 ])->find($id);
-                
+                if ($phAnalysis) {
+                    $analysis = $phAnalysis;
+                    $type = 'ph';
+                }
+            }
+            if (!$analysis) {
+                $conductivityAnalysis = ConductivityAnalysis::with([
+                    'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
+                ])->find($id);
                 if ($conductivityAnalysis) {
                     $analysis = $conductivityAnalysis;
                     $type = 'conductivity';
-                } else {
-                    // Buscar en análisis de humedad
-                    $humidityAnalysis = HumidityAnalysis::with([
-                        'analysis.process.quote',
-                        'analysis.service',
-                        'analysis.process.customer',
-                        'analysis.process.quote.customer',
-                        'user'
-                    ])->find($id);
-                    
-                    if ($humidityAnalysis) {
-                        $analysis = $humidityAnalysis;
-                        $type = 'humidity';
-                    } else {
-                        // Buscar en análisis de fósforo
-                        $phosphorusAnalysis = PhosphorusAnalysis::with([
-                            'process.quote.customer',
-                            'service'
-                        ])->find($id);
-                        
-                        if ($phosphorusAnalysis) {
-                            $analysis = $phosphorusAnalysis;
-                            $type = 'phosphorus';
-                        } else {
-                            // Buscar en análisis de textura
-                            $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with([
-                                'process.quote.customer',
-                                'service'
-                            ])->find($id);
-                            
-                            if ($textureAnalysis) {
-                                $analysis = $textureAnalysis;
-                                $type = 'texture';
-                            } else {
-                                // Buscar en análisis de boro
-                                $boronAnalysis = BoronAnalysisDetail::with([
-                                    'process.quote.customer',
-                                    'service'
-                                ])->find($id);
-                                
-                                if ($boronAnalysis) {
-                                    $analysis = $boronAnalysis;
-                                    $type = 'boron';
-                                }
-                            }
-                        }
-                    }
+                }
+            }
+            if (!$analysis) {
+                $humidityAnalysis = HumidityAnalysis::with([
+                    'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
+                ])->find($id);
+                if ($humidityAnalysis) {
+                    $analysis = $humidityAnalysis;
+                    $type = 'humidity';
+                }
+            }
+            if (!$analysis) {
+                $phosphorusAnalysis = PhosphorusAnalysis::with(['process.quote.customer','service'])->find($id);
+                if ($phosphorusAnalysis) {
+                    $analysis = $phosphorusAnalysis;
+                    $type = 'phosphorus';
+                }
+            }
+            if (!$analysis) {
+                $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer','service'])->find($id);
+                if ($textureAnalysis) {
+                    $analysis = $textureAnalysis;
+                    $type = 'texture';
+                }
+            }
+            if (!$analysis) {
+                $boronAnalysis = BoronAnalysisDetail::with(['process.quote.customer','service'])->find($id);
+                if ($boronAnalysis) {
+                    $analysis = $boronAnalysis;
+                    $type = 'boron';
                 }
             }
             
@@ -468,12 +667,36 @@ class ReviewController extends Controller
                 \Log::warning('No se pudo resolver el técnico responsable en ReviewController@show: ' . $e->getMessage());
             }
             
+            // Si es un tipo sin relación directa 'analysis' (p.ej., fósforo, boro), resolver el detail por process_id + service_id
+            if (!$detail && in_array($type, ['phosphorus','boron'])) {
+                try {
+                    if (!empty($analysis->process_id) && !empty($analysis->service_id)) {
+                        $detail = ServiceProcessDetail::where('process_id', $analysis->process_id)
+                            ->where('service_id', $analysis->service_id)
+                            ->first();
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('ReviewController@show: no se pudo resolver ServiceProcessDetail para tipo '.$type.' - '.$e->getMessage());
+                }
+            }
+
+            // Si logramos resolver $detail posteriormente y faltan datos de proceso/cliente, recomputarlos
+            if ($detail && (!$process)) {
+                try {
+                    $process = $detail->process ?? $process;
+                    $quote = $process->quote ?? $quote ?? null;
+                    $customer = $process->customer ?? ($quote->customer ?? $customer ?? null);
+                } catch (\Throwable $e) {
+                    \Log::debug('ReviewController@show recompute process/customer failed: '.$e->getMessage());
+                }
+            }
+
             // Determinar qué vista usar según el tipo de análisis
             $view = match($type) {
                 'ph' => 'lscefa::reviews.ph_review',
                 'conductivity' => 'lscefa::reviews.conductivity_show',
                 'humidity' => 'lscefa::reviews.humidity_show',
-                'phosphorus' => 'lscefa::reviews.ph_review',
+                'phosphorus' => 'lscefa::reviews.phosphorus_review',
                 'texture' => 'lscefa::reviews.ph_review',
                 'boron' => 'lscefa::reviews.ph_review',
                 default => 'lscefa::reviews.ph_review'
@@ -496,8 +719,34 @@ class ReviewController extends Controller
                 $viewData = array_merge($viewData, $this->preparePhData($analysis));
             } elseif ($type === 'humidity') {
                 $viewData = array_merge($viewData, $this->prepareHumidityData($analysis));
+            } elseif ($type === 'phosphorus') {
+                $viewData = array_merge($viewData, $this->preparePhosphorusData($analysis));
             }
+
+            try {
+                \Log::debug('ReviewController@show general info', [
+                    'type' => $type,
+                    'analysis_id' => $analysis->id ?? null,
+                    'process_id' => $analysis->process_id ?? ($process->process_id ?? null),
+                    'service_id' => $analysis->service_id ?? ($detail->service_id ?? null),
+                    'analysis_consecutivo_no' => $analysis->consecutivo_no ?? $analysis->consecutive_no ?? ($analysis->consecutivo ?? null),
+                    'detail_consecutivo_no' => $detail->consecutivo_no ?? null,
+                    'effectiveConsecutivo' => $viewData['effectiveConsecutivo'] ?? null,
+                    'customer_name' => $customer->nombre ?? $customer->name ?? null,
+                    'technician' => $technicianName,
+                ]);
+            } catch (\Throwable $e) {}
             
+            \Log::info('ReviewController@show selecting view', [
+                'requested_type' => $requestedType,
+                'resolved_type' => $type,
+                'view' => $view,
+                'analysis_id' => $analysis->id ?? null,
+                'process_id' => $analysis->process_id ?? ($process->process_id ?? null),
+                'service_id' => $analysis->service_id ?? ($detail->service_id ?? null),
+                'detail_id' => $detail->id ?? null,
+            ]);
+
             return view($view, $viewData);
             
         } catch (\Exception $e) {
@@ -892,9 +1141,55 @@ class ReviewController extends Controller
                     ->where('service_id', $analysis->service_id)
                     ->first();
                 if ($detail) {
+                    // Backfill consecutivo_no en SPD si está vacío y existe la columna
+                    try {
+                        if (\Illuminate\Support\Facades\Schema::hasColumn($detail->getTable(), 'consecutivo_no')) {
+                            $spdConsec = $detail->consecutivo_no;
+                            $anaConsec = $analysis->consecutivo_no ?? $analysis->consecutive_no ?? null;
+                            if (!$spdConsec && $anaConsec) {
+                                $detail->consecutivo_no = $anaConsec;
+                                $detail->save();
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::debug('accept() SPD consecutivo_no backfill phosphorus: '.$e->getMessage());
+                    }
+
+                    // Aprobar en bloque todos los ítems del mismo process/service y mismo consecutivo
+                    try {
+                        $cons = $analysis->consecutivo_no ?? $analysis->consecutive_no ?? null;
+                        $bulk = PhosphorusAnalysis::where('process_id', $analysis->process_id)
+                            ->where('service_id', $analysis->service_id);
+                        if ($cons !== null) {
+                            $bulk->where(function($q) use ($cons){
+                                $q->where('consecutivo_no', $cons)
+                                  ->orWhere('consecutive_no', $cons);
+                            });
+                        }
+                        $bulk->update([
+                            'review_status' => 'approved',
+                            'reviewed_by' => auth()->id(),
+                            'review_date' => now(),
+                            'review_observations' => $validated['observations'] ?? null,
+                        ]);
+                    } catch (\Throwable $e) {
+                        \Log::warning('No se pudo aprobar en bloque fósforo: '.$e->getMessage());
+                    }
+
                     $rows = PhosphorusAnalysis::where('process_id', $analysis->process_id)
                         ->where('service_id', $analysis->service_id)
-                        ->where('consecutivo_no', $analysis->consecutivo_no)
+                        ->where(function($q) use ($analysis) {
+                            $consecutivo = $analysis->consecutivo_no ?? null;
+                            $consecutive = $analysis->consecutive_no ?? null;
+                            if ($consecutivo !== null) {
+                                $q->orWhere('consecutivo_no', $consecutivo)
+                                  ->orWhere('consecutive_no', $consecutivo);
+                            }
+                            if ($consecutive !== null) {
+                                $q->orWhere('consecutivo_no', $consecutive)
+                                  ->orWhere('consecutive_no', $consecutive);
+                            }
+                        })
                         ->get();
                     $resultsOnly = $rows->map(function($row){
                         $resultado = $row->fosforo_disponible_mg_kg
@@ -903,7 +1198,9 @@ class ReviewController extends Controller
                             ?? $row->fosforo_disponible_mg_l
                             ?? null;
                         return [
-                            'identificacion' => $row->codigo_interno ?? null,
+                            'identificacion' => $row->codigo_interno
+                                ?? $row->internal_code
+                                ?? null,
                             'resultado' => $resultado,
                         ];
                     })->values()->toArray();
@@ -912,6 +1209,16 @@ class ReviewController extends Controller
                 }
             } else {
                 $detail = $analysis->analysis; // ServiceProcessDetail
+                // Fallback si no existe relación directa
+                if (!$detail) {
+                    $processId = $analysis->analysis->process_id ?? $analysis->process_id ?? null;
+                    $serviceId = $analysis->analysis->service_id ?? $analysis->service_id ?? null;
+                    if ($processId && $serviceId) {
+                        $detail = ServiceProcessDetail::where('process_id', $processId)
+                            ->where('service_id', $serviceId)
+                            ->first();
+                    }
+                }
                 if ($detail) {
                     $resultsOnly = [];
                     $items = is_array($analysis->items_ensayo ?? null) ? $analysis->items_ensayo : [];
@@ -919,8 +1226,15 @@ class ReviewController extends Controller
                         foreach ($items as $item) {
                             if (is_object($item)) { $item = (array)$item; }
                             $resultsOnly[] = [
-                                'identificacion' => $item['identificacion'] ?? null,
-                                'resultado' => $item['valor_leido'] ?? null,
+                                'identificacion' => $item['identificacion']
+                                    ?? $item['identificación']
+                                    ?? $item['codigo_interno']
+                                    ?? $item['internal_code']
+                                    ?? null,
+                                'resultado' => $item['valor_leido']
+                                    ?? $item['resultado']
+                                    ?? $item['value']
+                                    ?? null,
                             ];
                         }
                     } elseif ($validated['analysis_type'] === 'texture') {
@@ -945,9 +1259,20 @@ class ReviewController extends Controller
                     } else { // conductivity
                         foreach ($items as $item) {
                             if (is_object($item)) { $item = (array)$item; }
-                            $resultado = $item['valor_leido'] ?? ($item['lectura_uscm'] ?? ($item['valor_leido_dsm'] ?? null));
+                            // Ampliar claves aceptadas para conductividad
+                            $resultado = $item['resultado']
+                                ?? $item['valor_leido']
+                                ?? $item['value']
+                                ?? $item['lectura']
+                                ?? $item['lectura_uscm']
+                                ?? $item['valor_leido_dsm']
+                                ?? null;
                             $resultsOnly[] = [
-                                'identificacion' => $item['identificacion'] ?? null,
+                                'identificacion' => $item['identificacion']
+                                    ?? $item['identificación']
+                                    ?? $item['codigo_interno']
+                                    ?? $item['internal_code']
+                                    ?? null,
                                 'resultado' => $resultado,
                             ];
                         }

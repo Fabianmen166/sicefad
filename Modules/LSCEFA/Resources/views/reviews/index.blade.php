@@ -34,6 +34,17 @@
                 <div class="col-sm-6">
                     <form action="{{ route('lscefa.quality.reviews.index') }}" method="GET" class="float-right">
                         <div class="input-group">
+                            <div class="input-group-prepend">
+                                <select name="type" class="form-control">
+                                    <option value="" {{ request('type') ? '' : 'selected' }}>Todos</option>
+                                    <option value="ph" {{ request('type') === 'ph' ? 'selected' : '' }}>pH</option>
+                                    <option value="conductivity" {{ request('type') === 'conductivity' ? 'selected' : '' }}>Conductividad</option>
+                                    <option value="humidity" {{ request('type') === 'humidity' ? 'selected' : '' }}>Humedad</option>
+                                    <option value="phosphorus" {{ request('type') === 'phosphorus' ? 'selected' : '' }}>Fósforo</option>
+                                    <option value="texture" {{ request('type') === 'texture' ? 'selected' : '' }}>Textura</option>
+                                    <option value="boron" {{ request('type') === 'boron' ? 'selected' : '' }}>Boro</option>
+                                </select>
+                            </div>
                             <input type="text" name="q" class="form-control" 
                                    placeholder="Buscar por número de consecutivo o cliente..." 
                                    value="{{ request('q') }}">
@@ -66,7 +77,8 @@
                         'conductivity' => 'bg-info',
                         'turbidity' => 'bg-warning',
                         'hardness' => 'bg-secondary',
-                        'texture' => 'bg-success'
+                        'texture' => 'bg-success',
+                        'phosphorus' => 'bg-success'
                     ];
                     
                     $typeTexts = [
@@ -74,7 +86,8 @@
                         'conductivity' => 'Conductividad',
                         'turbidity' => 'Turbidez',
                         'hardness' => 'Dureza',
-                        'texture' => 'Textura'
+                        'texture' => 'Textura',
+                        'phosphorus' => 'Fósforo'
                     ];
                     
                     // Contar ítems de ensayo

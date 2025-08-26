@@ -252,6 +252,7 @@ class ConductivityAnalysisController extends Controller
         $validated = $request->validate([
             'consecutivo_no' => 'required|string|max:255',
             'fecha_analisis' => 'required|date',
+            // Ítems de ensayo
             'items_ensayo' => 'required|array|min:1',
             'items_ensayo.*.identificacion' => 'required|string',
             'items_ensayo.*.peso' => 'required|numeric',
@@ -259,6 +260,18 @@ class ConductivityAnalysisController extends Controller
             'items_ensayo.*.temperatura' => 'required|numeric',
             'items_ensayo.*.valor_leido' => 'required|numeric',
             'items_ensayo.*.valor_leido_dsm' => 'required|numeric',
+            // Blanco del proceso
+            'blanco_valor_leido' => 'required|numeric',
+            // Precisión (duplicados)
+            'duplicado_a_valor_leido' => 'required|numeric',
+            'duplicado_b_valor_leido' => 'required|numeric',
+            // Veracidad
+            'veracidad' => 'required|array|min:2',
+            'veracidad.0.valor_esperado' => 'required|numeric',
+            'veracidad.0.valor_leido' => 'required|numeric',
+            'veracidad.1.valor_esperado' => 'required|numeric',
+            'veracidad.1.valor_leido' => 'required|numeric',
+            // Análisis asociados
             'analyses' => 'required|array|min:1',
             'analyses.*.analysis_id' => 'required|exists:service_process_details,id',
         ]);
@@ -270,7 +283,7 @@ class ConductivityAnalysisController extends Controller
             $blancoValor = floatval($request->blanco_valor_leido ?? 0);
             $blancoAceptable = ($blancoValor <= 0.1) ? 'Aceptable' : 'No aceptable';
             
-            // Calcular precisión analítica
+            // Calcular precisión analítica (convertir µS/cm a mS/m dividiendo por 10)
             $duplicadoA = floatval($request->duplicado_a_valor_leido ?? 0);
             $duplicadoB = floatval($request->duplicado_b_valor_leido ?? 0);
             $dupAPeso = $request->duplicado_peso ?? null; // A
@@ -284,12 +297,20 @@ class ConductivityAnalysisController extends Controller
             $dupIdent = $request->duplicado_identificacion ?? null;
             $dupAIdent = $request->duplicado_a_identificacion ?? $dupIdent;
             $dupBIdent = $request->duplicado_b_identificacion ?? $dupIdent;
-            $promedio = ($duplicadoA + $duplicadoB) / 2;
-            $diferencia = abs($duplicadoA - $duplicadoB);
+            // Convertir a mS/m para aplicar los límites definidos en la metodología
+            $a_msm = $duplicadoA / 10; // µS/cm -> mS/m
+            $b_msm = $duplicadoB / 10;
+            $promedio = ($a_msm + $b_msm) / 2; // mS/m
+            $diferencia = abs($a_msm - $b_msm); // mS/m
             
-            // Calcular si la precisión es aceptable
-            if ($promedio <= 50000) {
-                $precisionAceptable = ($diferencia <= 5000) ? 'Aceptable' : 'No aceptable';
+            // Calcular si la precisión es aceptable (en mS/m):
+            // <= 50 mS/m: límite 5 mS/m
+            // > 50 y <= 200 mS/m: límite 20 mS/m
+            // > 200 mS/m: límite 10% del promedio
+            if ($promedio <= 50) {
+                $precisionAceptable = ($diferencia <= 5) ? 'Aceptable' : 'No aceptable';
+            } elseif ($promedio <= 200) {
+                $precisionAceptable = ($diferencia <= 20) ? 'Aceptable' : 'No aceptable';
             } else {
                 $porcentajeDiferencia = $promedio > 0 ? ($diferencia / $promedio) * 100 : 0;
                 $precisionAceptable = ($porcentajeDiferencia <= 10) ? 'Aceptable' : 'No aceptable';
@@ -360,6 +381,21 @@ class ConductivityAnalysisController extends Controller
             \Log::info('Conductivity store: computed veracidad_analitica', [
                 'veracidad_analitica' => $veracidadAnalitica
             ]);
+
+            // Validación QC: bloquear si algún control o precisión/veracidad es No aceptable
+            $hayVeracidadNoAceptable = false;
+            foreach ($veracidadAnalitica as $va) {
+                if (isset($va['aceptable']) && strtolower($va['aceptable']) === 'no aceptable') {
+                    $hayVeracidadNoAceptable = true;
+                    break;
+                }
+            }
+            if (strtolower($blancoAceptable) === 'no aceptable' || strtolower($precisionAnalitica['aceptable']) === 'no aceptable' || $hayVeracidadNoAceptable) {
+                DB::rollBack();
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'No es posible enviar el análisis: existe al menos un control (blanco/veracidad) o la precisión marcada como "No aceptable".');
+            }
 
             // Guardar análisis
             $itemsEnsayo = $request->items_ensayo;

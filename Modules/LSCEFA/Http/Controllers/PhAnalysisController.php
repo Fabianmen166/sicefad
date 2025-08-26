@@ -227,8 +227,7 @@ class PhAnalysisController extends Controller
 
             Log::info('PhAnalysisController@processAll consecutivo prefill', [ 'consecutivo_no' => $consecutivoNo, 'from_query' => $queryConsecutivo !== '' ? 'yes' : 'no' ]);
 
-            // Evitar que old() vacío tape el valor calculado en la vista
-            try { session()->forget('_old_input'); } catch (\Throwable $t) {}
+            // Mantener old() para que, en caso de error al guardar, el formulario conserve los datos ingresados
 
             return view('lscefa::ph_analyses.process', [
                 'pendingAnalyses' => $pendingAnalyses,
@@ -348,8 +347,7 @@ class PhAnalysisController extends Controller
 
             Log::info('PhAnalysisController@phAnalysis consecutivo prefill', [ 'consecutivo_no' => $consecutivoNo, 'from_query' => $queryConsecutivo !== '' ? 'yes' : 'no' ]);
 
-            // Evitar que old() vacío tape el valor calculado en la vista
-            try { session()->forget('_old_input'); } catch (\Throwable $t) {}
+            // Mantener old() para preservar los datos ingresados cuando hay errores de validación
 
             return view('lscefa::ph_analyses.process', [
                 'process' => $process,
@@ -520,6 +518,17 @@ class PhAnalysisController extends Controller
                 $limite = 0.40;
             }
             $precision['aceptabilidad'] = ($precision['diferencia'] <= $limite) ? 'Aceptable' : 'No aceptable';
+
+            // Validación QC: bloquear envío si algún control o la precisión es No aceptable
+            $hayControlNoAceptable = collect($controles)->contains(function($c){
+                return isset($c['aceptabilidad']) && strtolower($c['aceptabilidad']) === 'no aceptable';
+            });
+            if ($hayControlNoAceptable || strtolower($precision['aceptabilidad']) === 'no aceptable') {
+                DB::rollBack();
+                return back()
+                    ->withInput()
+                    ->with('error', 'No es posible enviar el análisis: existe al menos un control o la precisión analítica marcada como "No aceptable".');
+            }
 
             // Procesar ítems de ensayo
             $itemsEnsayo = $request->items_ensayo;

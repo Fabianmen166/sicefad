@@ -44,23 +44,10 @@ class TechnicalAnalysisController extends Controller
             $completed[$process->process_id] = $completedDetails;
         }
 
-        // Calcular 'devueltos' a nivel global (no paginado) para no perder análisis por páginas
+        // Calcular 'devueltos' a nivel global usando SOLO el estado del detalle de servicio
+        // Evitar depender de columnas review_status en tablas de análisis
         $returnedQuery = ServiceProcessDetail::with(['service', 'phAnalysis', 'conductivityAnalysis', 'batchTextureAnalysis'])
-            ->where(function($q){
-                $q->where('status', 'rejected')
-                  ->orWhere('status', 'pending');
-            })
-            ->where(function($q){
-                $q->whereHas('phAnalysis', function($qa){
-                        $qa->whereIn('review_status', ['returned', 'rejected']);
-                    })
-                  ->orWhereHas('conductivityAnalysis', function($qb){
-                        $qb->whereIn('review_status', ['returned', 'rejected']);
-                    })
-                  ->orWhereHas('batchTextureAnalysis', function($qc){
-                        $qc->whereIn('review_status', ['rejected']);
-                    });
-            })
+            ->where('status', 'rejected')
             ->get();
 
         // Incluir análisis de Boro devueltos/rechazados (tabla independiente)

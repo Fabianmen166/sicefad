@@ -16,24 +16,24 @@ class PeopleTableSeeder extends Seeder{
         $pension_entity = PensionEntity::firstOrCreate(['name'=>'NO REGISTRA']);
 
         Person::firstOrCreate(['document_number' => '1075792846' ],[
-            'document_type' => 'Cedula Ciudadania',
+            'document_type' => 'Cédula de ciudadanía',
             'first_name' => 'CRISTIAN',
             'first_last_name' => 'MUÑOZ',
             'second_last_name' => 'VALLEJO',
             'eps_id' => $eps->id,
             'population_group_id' => $population_group->id,
-            'Pension_entity_id' => $pension_entity->id,
+            'pension_entity_id' => $pension_entity->id,
         ]);
 
         // Persona requerida para crear el usuario 'MariaG' en UsersTableSeeder
         Person::firstOrCreate(['document_number' => '1079605057' ],[
-            'document_type' => 'Cedula Ciudadania',
+            'document_type' => 'Cédula de ciudadanía',
             'first_name' => 'MARIA',
             'first_last_name' => 'GONZALES',
             'second_last_name' => null,
             'eps_id' => $eps->id,
             'population_group_id' => $population_group->id,
-            'Pension_entity_id' => $pension_entity->id,
+            'pension_entity_id' => $pension_entity->id,
         ]);
     }
 }

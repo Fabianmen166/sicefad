@@ -409,6 +409,4 @@ Route::middleware(['lang'])->group(function(){
         Route::get('/lscefa/home', [LSCEFAController::class, 'index'])->name('cefa.home');
     }); // Cierre de Route::prefix('lscefa')
 
-        
-
-
+    }); // Cierre de Route::middleware(['lang'])

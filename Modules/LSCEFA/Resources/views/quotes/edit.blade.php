@@ -58,7 +58,12 @@
                         <div id="unit-container">
                             @foreach($units as $unitIndex => $unit)
                             <div class="unit-row mb-4 border p-3" data-index="{{ $unitIndex }}">
-                                <h6>Unidad {{ $unitIndex + 1 }}</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Unidad {{ $unitIndex + 1 }}</h6>
+                                    <button type="button" class="btn btn-outline-danger btn-sm delete-unit-btn" style="{{ count($units) > 1 ? '' : 'display:none;' }}">
+                                        <i class="fas fa-trash"></i> Eliminar unidad
+                                    </button>
+                                </div>
                                 <!-- Servicios de la Unidad -->
                                 <h6>Servicios</h6>
                                 <div class="service-container">
@@ -169,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('customer_id').addEventListener('change', function(e) {
         const selectedOption = e.target.selectedOptions[0];
         discountPercentage = parseFloat(selectedOption.dataset.discount) || 0;
-        calculateTotal();
+        reindexUnits();
     });
 
     // Funciones de cálculo
@@ -202,6 +207,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         totalDisplay.textContent = total.toFixed(2);
+    }
+
+    // Reindex all units and their fields
+    function reindexUnits() {
+        const unitRows = unitContainer.querySelectorAll('.unit-row');
+        unitRows.forEach((row, idx) => {
+            row.dataset.index = idx;
+            const title = row.querySelector('h6');
+            if (title) { title.textContent = `Unidad ${idx + 1}`; }
+            const delBtn = row.querySelector('.delete-unit-btn');
+            if (delBtn) { delBtn.style.display = (unitRows.length > 1) ? 'inline-block' : 'none'; }
+            // Update name attributes for inputs
+            row.querySelectorAll('[name]').forEach(el => {
+                const name = el.getAttribute('name');
+                if (name) el.setAttribute('name', name.replace(/units\[\d+\]/, `units[${idx}]`));
+            });
+            // Update ids and labels
+            row.querySelectorAll('[id]').forEach(el => {
+                const id = el.getAttribute('id');
+                if (id) el.setAttribute('id', id.replace(/units_\d+_/g, `units_${idx}_`));
+            });
+            row.querySelectorAll('label[for]').forEach(lb => {
+                const f = lb.getAttribute('for');
+                if (f) lb.setAttribute('for', f.replace(/units_\d+_/g, `units_${idx}_`));
+            });
+        });
+        unitIndex = unitContainer.querySelectorAll('.unit-row').length;
+        calculateTotal();
+    }
+
+    function attachUnitHandlers(unitRow) {
+        const delBtn = unitRow.querySelector('.delete-unit-btn');
+        if (delBtn) {
+            delBtn.addEventListener('click', function() {
+                const unitRows = unitContainer.querySelectorAll('.unit-row');
+                if (unitRows.length <= 1) {
+                    Swal.fire('Aviso', 'Debe existir al menos una unidad.', 'info');
+                    return;
+                }
+                unitRow.remove();
+                reindexUnits();
+            });
+        }
     }
 
     // Función para agregar fila de servicio
@@ -368,7 +416,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const unitTemplate = `
             <div class="unit-row mb-4 border p-3" data-index="${newUnitIndex}">
-                <h6>Unidad ${newUnitIndex + 1}</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Unidad ${newUnitIndex + 1}</h6>
+                    <button type="button" class="btn btn-outline-danger btn-sm delete-unit-btn">
+                        <i class="fas fa-trash"></i> Eliminar unidad
+                    </button>
+                </div>
                 <!-- Servicios de la Unidad -->
                 <h6>Servicios</h6>
                 <div class="service-container">
@@ -517,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configurar unidades existentes
     const unitRows = unitContainer.querySelectorAll('.unit-row');
     unitRows.forEach(function(unitRow, index) {
+        attachUnitHandlers(unitRow);
         const addServiceBtn = unitRow.querySelector('.add-service-btn');
         const addPackageBtn = unitRow.querySelector('.add-package-btn');
         let serviceIndex = unitRow.querySelectorAll('.service-row').length;
@@ -610,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Calcular total inicial
-    calculateTotal();
+    reindexUnits();
 });
 </script>
 @endpush

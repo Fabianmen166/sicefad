@@ -5,6 +5,8 @@ namespace Modules\LSCEFA\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Modules\LSCEFA\Models\Process;
 use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Models\Service;
@@ -39,12 +41,17 @@ class ReportsController extends Controller
                                            ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%texture%']);
                                });
                            });
-                  })
-                  ->orWhereRaw('EXISTS (
-                      SELECT 1 FROM boron_analysis_details 
-                      WHERE boron_analysis_details.process_id = processes.process_id 
-                      AND boron_analysis_details.review_status = "approved"
-                  )');
+                  });
+
+                // Solo agregar condición de boro si la columna review_status existe
+                if (Schema::hasColumn('boron_analysis_details', 'review_status')) {
+                    $q->orWhereExists(function($existsQ) {
+                        $existsQ->select(DB::raw(1))
+                            ->from('boron_analysis_details')
+                            ->whereColumn('boron_analysis_details.process_id', 'processes.process_id')
+                            ->where('boron_analysis_details.review_status', 'approved');
+                    });
+                }
             });
 
         if ($itemFilter !== '') {
@@ -89,13 +96,35 @@ class ReportsController extends Controller
                     $decoded = null;
                 }
                 if (is_array($decoded)) {
-                    // Si es un arreglo de objetos {identificacion, resultado}
-                    if (isset($decoded[0]) && is_array($decoded[0]) && array_key_exists('resultado', $decoded[0])) {
-                        $resultadoDisplay = (string) ($decoded[0]['resultado'] ?? '');
+                    $keys = ['resultado','result','valor','value','lectura','reading','valor_leido','resultado_reportado'];
+                    if (array_key_exists(0, $decoded)) {
+                        // Lista de items
+                        $first = $decoded[0];
+                        if (is_array($first)) {
+                            foreach ($keys as $k) {
+                                if (array_key_exists($k, $first) && $first[$k] !== null && $first[$k] !== '') {
+                                    $resultadoDisplay = (string) $first[$k];
+                                    break;
+                                }
+                            }
+                        } else {
+                            $resultadoDisplay = (string) $first;
+                        }
                     } else {
-                        // Si es un arreglo simple, tomar el primer valor
-                        $first = reset($decoded);
-                        $resultadoDisplay = is_array($first) ? (string) ($first['resultado'] ?? '') : (string) $first;
+                        // Arreglo asociativo: buscar claves directamente
+                        foreach ($keys as $k) {
+                            if (array_key_exists($k, $decoded) && $decoded[$k] !== null && $decoded[$k] !== '') {
+                                $resultadoDisplay = (string) $decoded[$k];
+                                break;
+                            }
+                        }
+                        if ($resultadoDisplay === '') {
+                            // como fallback, tomar primer valor escalar
+                            $firstVal = reset($decoded);
+                            if (is_scalar($firstVal)) {
+                                $resultadoDisplay = (string) $firstVal;
+                            }
+                        }
                     }
                 } elseif (is_scalar($spd->result)) {
                     $resultadoDisplay = (string) $spd->result;
@@ -104,10 +133,14 @@ class ReportsController extends Controller
 
             // pH
             if (strpos($serviceName, 'ph') !== false) {
-                // Fecha solo desde tabla de pH
+                // Fecha solo desde tabla de pH (formateada Y-m-d)
                 $fechaAnalisis = '';
                 if ($spd->phAnalysis && !empty($spd->phAnalysis->fecha_analisis)) {
-                    $fechaAnalisis = $spd->phAnalysis->fecha_analisis;
+                    try {
+                        $fechaAnalisis = \Illuminate\Support\Carbon::parse($spd->phAnalysis->fecha_analisis)->format('Y-m-d');
+                    } catch (\Throwable $e) {
+                        $fechaAnalisis = (string) $spd->phAnalysis->fecha_analisis;
+                    }
                 }
                 $rows[] = [
                     'ensayo' => 'Determinación de pH',
@@ -122,10 +155,28 @@ class ReportsController extends Controller
 
             // Conductividad eléctrica
             if (strpos($serviceName, 'conductividad') !== false || strpos($serviceName, 'conductivity') !== false) {
-                // Fecha solo desde tabla de Conductividad
+                // Resultado: preferir ServiceProcessDetail->result; si vacío, intentar desde items_ensayo
+                if ($resultadoDisplay === '' && $spd->conductivityAnalysis && is_array($spd->conductivityAnalysis->items_ensayo ?? null)) {
+                    $items = $spd->conductivityAnalysis->items_ensayo;
+                    if (isset($items[0]) && is_array($items[0])) {
+                        if (array_key_exists('resultado', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['resultado'] ?? '');
+                        } elseif (array_key_exists('resultado_valor', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['resultado_valor'] ?? '');
+                        } elseif (array_key_exists('lectura', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['lectura'] ?? '');
+                        }
+                    }
+                }
+
+                // Fecha solo desde tabla de Conductividad (formateada Y-m-d)
                 $fechaAnalisis = '';
                 if ($spd->conductivityAnalysis && !empty($spd->conductivityAnalysis->fecha_analisis)) {
-                    $fechaAnalisis = $spd->conductivityAnalysis->fecha_analisis;
+                    try {
+                        $fechaAnalisis = \Illuminate\Support\Carbon::parse($spd->conductivityAnalysis->fecha_analisis)->format('Y-m-d');
+                    } catch (\Throwable $e) {
+                        $fechaAnalisis = (string) $spd->conductivityAnalysis->fecha_analisis;
+                    }
                 }
                 $rows[] = [
                     'ensayo' => 'Determinación de Conductividad eléctrica',
@@ -245,11 +296,32 @@ class ReportsController extends Controller
                     $decoded = null;
                 }
                 if (is_array($decoded)) {
-                    if (isset($decoded[0]) && is_array($decoded[0]) && array_key_exists('resultado', $decoded[0])) {
-                        $resultadoDisplay = (string) ($decoded[0]['resultado'] ?? '');
+                    $keys = ['resultado','result','valor','value','lectura','reading','valor_leido','resultado_reportado'];
+                    if (array_key_exists(0, $decoded)) {
+                        $first = $decoded[0];
+                        if (is_array($first)) {
+                            foreach ($keys as $k) {
+                                if (array_key_exists($k, $first) && $first[$k] !== null && $first[$k] !== '') {
+                                    $resultadoDisplay = (string) $first[$k];
+                                    break;
+                                }
+                            }
+                        } else {
+                            $resultadoDisplay = (string) $first;
+                        }
                     } else {
-                        $first = reset($decoded);
-                        $resultadoDisplay = is_array($first) ? (string) ($first['resultado'] ?? '') : (string) $first;
+                        foreach ($keys as $k) {
+                            if (array_key_exists($k, $decoded) && $decoded[$k] !== null && $decoded[$k] !== '') {
+                                $resultadoDisplay = (string) $decoded[$k];
+                                break;
+                            }
+                        }
+                        if ($resultadoDisplay === '') {
+                            $firstVal = reset($decoded);
+                            if (is_scalar($firstVal)) {
+                                $resultadoDisplay = (string) $firstVal;
+                            }
+                        }
                     }
                 } elseif (is_scalar($spd->result)) {
                     $resultadoDisplay = (string) $spd->result;
@@ -259,7 +331,11 @@ class ReportsController extends Controller
             if (strpos($serviceName, 'ph') !== false) {
                 $fechaAnalisis = '';
                 if ($spd->phAnalysis && !empty($spd->phAnalysis->fecha_analisis)) {
-                    $fechaAnalisis = $spd->phAnalysis->fecha_analisis;
+                    try {
+                        $fechaAnalisis = \Illuminate\Support\Carbon::parse($spd->phAnalysis->fecha_analisis)->format('Y-m-d');
+                    } catch (\Throwable $e) {
+                        $fechaAnalisis = (string) $spd->phAnalysis->fecha_analisis;
+                    }
                 }
                 $rows[] = [
                     'ensayo' => 'Determinación de pH',
@@ -273,9 +349,27 @@ class ReportsController extends Controller
             }
 
             if (strpos($serviceName, 'conductividad') !== false || strpos($serviceName, 'conductivity') !== false) {
+                // Resultado: preferir ServiceProcessDetail->result; si vacío, intentar desde items_ensayo
+                if ($resultadoDisplay === '' && $spd->conductivityAnalysis && is_array($spd->conductivityAnalysis->items_ensayo ?? null)) {
+                    $items = $spd->conductivityAnalysis->items_ensayo;
+                    if (isset($items[0]) && is_array($items[0])) {
+                        if (array_key_exists('resultado', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['resultado'] ?? '');
+                        } elseif (array_key_exists('resultado_valor', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['resultado_valor'] ?? '');
+                        } elseif (array_key_exists('lectura', $items[0])) {
+                            $resultadoDisplay = (string) ($items[0]['lectura'] ?? '');
+                        }
+                    }
+                }
+
                 $fechaAnalisis = '';
                 if ($spd->conductivityAnalysis && !empty($spd->conductivityAnalysis->fecha_analisis)) {
-                    $fechaAnalisis = $spd->conductivityAnalysis->fecha_analisis;
+                    try {
+                        $fechaAnalisis = \Illuminate\Support\Carbon::parse($spd->conductivityAnalysis->fecha_analisis)->format('Y-m-d');
+                    } catch (\Throwable $e) {
+                        $fechaAnalisis = (string) $spd->conductivityAnalysis->fecha_analisis;
+                    }
                 }
                 $rows[] = [
                     'ensayo' => 'Determinación de Conductividad eléctrica',

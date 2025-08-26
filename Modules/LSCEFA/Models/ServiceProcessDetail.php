@@ -3,6 +3,7 @@
 namespace Modules\LSCEFA\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class ServiceProcessDetail extends Model
 {
@@ -36,11 +37,13 @@ class ServiceProcessDetail extends Model
     }
     public function humidityAnalysis()
     {
-        return $this->hasOne(HumidityAnalysis::class, 'analysis_id'); // Nuevo método para HumidityAnalysis
+        // Link only by process_id to be compatible with both schemas (with/without service_id)
+        return $this->hasOne(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'process_id', 'process_id');
     }
 
     public function batchTextureAnalysis()
     {
         return $this->hasOne(\Modules\LSCEFA\Entities\BatchTextureAnalysis::class, 'process_id', 'process_id');
     }
-} 
+
+}

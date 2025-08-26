@@ -30,7 +30,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    @php($qc = optional(optional($process->quote)->customer))
+                    <?php $qc = optional(optional($process->quote)->customer); ?>
                     <div><strong>NIT/CC:</strong> {{ $qc->tax_id ?? '—' }}</div>
                     <div><strong>Solicitante:</strong> {{ $qc->applicant ?? '—' }}</div>
                     <div><strong>Contacto:</strong> {{ $qc->applicant ?? '—' }}</div>
