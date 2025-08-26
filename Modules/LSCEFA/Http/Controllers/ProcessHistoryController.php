@@ -13,12 +13,20 @@ class ProcessHistoryController extends Controller
 {
     public function index()
     {
-        $processes = Process::with(['quote', 'quote.customer'])
-            ->latest('created_at')
-            ->paginate(15);
+        $query = Process::with(['quote', 'quote.customer'])
+            ->latest('created_at');
+
+        // Filtro por código de ítem
+        $itemCode = request('item_code');
+        if (!empty($itemCode)) {
+            $query->where('item_code', 'like', '%' . $itemCode . '%');
+        }
+
+        $processes = $query->paginate(15);
 
         return view('lscefa::process_history.index', [
             'processes' => $processes,
+            'itemCode' => $itemCode,
         ]);
     }
 

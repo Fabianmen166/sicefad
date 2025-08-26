@@ -6,13 +6,26 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">Historial de procesos</h3>
+        <form method="GET" action="{{ route('lscefa.admin.process_history.index') }}" class="form-inline">
+            <div class="input-group input-group-sm">
+                <input type="text" name="item_code" value="{{ request('item_code') }}" class="form-control" placeholder="Buscar por código de ítem">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            @if(request('item_code'))
+                <a href="{{ route('lscefa.admin.process_history.index') }}" class="btn btn-link btn-sm ml-2">Limpiar</a>
+            @endif
+        </form>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped mb-0">
                 <thead>
                     <tr>
-                        <th>ID Proceso</th>
+                        <th>Código de ítem</th>
                         <th>Cotización</th>
                         <th>Cliente</th>
                         <th>Estado</th>
@@ -24,7 +37,7 @@
                 <tbody>
                     @forelse($processes as $p)
                         <tr>
-                            <td>{{ $p->process_id }}</td>
+                            <td>{{ $p->item_code ?? '—' }}</td>
                             <td>
                                 @if($p->quote)
                                     <a href="{{ route('lscefa.quality.quotes.show', $p->quote->quote_id ?? $p->quote_id) }}">
@@ -55,7 +68,7 @@
     </div>
     @if(method_exists($processes, 'links'))
         <div class="card-footer">
-            {{ $processes->links() }}
+            {{ $processes->appends(request()->query())->links() }}
         </div>
     @endif
 </div>
