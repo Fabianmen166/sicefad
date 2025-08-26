@@ -35,11 +35,15 @@ class ServiceProcessDetail extends Model
     {
         return $this->hasOne(ConductivityAnalysis::class, 'analysis_id');
     }
-    public function humidityAnalysis()
+    public function HumidityAnalysis()
     {
-        // Link only by process_id to be compatible with both schemas (with/without service_id)
-        return $this->hasOne(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'process_id', 'process_id');
+        return $this->hasOne(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'analysis_id');
     }
+    public function AcidezAnalysis()
+    {
+        return $this->hasOne(\Modules\LSCEFA\Entities\AcidezAnalysis::class, 'analysis_id');
+    }
+   
 
     public function batchTextureAnalysis()
     {

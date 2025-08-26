@@ -13,6 +13,7 @@ use Modules\LSCEFA\Models\Service;
 use Modules\LSCEFA\Models\PhAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
 use Modules\LSCEFA\Entities\BatchTextureAnalysis;
+use Modules\LSCEFA\Entities\HumidityAnalysis;
 
 class ReportsController extends Controller
 {
@@ -73,7 +74,7 @@ class ReportsController extends Controller
     {
         $process = Process::with([
             'serviceProcessDetails' => function ($q) {
-                $q->with(['service', 'phAnalysis', 'conductivityAnalysis']);
+                $q->with(['service', 'phAnalysis', 'conductivityAnalysis', 'humidityAnalysis']);
             },
             'quote',
             'customer',
@@ -246,6 +247,37 @@ class ReportsController extends Controller
                     'unidad' => 'Clase textural',
                     'fecha_analisis' => $fechaAnalisis,
                     'tecnica' => 'Hidrómetro de Bouyoucos',
+                    'documento' => 'NTC 5264:2023',
+                ];
+                continue;
+            }
+
+            // Humedad
+            if (strpos($serviceNameNorm, 'humedad') !== false || strpos($serviceNameNorm, 'humidity') !== false) {
+                // Buscar fecha_analisis en tabla humidity_analyses por process_id y service_id
+                $fechaAnalisis = '';
+                try {
+                    $ha = HumidityAnalysis::where('process_id', $spd->process_id)
+                        ->where('service_id', $spd->service_id)
+                        ->latest('fecha_analisis')
+                        ->first();
+                    if ($ha && !empty($ha->fecha_analisis)) {
+                        $fechaAnalisis = $ha->fecha_analisis;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener fecha_analisis de humedad para reporte', [
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Humedad',
+                    'resultado' => $resultadoDisplay,
+                    'unidad' => '%',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Gravimétrico por secado en estufa',
                     'documento' => 'NTC 5264:2023',
                 ];
                 continue;

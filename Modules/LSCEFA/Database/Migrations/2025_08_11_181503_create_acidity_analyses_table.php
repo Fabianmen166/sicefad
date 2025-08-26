@@ -15,6 +15,7 @@ return new class extends Migration
                 $table->string('process_id'); // Clave foránea para relacionar con la tabla de processes
                 $table->string('consecutivo_no')->nullable();
                 $table->string('unidades_reporte_equipo')->nullable();
+           $table->string('nombre_metodo')->nullable(); // Agregado campo faltante
 
                 $table->date('fecha_analisis')->nullable();
                 $table->string('equipo_utilizado')->nullable();

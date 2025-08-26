@@ -83,8 +83,7 @@ public function index()
 
         $analysis = new AcidezAnalysis();
 
-        return view('lscefa::analyses.acidity.process', ['process' => $process,'analysis' => $analysis
-        ]);
+        return view('lscefa::analyses.acidity.process', ['process' => $process,'analysis' => $analysis, 'user' => Auth::user()]);
 
     } catch (\Exception $e) {
         Log::error('Error al cargar formulario de acidez: ' . $e->getMessage());
@@ -139,7 +138,12 @@ public function storeAcidezAnalysis(Request $request)
                 'porcentaje_humedad' => $row['porcentaje_humedad'] ?? null,
                 'molaridad' => $row['molaridad'],
                 'consumido_muestra' => $row['consumido_muestra'] ?? null,
-                'acidez' => $row['acidez'],             
+                'acidez' => $row['acidez'],
+                'valor_obtenido' => $row['valor_obtenido'] ?? null,
+                'valor_referencia' => $row['valor_referencia'] ?? null,
+                'error_analitico' => $row['error_analitico'] ?? null,
+                'recuperacion' => $row['recuperacion'] ?? null,
+                'status' => 'pending',         
                 
             ]);
 

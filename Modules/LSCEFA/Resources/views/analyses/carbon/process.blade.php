@@ -60,7 +60,8 @@
                             <div class="form-group col-md-2">
                                 <label for="analista">Analista</label>
                                 <input type="text" class="form-control" id="analista"
-                                    value="{{ Auth::user()->name ?? 'N/A' }}" readonly>
+                                    value="{{ $user ? $user->nickname : '' }}" readonly>
+                                <input type="hidden" name="user_id" value="{{ Auth::id() }}">
                             </div>
 
                             <!-- Unidades de reporte equipo -->

@@ -270,8 +270,9 @@ Route::middleware(['lang'])->group(function(){
         Route::middleware(['auth', 'lscefa.role:lscefa.technical'])->group(function () {
             // Rutas para Analisis de humedad
             Route::get('/technical/analyses/humidity', [HumidityAnalysisController::class, 'index'])->name('lscefa.technical.analyses.humidity.index');
-            Route::get('/technical/analyses/humidity/process/{processId}', [HumidityAnalysisController::class, 'humidityAnalysis'])->name('lscefa.technical.analyses.humidity.process');
+            Route::get('/technical/analyses/humidity/{processId}/process', [HumidityAnalysisController::class, 'humidityAnalysis'])->name('lscefa.technical.analyses.humidity.process');
             Route::post('/technical/analyses/humidity/store', [HumidityAnalysisController::class, 'storeHumidityAnalysis'])->name('lscefa.technical.analyses.humidity.store');
+            Route::get('/technical/analyses/humidity/{analysisId}/download', [HumidityAnalysisController::class, 'downloadHumidityReport'])->name('lscefa.technical.analyses.humidity.download');
 
             // Rutas para Análisis de Intercambio Catiónico
             Route::get('/technical/analyses/cationic', [CationicAnalysisController::class, 'index'])->name('lscefa.technical.analyses.cationic.index');

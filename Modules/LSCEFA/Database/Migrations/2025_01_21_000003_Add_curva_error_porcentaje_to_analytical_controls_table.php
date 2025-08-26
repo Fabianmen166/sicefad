@@ -14,9 +14,9 @@ return new class extends Migration
     public function up()
     {
         if (Schema::hasTable('analytical_controls') && !Schema::hasColumn('analytical_controls', 'curva_error_porcentaje')) {
-            Schema::table('analytical_controls', function (Blueprint $table) {
-                $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
-            });
+            // Schema::table('analytical_controls', function (Blueprint $table) {
+            //     $table->decimal('curva_error_porcentaje', 8, 4)->nullable();
+            // });
         }
     }
 
@@ -35,3 +35,8 @@ return new class extends Migration
         // }
     }
 };
+        // Schema::table('analytical_controls', function (Blueprint $table) {
+        //     $table->dropColumn('curva_error_porcentaje');
+        // });
+    }
+} 

@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\LSCEFA\Models\Process;
-use Modules\LSCEFA\Models\AnalyticalControl;
+use Modules\LSCEFA\Entities\AnalyticalControl;
+use App\Models\User;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -57,9 +58,9 @@ class CarbonoAnalysis extends Model
         return $this->belongsTo(Process::class, 'process_id', 'process_id');
     }
 
-     public function user(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function analyticalControl(): HasOne

@@ -89,7 +89,7 @@ class CarbonoAnalysisController extends Controller
                 'service',
                 'serviceId',
                 'carbonAnalysis'
-            ));
+            ) + ['user' => Auth::user()]);
 
         } catch (\Exception $e) {
             Log::error('Error al cargar análisis de carbono: '.$e->getMessage());
@@ -263,4 +263,77 @@ public function storeCarbonoAnalysis(Request $request)
         return back()->with('error', 'Hubo un error al guardar los análisis: ' . $e->getMessage())->withInput();
     }
 }   
+
+/**
+ * Mostrar un análisis de carbono para revisión
+ */
+public function show($id)
+{
+    try {
+        $analysis = CarbonoAnalysis::with([
+            'process.quote.customer',
+            'process.serviceProcessDetails.service',
+            'analyticalControl',
+            'user'
+        ])->findOrFail($id);
+
+        // Obtener el detalle del servicio
+        $detail = $analysis->process->serviceProcessDetails
+            ->where('service_id', $analysis->process->serviceProcessDetails->first()->service_id)
+            ->first();
+
+        // Obtener el cliente
+        $customer = $analysis->process->quote->customer;
+
+        // Obtener el nombre del técnico
+        $technicianName = $analysis->user ? $analysis->user->nickname : 'No asignado';
+
+        // Obtener controles analíticos
+        $controles_analiticos = [];
+        if ($analysis->analyticalControl) {
+            $controles_analiticos[] = [
+                'identificacion_mf' => $analysis->analyticalControl->identificacion_mf,
+                'identificacion_mr' => $analysis->analyticalControl->identificacion_mr,
+                'identificacion_dm' => $analysis->analyticalControl->identificacion_dm,
+                'identificacion_bm' => $analysis->analyticalControl->identificacion_bm,
+                'limite_cuantificacion_metodo' => $analysis->analyticalControl->limite_cuantificacion_metodo,
+                'valor_leido' => $analysis->analyticalControl->valor_leido,
+                'valor_referencia' => $analysis->analyticalControl->valor_referencia,
+                'valor_obtenido' => $analysis->analyticalControl->valor_obtenido,
+                'recuperacion' => $analysis->analyticalControl->recuperacion,
+                'replica_1' => $analysis->analyticalControl->replica_1,
+                'replica_2' => $analysis->analyticalControl->replica_2,
+                'dpr' => $analysis->analyticalControl->dpr,
+                'aceptable_blanco' => $analysis->analyticalControl->aceptable_blanco,
+                'aceptable_fortificada' => $analysis->analyticalControl->aceptable_fortificada,
+                'aceptable_referencia' => $analysis->analyticalControl->aceptable_referencia,
+                'aceptable_duplicado' => $analysis->analyticalControl->aceptable_duplicado,
+                'observaciones' => $analysis->analyticalControl->observaciones,
+            ];
+        }
+
+        // Obtener todos los análisis del mismo proceso para mostrar en la tabla
+        $analisis_completos = CarbonoAnalysis::where('process_id', $analysis->process_id)
+            ->orderBy('consecutivo_no')
+            ->get()
+            ->toArray();
+
+        $total_analisis = count($analisis_completos);
+
+        return view('lscefa::analyses.carbon.review-show', compact(
+            'analysis',
+            'process',
+            'detail',
+            'customer',
+            'technicianName',
+            'controles_analiticos',
+            'analisis_completos',
+            'total_analisis'
+        ));
+
+    } catch (\Exception $e) {
+        Log::error('Error al mostrar análisis de carbono: ' . $e->getMessage());
+        return back()->with('error', 'No se pudo cargar el análisis: ' . $e->getMessage());
+    }
+}
 }

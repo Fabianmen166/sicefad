@@ -11,7 +11,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <strong>Código interno ítem de ensayo:</strong> {{ $process->item_code }}
+                    <strong>Código interno ítem de ensayo:</strong> {{ $process->item_code ?? '—' }}
                 </div>
                 <div class="col-md-6 text-md-right">
                     <strong>Informe número:</strong> —
@@ -30,12 +30,14 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <?php $qc = optional(optional($process->quote)->customer); ?>
-                    <div><strong>NIT/CC:</strong> {{ $qc->tax_id ?? '—' }}</div>
-                    <div><strong>Solicitante:</strong> {{ $qc->applicant ?? '—' }}</div>
-                    <div><strong>Contacto:</strong> {{ $qc->applicant ?? '—' }}</div>
-                    <div><strong>Teléfono:</strong> {{ $qc->phone ?? '—' }}</div>
-                    <div><strong>Correo electrónico:</strong> {{ $qc->email ?? '—' }}</div>
+                    @php
+                        $customer = optional(optional($process->quote)->customer);
+                    @endphp
+                    <div><strong>NIT/CC:</strong> {{ $customer->tax_id ?? '—' }}</div>
+                    <div><strong>Solicitante:</strong> {{ $customer->applicant ?? '—' }}</div>
+                    <div><strong>Contacto:</strong> {{ $customer->applicant ?? '—' }}</div>
+                    <div><strong>Teléfono:</strong> {{ $customer->phone ?? '—' }}</div>
+                    <div><strong>Correo electrónico:</strong> {{ $customer->email ?? '—' }}</div>
                 </div>
                 <div class="col-md-6">
                     <div><strong>Lugar de muestreo:</strong> {{ $process->sampling_place ?? '—' }}</div>
@@ -66,12 +68,12 @@
                     <tbody>
                         @forelse($rows as $row)
                             <tr>
-                                <td>{{ $row['ensayo'] }}</td>
-                                <td>{{ $row['resultado'] }}</td>
-                                <td>{{ $row['unidad'] }}</td>
-                                <td>{{ $row['fecha_analisis'] }}</td>
-                                <td>{{ $row['tecnica'] }}</td>
-                                <td>{{ $row['documento'] }}</td>
+                                <td>{{ $row['ensayo'] ?? '—' }}</td>
+                                <td>{{ $row['resultado'] ?? '—' }}</td>
+                                <td>{{ $row['unidad'] ?? '—' }}</td>
+                                <td>{{ $row['fecha_analisis'] ?? '—' }}</td>
+                                <td>{{ $row['tecnica'] ?? '—' }}</td>
+                                <td>{{ $row['documento'] ?? '—' }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -100,13 +102,13 @@
                         <strong>{{ $spd->service->descripcion ?? 'N/A' }}</strong> - 
                         <span class="badge badge-success">Aprobado</span>
                         
-                        @if(strpos($serviceName, 'ph') !== false)
-                            <a href="{{ route('lscefa.ph_analysis.download', $spd->phAnalysis->id ?? 0) }}" class="btn btn-success btn-sm ml-2">
+                        @if(strpos($serviceName, 'ph') !== false && isset($spd->phAnalysis))
+                            <a href="{{ route('lscefa.ph_analysis.download', $spd->phAnalysis->id) }}" class="btn btn-success btn-sm ml-2">
                                 <i class="fas fa-download"></i> Descargar pH
                             </a>
                         @endif
                         
-                        @if(strpos($serviceNameNorm, 'textura') !== false || strpos($serviceNameNorm, 'texture') !== false)
+                        @if((strpos($serviceNameNorm, 'textura') !== false || strpos($serviceNameNorm, 'texture') !== false))
                             @php 
                                 $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $spd->process_id)
                                     ->where('service_id', $spd->service_id)
@@ -119,7 +121,7 @@
                             @endif
                         @endif
                         
-                        @if(strpos($serviceNameNorm, 'boro') !== false || strpos($serviceNameNorm, 'boron') !== false)
+                        @if((strpos($serviceNameNorm, 'boro') !== false || strpos($serviceNameNorm, 'boron') !== false))
                             @php 
                                 $boronAnalysis = \Modules\LSCEFA\Entities\BoronAnalysisDetail::where('process_id', $spd->process_id)
                                     ->where('service_id', $spd->service_id)
@@ -128,6 +130,19 @@
                             @if($boronAnalysis)
                                 <a href="{{ route('lscefa.technical.analyses.boron.download', $boronAnalysis->id) }}" class="btn btn-success btn-sm ml-2">
                                     <i class="fas fa-download"></i> Descargar Boro
+                                </a>
+                            @endif
+                        @endif
+                        
+                        @if((strpos($serviceNameNorm, 'humedad') !== false || strpos($serviceNameNorm, 'humidity') !== false))
+                            @php 
+                                $humidityAnalysis = \Modules\LSCEFA\Entities\HumidityAnalysis::where('process_id', $spd->process_id)
+                                    ->where('service_id', $spd->service_id)
+                                    ->first();
+                            @endphp
+                            @if($humidityAnalysis)
+                                <a href="{{ route('lscefa.technical.analyses.humidity.download', $humidityAnalysis->id) }}" class="btn btn-success btn-sm ml-2">
+                                    <i class="fas fa-download"></i> Descargar Humedad
                                 </a>
                             @endif
                         @endif

@@ -84,7 +84,8 @@
                             <div class="form-group col-md-3">
                                 <label for="analista">Analista</label>
                                 <input type="text" class="form-control form-control-sm" id="analista"
-                                    value="{{ Auth::user()->name ?? 'N/A' }}" readonly>
+                                    value="{{ $user ? $user->nickname : '' }}" readonly>
+                                <input type="hidden" name="user_id" value="{{ Auth::id() }}">
                             </div>
                         </div>
                     </div>

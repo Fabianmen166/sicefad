@@ -16,7 +16,7 @@ use Modules\LSCEFA\Models\Service;
 
 class HumidityAnalysisController extends Controller
 {
- public function index()
+    public function index()
     {
         try {
             Log::info('Usuario accede a index de análisis de humedad', [
@@ -105,7 +105,7 @@ class HumidityAnalysisController extends Controller
             'service_id' => $serviceProcessDetail->service_id
         ]);
 
-        return view('lscefa::analyses.humidity.process', compact('process', 'service', 'serviceProcessDetail'));
+        return view('lscefa::analyses.humidity.process', compact('process', 'service', 'serviceProcessDetail') + ['user' => Auth::user()]);
 
     } catch (\Exception $e) {
         Log::error('Error al cargar análisis de humedad: '.$e->getMessage(), [
@@ -536,5 +536,91 @@ public function storeHumidityAnalysis(Request $request)
         $analysis->delete();
 
         return redirect()->route('humidity_analysis.index')->with('success', 'Análisis eliminado correctamente.');
+    }
+
+    /**
+     * Descarga el informe de análisis de humedad en formato Excel
+     */
+    public function downloadHumidityReport($analysisId)
+    {
+        $humidityAnalysis = HumidityAnalysis::findOrFail($analysisId);
+        
+        // Crear el archivo Excel usando PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Configurar encabezados del informe
+        $sheet->setCellValue('A1', 'LABORATORIO DE CIENCIAS BÁSICAS');
+        $sheet->setCellValue('A2', 'PROCEDIMIENTO DETERMINACIÓN DE HUMEDAD EN SUELOS');
+        $sheet->setCellValue('A3', 'FORMATO REPORTE RESULTADOS HUMEDAD EN SUELOS');
+        $sheet->setCellValue('D3', 'Versión: 1');
+        $sheet->setCellValue('D4', 'Código: F-HSS-001');
+        $sheet->setCellValue('D5', 'Página: 1 de 1');
+
+        // Información general del análisis
+        $sheet->setCellValue('A6', 'Consecutivo No.:');
+        $sheet->setCellValue('B6', $humidityAnalysis->consecutivo_no);
+        $sheet->setCellValue('A7', 'Fecha del análisis:');
+        $sheet->setCellValue('B7', $humidityAnalysis->fecha_analisis);
+        $sheet->setCellValue('A8', 'Nombre Analista:');
+        $sheet->setCellValue('B8', optional($humidityAnalysis->user)->name ?? 'N/A');
+        $sheet->setCellValue('A9', 'Metodología Utilizada:');
+        $sheet->setCellValue('B9', $humidityAnalysis->nombre_metodo ?? 'N/A');
+        $sheet->setCellValue('A10', 'Intervalo del método:');
+        $sheet->setCellValue('B10', $humidityAnalysis->intervalo_metodo ?? 'N/A');
+        $sheet->setCellValue('A11', 'Equipo utilizado:');
+        $sheet->setCellValue('B11', $humidityAnalysis->equipo_utilizado ?? 'N/A');
+
+        // Condiciones del horno
+        $sheet->setCellValue('A13', 'Condiciones del horno');
+        $sheet->setCellValue('A14', 'Hora de ingreso:');
+        $sheet->setCellValue('B14', $humidityAnalysis->hora_ingreso_horno ?? 'N/A');
+        $sheet->setCellValue('A15', 'Hora de salida:');
+        $sheet->setCellValue('B15', $humidityAnalysis->hora_salida_horno ?? 'N/A');
+        $sheet->setCellValue('A16', 'Temperatura del horno (°C):');
+        $sheet->setCellValue('B16', $humidityAnalysis->temperatura_horno ?? 'N/A');
+
+        // Resultados del análisis
+        $sheet->setCellValue('A18', 'Resultados del análisis');
+        $sheet->setCellValue('A19', 'Identificación');
+        $sheet->setCellValue('B19', 'Peso cápsula (g)');
+        $sheet->setCellValue('C19', 'Peso muestra (g)');
+        $sheet->setCellValue('D19', 'Peso cápsula + muestra húmeda (g)');
+        $sheet->setCellValue('E19', 'Peso cápsula + muestra seca (g)');
+        $sheet->setCellValue('F19', 'Porcentaje de humedad (%)');
+        $sheet->setCellValue('G19', 'Observaciones');
+
+        $row = 20;
+        $sheet->setCellValue('A' . $row, $humidityAnalysis->codigo_interno ?? 'N/A');
+        $sheet->setCellValue('B' . $row, $humidityAnalysis->peso_capsula ?? 'N/A');
+        $sheet->setCellValue('C' . $row, $humidityAnalysis->peso_muestra ?? 'N/A');
+        $sheet->setCellValue('D' . $row, $humidityAnalysis->peso_capsula_muestra_humedad ?? 'N/A');
+        $sheet->setCellValue('E' . $row, $humidityAnalysis->peso_capsula_muestra_seca ?? 'N/A');
+        $sheet->setCellValue('F' . $row, $humidityAnalysis->porcentaje_humedad ?? 'N/A');
+        $sheet->setCellValue('G' . $row, $humidityAnalysis->observaciones ?? '');
+
+        // Ajustar ancho de columnas
+        $sheet->getColumnDimension('A')->setWidth(25);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(25);
+        $sheet->getColumnDimension('E')->setWidth(25);
+        $sheet->getColumnDimension('F')->setWidth(20);
+        $sheet->getColumnDimension('G')->setWidth(30);
+
+        // Crear el archivo Excel
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        
+        // Generar nombre del archivo
+        $filename = 'Reporte_Humedad_' . $humidityAnalysis->consecutivo_no . '_' . date('Y-m-d') . '.xlsx';
+        
+        // Configurar headers para descarga
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        
+        // Enviar el archivo al navegador
+        $writer->save('php://output');
+        exit;
     }
 }

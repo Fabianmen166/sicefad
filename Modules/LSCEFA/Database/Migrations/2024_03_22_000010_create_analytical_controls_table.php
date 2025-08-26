@@ -17,8 +17,8 @@ class CreateAnalyticalControlsTable extends Migration
             $table->id();
             $table->string('process_id');
             $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
-            $table->unsignedBigInteger('humidity_analysis_id')->nullable()->after('analysis_id');
-            $table->foreign('humidity_analysis_id')->references('id')->on('humidity_analyses')->onDelete('cascade');
+            $table->unsignedBigInteger('humidity_analysis_id')->nullable();
+            // $table->foreign('humidity_analysis_id')->references('id')->on('humidity_analyses')->onDelete('cascade');
      
 
             // Campos de controle analíticos
