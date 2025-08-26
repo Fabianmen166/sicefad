@@ -56,31 +56,32 @@
                         </div>
                     </div>
                 </div>
-                <!-- Tabla de Datos del Análisis (antes de la tarjeta) -->
-                <div class="table-responsive mb-4">
-                    <table class="table table-borderless align-middle" style="background: #f8f9fa; border-radius: 8px;">
-                        <tr>
-                            <td class="fw-bold" style="width: 10%">Consecutivo:</td>
-                            <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no') }}"></td>
-                            <td class="fw-bold" style="width: 16%">Metodología aplicada:</td>
-                            <td colspan="2" style="width: 30%"><span class="form-control-plaintext">Extracción por Bray (II) y cuantificación por ácido ascórbico</span></td>
-                            <td class="fw-bold" style="width: 10%">Intervalo:</td>
-                            <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo') }}"></td>
-                        </tr>
-                        <tr style="height: 10px;"></tr>
-                        <tr>
-                            <td class="fw-bold">Fecha:</td>
-                            <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis') }}"></td>
-                            <td class="fw-bold">Equipo:</td>
-                            <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado') }}"></td>
-                            <td></td>
-                            <td class="fw-bold">Analista:</td>
-                            <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista') }}"></td>
-                        </tr>
-                    </table>
-                </div>
+                <!-- Formulario de guardado por lote -->
                 <form action="{{ route('lscefa.technical.analyses.phosphorus.batch_store') }}" method="POST" id="phosphorusBatchForm">
                     @csrf
+                    <!-- Tabla de Datos del Análisis (antes de la tarjeta) -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-borderless align-middle" style="background: #f8f9fa; border-radius: 8px;">
+                            <tr>
+                                <td class="fw-bold" style="width: 10%">Consecutivo:</td>
+                                <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no') }}"></td>
+                                <td class="fw-bold" style="width: 16%">Metodología aplicada:</td>
+                                <td colspan="2" style="width: 30%"><span class="form-control-plaintext">Extracción por Bray (II) y cuantificación por ácido ascórbico</span></td>
+                                <td class="fw-bold" style="width: 10%">Intervalo:</td>
+                                <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo') }}"></td>
+                            </tr>
+                            <tr style="height: 10px;"></tr>
+                            <tr>
+                                <td class="fw-bold">Fecha:</td>
+                                <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis') }}"></td>
+                                <td class="fw-bold">Equipo:</td>
+                                <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado') }}"></td>
+                                <td></td>
+                                <td class="fw-bold">Analista:</td>
+                                <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista') }}"></td>
+                            </tr>
+                        </table>
+                    </div>
                     @foreach ($pendingProcesses as $index => $process)
                         <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
                     @endforeach
@@ -107,89 +108,89 @@
                         <div class="tab-pane fade show active" id="controls-content" role="tabpanel" aria-labelledby="controls-tab">
                             <!-- Controles Analíticos (primero) -->
                             <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Controles Analíticos (aplican a todo el lote)</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="controles_analiticos_table">
+                                <div class="card-header">
+                                    <h3 class="card-title">Controles Analíticos (aplican a todo el lote)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="controles_analiticos_table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Identificación</th>
+                                                    <th>Valor esperado</th>
+                                                    <th>Valor leído</th>
+                                                    <th>% Error</th>
+                                                    <th>Aceptabilidad</th>
+                                                    <th>% Recuperación</th>
+                                                    <th>Aceptabilidad</th>
+                                                    <th>% DPR</th>
+                                                    <th>Aceptabilidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
+                                                    <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Curva de Calibración y Duplicados (segundo) -->
+                            <div class="table-responsive mt-4">
+                                <table class="table table-bordered" id="curva_duplicados_table">
                                     <thead>
                                         <tr>
-                                            <th>Identificación</th>
-                                            <th>Valor esperado</th>
+                                            <th>Curva de calibración</th>
+                                            <th>Valor</th>
                                             <th>Valor leído</th>
-                                            <th>% Error</th>
-                                            <th>Aceptabilidad</th>
-                                            <th>% Recuperación</th>
-                                            <th>Aceptabilidad</th>
+                                            <th>% ERROR</th>
+                                            <th></th>
+                                            <th>Duplicado</th>
+                                            <th>Valor leído</th>
                                             <th>% DPR</th>
                                             <th>Aceptabilidad</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
+                                            <td rowspan="2">Curva de calibración</td>
+                                            <td rowspan="2"><input type="number" class="form-control" value="0.995" readonly></td>
+                                            <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido"></td>
+                                            <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_error_porcentaje" id="curva_error_porcentaje" readonly></td>
+                                            <td colspan="2" rowspan="2"></td>
+                                            <td>Duplicado A</td>
+                                            <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a"></td>
+                                            <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" readonly></td>
+                                            <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" readonly></td>
                                         </tr>
                                         <tr>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
+                                            <td>Duplicado B</td>
+                                            <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b"></td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-                    <!-- Curva de Calibración y Duplicados (segundo) -->
-                    <div class="table-responsive mt-4">
-                        <table class="table table-bordered" id="curva_duplicados_table">
-                            <thead>
-                                <tr>
-                                    <th>Curva de calibración</th>
-                                    <th>Valor</th>
-                                    <th>Valor leído</th>
-                                    <th>% ERROR</th>
-                                    <th></th>
-                                    <th>Duplicado</th>
-                                    <th>Valor leído</th>
-                                    <th>% DPR</th>
-                                    <th>Aceptabilidad</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td rowspan="2">Curva de calibración</td>
-                                    <td rowspan="2"><input type="number" class="form-control" value="0.995" readonly></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido"></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_error_porcentaje" id="curva_error_porcentaje" readonly></td>
-                                    <td colspan="2" rowspan="2"></td>
-                                    <td>Duplicado A</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a"></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" readonly></td>
-                                    <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" readonly></td>
-                                </tr>
-                                <tr>
-                                    <td>Duplicado B</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
+                            
                         </div>
                         <!-- End of Controles Analíticos Tab -->
 
@@ -201,47 +202,53 @@
                                     <h3 class="card-title">Ítems de Ensayo</h3>
                                 </div>
                                 <div class="card-body">
-                            <div class="alert alert-info">
-                                Complete los valores para los análisis seleccionados. El cálculo de Fósforo disponible (mg/kg) es automático.
+                                    <div class="alert alert-info">
+                                        Complete los valores para los análisis seleccionados. El cálculo de Fósforo disponible (mg/kg) es automático.
+                                    </div>
+                                    <table class="table table-bordered" id="items_ensayo_table">
+                                        <thead>
+                                            <tr>
+                                                <th>Proceso</th>
+                                                <th>Código interno</th>
+                                                <th>Peso muestra (g)</th>
+                                                <th>pW</th>
+                                                <th>V. Extractante (mL)</th>
+                                                <th>Lectura blanco</th>
+                                                <th>Factor de dilución (fd)</th>
+                                                <th>Fósforo disponible (mg/L)</th>
+                                                <th>Fósforo disponible (mg/kg)</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($pendingProcesses as $index => $process)
+                                                <tr>
+                                                    <td>{{ $process->process_id }}</td>
+                                                    <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][fosforo_disponible_mg_l]"></td>
+                                                    <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][fosforo_disponible_mg_kg]" readonly></td>
+                                                    <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]"></td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <!-- End of Items de Ensayo Tab -->
                             </div>
-                            <table class="table table-bordered" id="items_ensayo_table">
-                                <thead>
-                                    <tr>
-                                        <th>Proceso</th>
-                                        <th>Código interno</th>
-                                        <th>Peso muestra (g)</th>
-                                        <th>pW</th>
-                                        <th>V. Extractante (mL)</th>
-                                        <th>Lectura blanco</th>
-                                        <th>Factor de dilución (fd)</th>
-                                        <th>Fósforo disponible (mg/L)</th>
-                                        <th>Fósforo disponible (mg/kg)</th>
-                                        <th>Observaciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($pendingProcesses as $index => $process)
-                                        <tr>
-                                            <td>{{ $process->process_id }}</td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][fosforo_disponible_mg_l]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][fosforo_disponible_mg_kg]" readonly></td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]"></td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            </div>
-                            <!-- End of Items de Ensayo Tab -->
                         </div>
                         <!-- End of Tab Content -->
-
-                        <button type="submit" class="btn btn-primary">Guardar Análisis de Fósforo (Lote)</button>
+                        <!-- Actions -->
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Guardar Análisis de Fósforo (Lote)</button>
+                            <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </div>
+                    <!-- Close form -->
                 </form>
             @endif
         </div>
@@ -411,4 +418,6 @@
         });
     });
 </script>
-@endpush 
+@endpush
+
+@endsection

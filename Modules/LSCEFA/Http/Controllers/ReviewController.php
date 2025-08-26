@@ -305,6 +305,12 @@ class ReviewController extends Controller
                     ->whereIn('analysis_type', ['phosphorus', 'fosforo'])
                     ->orderByDesc('id')
                     ->first();
+                // Fallback: si no hay analysis_type (datos antiguos), tomar el más reciente por process
+                if (!$control) {
+                    $control = AnalyticalControl::where('process_id', $processId)
+                        ->orderByDesc('id')
+                        ->first();
+                }
                 if ($control) {
                     $data['analyticalControl'] = $control;
                     try {

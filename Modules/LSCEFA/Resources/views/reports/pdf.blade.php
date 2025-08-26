@@ -105,6 +105,43 @@
                 @endforelse
             </tbody>
         </table>
+
+        <!-- Observaciones -->
+        <div class="title-row" style="margin-top:8px; text-align:left; padding-left:6px;">OBSERVACIONES:</div>
+        <table class="no-border" style="border:1px solid #000; border-top:none;">
+            <tr>
+                <td class="no-border" style="height:80px; border-left:1px solid #000; border-right:1px solid #000; border-bottom:1px solid #000;"></td>
+            </tr>
+        </table>
+
+        <!-- Firmas -->
+        <table class="no-border" style="width:100%; margin-top:14px;">
+            <tr>
+                <td class="no-border" style="width:50%; text-align:center; padding:0 12px;">
+                    <div style="width:70%; margin:18px auto 6px auto; border-top:1px solid #444;"></div>
+                    <div style="font-size:8.5pt; line-height:1.2;">
+                        <strong>REVISADO POR:</strong><br>
+                        RESPONSABLE DE GESTIÓN<br>
+                        TÉCNICA SERVICIOS
+                    </div>
+                </td>
+                <td class="no-border" style="width:50%; text-align:center; padding:0 12px;">
+                    <div style="width:70%; margin:18px auto 6px auto; border-top:1px solid #444;"></div>
+                    <div style="font-size:8.5pt; line-height:1.2;">
+                        <strong>AUTORIZADO POR:</strong><br>
+                        RESPONSABLE DE SERVICIOS<br>
+                        TECNOLÓGICOS
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Información de contacto -->
+        <div style="text-align:center; margin-top:8px;">
+            <div class="small">Centro de Formación Agroindustrial, Laboratorio de Ciencias Básicas</div>
+            <div class="small">Km 38 vía al sur de Neiva, Campoalegre–Huila</div>
+            <div class="small">Correo electrónico: st-angostura@sena.edu.co &nbsp; Tel: (+57) 6015461500 ext. 83596</div>
+        </div>
     </div>
 </body>
 </html>
