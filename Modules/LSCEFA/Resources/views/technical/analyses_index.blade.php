@@ -133,8 +133,8 @@
                         $returnedDetails = collect();
                         foreach ($returned as $processId => $details) {
                             foreach ($details as $spd) {
-                                // Soportar entradas sintéticas para Fósforo y Boro (ya normalizadas con tipo)
-                                if (isset($spd->type) && ($spd->type === 'phosphorus' || $spd->type === 'boron')) {
+                                // Soportar entradas sintéticas para Fósforo, Boro, Textura, Intercambio Catiónico y Azufre (ya normalizadas con tipo)
+                                if (isset($spd->type) && ($spd->type === 'phosphorus' || $spd->type === 'boron' || $spd->type === 'texture' || $spd->type === 'cationic' || $spd->type === 'sulfur')) {
                                     $returnedDetails->push((object) [
                                         'process_id' => $spd->process_id,
                                         'service_id' => $spd->service_id,
@@ -165,6 +165,18 @@
                                 ]);
                             }
                         }
+
+                        // Debug: Mostrar qué se está procesando
+                        \Log::info('Vista processing returnedDetails', [
+                            'total_items' => $returnedDetails->count(),
+                            'texture_items' => $returnedDetails->where('type', 'texture')->count(),
+                            'ph_items' => $returnedDetails->where('type', 'ph')->count(),
+                            'conductivity_items' => $returnedDetails->where('type', 'conductivity')->count(),
+                            'phosphorus_items' => $returnedDetails->where('type', 'phosphorus')->count(),
+                            'boron_items' => $returnedDetails->where('type', 'boron')->count(),
+                            'cationic_items' => $returnedDetails->where('type', 'cationic')->count(),
+                            'sulfur_items' => $returnedDetails->where('type', 'sulfur')->count(),
+                        ]);
 
                         // 2) Agrupar por consecutivo_no con llave de respaldo si viene vacío
                         $returnedWithKey = $returnedDetails->map(function($it){
@@ -230,6 +242,12 @@
                                             } elseif ($ref && $ref->type === 'boron') {
                                                 // Para boro, necesitamos el ID del análisis rechazado, no del proceso
                                                 $actionUrl = route('lscefa.technical.analyses.boron.edit_rejected', $ref->id);
+                                            } elseif ($ref && $ref->type === 'cationic') {
+                                                // Para intercambio catiónico, necesitamos el ID del análisis rechazado, no del proceso
+                                                $actionUrl = route('lscefa.technical.analyses.cationic.edit_rejected', $ref->id);
+                                            } elseif ($ref && $ref->type === 'sulfur') {
+                                                // Para azufre, necesitamos el ID del análisis rechazado, no del proceso
+                                                $actionUrl = route('lscefa.technical.analyses.sulfur.edit_rejected', $ref->id);
                                             }
                                         @endphp
                                         <tr>

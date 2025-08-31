@@ -34,6 +34,7 @@
         "mpdf/mpdf": "^8.1",
         "nwidart/laravel-modules": "^8.2",
         "owen-it/laravel-auditing": "^13.0",
+        "spatie/laravel-permission": "^6.21",
         "tecnickcom/tcpdf": "^6.6",
         "unisharp/laravel-filemanager": "^2.4",
         "wildbit/swiftmailer-postmark": "^3.4",

@@ -13,11 +13,14 @@ class MicronutrientsAnalysis extends Model
 
     protected $fillable = [
         'analysis_id',
+        'process_id',
+        'service_id',
         'consecutivo_no',
         'fecha_analisis',
         'user_id',
         'equipo_utilizado',
         'intervalo_metodo',
+        'analista',
         'controles_analiticos',
         'precision_analitica',
         'veracidad_analitica',

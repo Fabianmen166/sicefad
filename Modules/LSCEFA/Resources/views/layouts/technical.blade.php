@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
-
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -34,17 +33,20 @@
                 </li>
             </ul>
         </nav>
+        
         <!-- Sidebar -->
         <aside class="main-sidebar elevation-4">
             <a href="#" class="brand-link">
+                <img src="https://www.sena.edu.co/Style%20Library/alayout/images/logoSena.png" width="40px" alt="SENA Logo">
                 <span class="brand-text font-weight-light">SLCEFA Técnico</span>
-                <img src="https://www.sena.edu.co/Style%20Library/alayout/images/logoSena.png" width="40px">
             </a>
+            
             <div class="sidebar">
                 <nav class="mt-2">
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                         @php $user = auth()->user(); @endphp
 
+                        <!-- Análisis Técnicos - Principal -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.index') }}"
                                 class="nav-link {{ request()->routeIs('lscefa.technical.analyses.index') ? 'active' : '' }}">
@@ -53,10 +55,10 @@
                             </a>
                         </li>
 
-                         
-                        <!-- Gestión de pH -->
+                        <!-- Análisis de pH -->
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.ph_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.ph_analysis.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.ph_analysis.index') }}" 
+                               class="nav-link {{ request()->routeIs('lscefa.ph_analysis.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
                                 <p>Análisis de pH</p>
                             </a>
@@ -64,14 +66,14 @@
                        
                         <!-- Análisis de Conductividad -->
                         <li class="nav-item">
-                            <a href="{{ route('lscefa.conductivity_analysis.index') }}" class="nav-link {{ request()->routeIs('lscefa.conductivity_analysis.*') ? 'active' : '' }}">
+                            <a href="{{ route('lscefa.conductivity_analysis.index') }}" 
+                               class="nav-link {{ request()->routeIs('lscefa.conductivity_analysis.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-tint"></i>
                                 <p>Conductividad</p>
                             </a>
                         </li>
                        
-                       
-                        <!-- Gestión de Análisis de humedad -->
+                        <!-- Análisis de Humedad -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.humidity.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.humidity.*') ? 'active' : '' }}">
@@ -79,6 +81,8 @@
                                 <p>Humedad</p>
                             </a>
                         </li>
+
+                        <!-- Análisis de Carbono Orgánico -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.carbon.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.carbon.*') ? 'active' : '' }}">
@@ -87,6 +91,7 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Acidez -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.acidity.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.acidity.*') ? 'active' : '' }}">
@@ -94,6 +99,8 @@
                                 <p>Acidez</p>
                             </a>
                         </li>
+
+                        <!-- Análisis de Micronutrientes -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}"
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.micronutrients.*') ? 'active' : '' }}">
@@ -102,6 +109,7 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Intercambio Catiónico -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.cationic.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.cationic.*') ? 'active' : '' }}">
@@ -110,6 +118,7 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Fósforo -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.phosphorus.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.phosphorus.*') ? 'active' : '' }}">
@@ -118,6 +127,7 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Azufre -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.sulfur.*') ? 'active' : '' }}">
@@ -126,6 +136,7 @@
                             </a>
                         </li>
 
+                        <!-- Análisis de Bases Cambiables -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.exchangeable_bases.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.exchangeable_bases.*') ? 'active' : '' }}">
@@ -142,18 +153,15 @@
                                 <p>Textura</p>
                             </a>
                         </li>
+
                         <!-- Análisis de Boro -->
                         <li class="nav-item">
                             <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
                                 class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
-                            <a href="{{ route('lscefa.technical.analyses.boron.index') }}" 
-                                class="nav-link {{ Route::is('lscefa.technical.analyses.boron.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-flask"></i>
-                                <p>Boro</p>
                                 <p>Boro</p>
                             </a>
                         </li>
-                    
                     </ul>
                 </nav>
             </div>
@@ -200,7 +208,7 @@
         --sena-green: #39B54A;
         --sena-dark-green: #2E8B3E;
         --sena-light-green: #D1E7DD;
-        --sidebar-width: 240px;
+        --sidebar-width: 250px;
         --header-height: 40px;
         --transition-speed: 0.3s;
     }
@@ -220,6 +228,32 @@
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
         width: var(--sidebar-width);
         transition: all var(--transition-speed) ease-in-out;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .sidebar {
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: var(--sena-green);
+        border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: var(--sena-dark-green);
     }
 
     .content-wrapper {
@@ -227,7 +261,7 @@
         background-color: #f8f9fa;
         min-height: 100vh;
         transition: margin var(--transition-speed) ease-in-out;
-        padding: 0; /* Eliminamos padding extra */
+        padding: 0;
     }
 
     .main-header {
@@ -236,32 +270,30 @@
         height: var(--header-height) !important;
         min-height: var(--header-height) !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        margin-left: var(--sidebar-width); /* Alineamos el header con el contenido */
+        margin-left: var(--sidebar-width);
     }
 
-    /* Content Header más compacto */
     .content-header {
-        padding: 0.5rem 1rem !important; /* Reducimos padding */
+        padding: 0.5rem 1rem !important;
         background-color: white;
         border-bottom: 1px solid #dee2e6;
         margin-bottom: 0;
     }
 
     .content-header h1 {
-        font-size: 1.25rem !important; /* Título más pequeño */
+        font-size: 1.25rem !important;
         margin: 0 !important;
         color: var(--sena-dark-green);
     }
 
-    /* Main content más pegado */
     .content {
-        padding: 0.75rem 1rem !important; /* Reducimos padding significativamente */
+        padding: 0.75rem 1rem !important;
     }
 
     .navbar-nav .nav-link {
         color: var(--sena-dark-green) !important;
         font-weight: 500;
-        padding: 0.3rem 0.8rem; /* Reducimos padding del navbar */
+        padding: 0.3rem 0.8rem;
         transition: all var(--transition-speed) ease;
     }
 
@@ -290,36 +322,42 @@
         display: flex;
         align-items: center;
         gap: 15px;
-        padding: 12px; /* Reducimos padding */
+        padding: 12px;
         text-decoration: none;
         background: white;
         transition: all var(--transition-speed) ease;
         flex-direction: row-reverse;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
     }
 
     .brand-text {
         color: var(--sena-dark-green) !important;
         font-weight: 700 !important;
-        font-size: 1.1rem; /* Ligeramente más pequeño */
+        font-size: 1.1rem;
         letter-spacing: 0.5px;
     }
 
     .nav-sidebar .nav-item {
-        margin: 2px 6px; /* Reducimos margen entre items */
+        margin: 2px 6px;
     }
 
     .nav-sidebar .nav-item>.nav-link {
         color: var(--sena-green);
-        border-radius: 6px; /* Radio más pequeño */
-        padding: 8px 12px; /* Reducimos padding */
-        font-size: 0.9rem; /* Texto ligeramente más pequeño */
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
         transition: all var(--transition-speed) ease;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .nav-sidebar .nav-item>.nav-link:hover {
         background-color: var(--sena-light-green);
         color: var(--sena-dark-green);
-        transform: translateX(3px); /* Menos desplazamiento */
+        transform: translateX(3px);
     }
 
     .nav-sidebar .nav-item>.nav-link.active {
@@ -329,23 +367,29 @@
     }
 
     .nav-sidebar .nav-item>.nav-link i {
-        margin-right: 8px; /* Menos espacio entre icono y texto */
+        margin-right: 8px;
         width: 16px;
         text-align: center;
         font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .nav-sidebar .nav-item>.nav-link p {
+        margin: 0;
+        flex: 1;
+        min-width: 0;
     }
 
     .main-footer {
         background-color: white !important;
         border-top: 1px solid rgba(0, 0, 0, 0.1);
         color: #6c757d !important;
-        padding: 0.75rem; /* Reducimos padding del footer */
+        padding: 0.75rem;
         text-align: center;
         margin-left: var(--sidebar-width);
         font-size: 0.85rem;
     }
 
-    /* Ajustes para las cards del formulario */
     .card {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         border: 1px solid #dee2e6;
@@ -356,14 +400,13 @@
     .card-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
-        padding: 0.75rem 1rem; /* Padding más compacto */
+        padding: 0.75rem 1rem;
     }
 
     .card-body {
-        padding: 1rem; /* Padding más compacto */
+        padding: 1rem;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         :root {
             --sidebar-width: 200px;
@@ -375,7 +418,7 @@
         
         .nav-sidebar .nav-item>.nav-link {
             font-size: 0.85rem;
-            padding: 6px 10px;
+            padding: 8px 10px;
         }
     }
 </style>

@@ -14,6 +14,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 use App\Models\Traits\UserTrait;
 use Illuminate\Support\Facades\Hash;
 
+
 class User extends Authenticatable implements Auditable
 {
 
@@ -45,6 +46,8 @@ class User extends Authenticatable implements Auditable
     protected $dates = [ // Atributos que deben ser tratados como objetos Carbon
         'deleted_at'
     ];
+
+
 
     // RELACIONES
     public function person(){ // Accede a la información de la persona asociada a este usuario

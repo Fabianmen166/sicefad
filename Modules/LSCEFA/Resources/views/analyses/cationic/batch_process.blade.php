@@ -29,7 +29,11 @@
                 </div>
             @endif
 
-            @if ($pendingProcesses->isEmpty())
+            @php
+                $processesToShow = isset($processes) ? $processes : $pendingProcesses;
+            @endphp
+            
+            @if ($processesToShow->isEmpty())
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle"></i> Error: No hay procesos pendientes para procesar.
                 </div>
@@ -39,16 +43,34 @@
             @else
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> 
-                    <strong>Procesos seleccionados:</strong> {{ $pendingProcesses->count() }} proceso(s) pendiente(s) de análisis de intercambio catiónico.
+                    <strong>Procesos seleccionados:</strong> {{ $processesToShow->count() }} proceso(s) pendiente(s) de análisis de intercambio catiónico.
                 </div>
 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Formulario de Análisis de Intercambio Catiónico por Lotes</h3>
+                        <h3 class="card-title">
+                            @if(isset($analysis) && $analysis->review_status === 'rejected')
+                                <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Análisis Rechazado - Edición</span>
+                            @else
+                                Formulario de Análisis de Intercambio Catiónico por Lotes
+                            @endif
+                        </h3>
                     </div>
                     <div class="card-body">
+                        @if(isset($analysis) && $analysis->review_status === 'rejected')
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>Análisis Rechazado:</strong> 
+                                @if($analysis->review_observations)
+                                    <span class="text-danger">{{ $analysis->review_observations }}</span>
+                                @endif
+                            </div>
+                        @endif
                         <form action="{{ route('lscefa.technical.analyses.cationic.batch_store') }}" method="POST">
                             @csrf
+                            @if(isset($analysis) && $analysis->review_status === 'rejected')
+                                <input type="hidden" name="rejected_analysis_id" value="{{ $analysis->id }}">
+                            @endif
                             
 
 
@@ -58,19 +80,19 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="consecutivo_no">Consecutivo No. *</label>
-                                        <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no" value="1" required>
+                                        <input type="text" class="form-control" id="consecutivo_no" name="consecutivo_no" value="{{ old('consecutivo_no', isset($analysis) ? $analysis->consecutivo_no : '1') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="fecha_analisis">Fecha del análisis *</label>
-                                        <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis" value="{{ now()->format('Y-m-d') }}" required>
+                                        <input type="date" class="form-control" id="fecha_analisis" name="fecha_analisis" value="{{ old('fecha_analisis', isset($analysis) ? $analysis->fecha_analisis : now()->format('Y-m-d')) }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="unidades_reporte_equipo">Unidades de reporte equipo *</label>
-                                        <input type="text" class="form-control" id="unidades_reporte_equipo" name="unidades_reporte_equipo" required>
+                                        <input type="text" class="form-control" id="unidades_reporte_equipo" name="unidades_reporte_equipo" value="{{ old('unidades_reporte_equipo', isset($analysis) ? $analysis->unidades_reporte_equipo : '') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -79,19 +101,19 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="nombre_metodo">Nombre del Método *</label>
-                                        <input type="text" class="form-control" id="nombre_metodo" name="nombre_metodo" required>
+                                        <input type="text" class="form-control" id="nombre_metodo" name="nombre_metodo" value="{{ old('nombre_metodo', isset($analysis) ? $analysis->nombre_metodo : '') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="equipo_utilizado">Equipo utilizado *</label>
-                                        <input type="text" class="form-control" id="equipo_utilizado" name="equipo_utilizado" required>
+                                        <input type="text" class="form-control" id="equipo_utilizado" name="equipo_utilizado" value="{{ old('equipo_utilizado', isset($analysis) ? $analysis->equipo_utilizado : '') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="intervalo_metodo">Intervalo del método *</label>
-                                        <input type="text" class="form-control" id="intervalo_metodo" name="intervalo_metodo" required>
+                                        <input type="text" class="form-control" id="intervalo_metodo" name="intervalo_metodo" value="{{ old('intervalo_metodo', isset($analysis) ? $analysis->intervalo_metodo : '') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -100,13 +122,13 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="nombre_analista">Nombre Analista *</label>
-                                        <input type="text" class="form-control" id="nombre_analista" name="nombre_analista" value="{{ Auth::user()->name }}" required>
+                                        <input type="text" class="form-control" id="nombre_analista" name="nombre_analista" value="{{ old('nombre_analista', isset($analysis) ? $analysis->nombre_analista : Auth::user()->name) }}" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="resolucion_instrumental">Resolución instrumental</label>
-                                        <input type="text" class="form-control" id="resolucion_instrumental" name="resolucion_instrumental">
+                                        <input type="text" class="form-control" id="resolucion_instrumental" name="resolucion_instrumental" value="{{ old('resolucion_instrumental', isset($analysis) ? $analysis->resolucion_instrumental : '') }}">
                                     </div>
                                 </div>
                             </div>
@@ -118,7 +140,7 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="observaciones">Observaciones</label>
-                                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                                        <textarea class="form-control" id="observaciones" name="observaciones" rows="3">{{ old('observaciones', isset($analysis) ? $analysis->observaciones : '') }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -149,7 +171,7 @@
                                             <h4><i class="fas fa-list"></i> Procesos a Procesar</h4>
                                         </div>
                                         <div class="card-body">
-                                            @foreach($pendingProcesses as $process)
+                                            @foreach($processesToShow as $process)
                                             <div class="process-item mb-4">
                                                 <div class="card">
                                                     <div class="card-header">
@@ -197,14 +219,14 @@
                                                                     <tbody>
                                                                         <tr class="fila-resultado">
                                                                             <td class="numero-fila text-center">1</td>
-                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]"></td>
-                                                                            <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]"></td>
-                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_muestra]"></td>
-                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_blanco]"></td>
-                                                                            <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[{{ $process->process_id }}][0][normalidad_naoh]"></td>
-                                                                            <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[{{ $process->process_id }}][0][humedad_porcentaje]"></td>
-                                                                            <td><input type="text" class="form-control cic-resultado" name="items_ensayo[{{ $process->process_id }}][0][cic_resultado]" readonly></td>
-                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][observaciones]"></td>
+                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][codigo_interno]" value="{{ old('items_ensayo.'.$process->process_id.'.0.codigo_interno', isset($analysis) ? $analysis->codigo_interno : '') }}"></td>
+                                                                            <td><input type="number" step="0.0001" class="form-control peso-muestra" name="items_ensayo[{{ $process->process_id }}][0][peso_muestra]" value="{{ old('items_ensayo.'.$process->process_id.'.0.peso_muestra', isset($analysis) ? $analysis->peso_muestra : '') }}"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-muestra" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_muestra]" value="{{ old('items_ensayo.'.$process->process_id.'.0.vol_naoh_muestra', isset($analysis) ? $analysis->vol_naoh_muestra : '') }}"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control vol-naoh-blanco" name="items_ensayo[{{ $process->process_id }}][0][vol_naoh_blanco]" value="{{ old('items_ensayo.'.$process->process_id.'.0.vol_naoh_blanco', isset($analysis) ? $analysis->vol_naoh_blanco : '') }}"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control normalidad-naoh" name="items_ensayo[{{ $process->process_id }}][0][normalidad_naoh]" value="{{ old('items_ensayo.'.$process->process_id.'.0.normalidad_naoh', isset($analysis) ? $analysis->normalidad_naoh : '') }}"></td>
+                                                                            <td><input type="number" step="0.01" class="form-control humedad-porcentaje" name="items_ensayo[{{ $process->process_id }}][0][humedad_porcentaje]" value="{{ old('items_ensayo.'.$process->process_id.'.0.humedad_porcentaje', isset($analysis) ? $analysis->humedad_porcentaje : '') }}"></td>
+                                                                            <td><input type="text" class="form-control cic-resultado" name="items_ensayo[{{ $process->process_id }}][0][cic_resultado]" value="{{ old('items_ensayo.'.$process->process_id.'.0.cic_resultado', isset($analysis) ? $analysis->cic_resultado : '') }}" readonly></td>
+                                                                            <td><input type="text" class="form-control" name="items_ensayo[{{ $process->process_id }}][0][observaciones]" value="{{ old('items_ensayo.'.$process->process_id.'.0.observaciones', isset($analysis) ? $analysis->observaciones : '') }}"></td>
                                                                             <td class="text-center">
                                                                                 <button type="button" class="btn btn-success btn-sm" onclick="addItemToProcess('{{ $process->process_id }}')">
                                                                                     <i class="fas fa-plus"></i>
@@ -247,19 +269,19 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="blanco_identificacion" value="Blanco del método">
+                                                <input type="text" class="form-control" name="blanco_identificacion" value="{{ old('blanco_identificacion', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'blanco')->first()['datos_completos']['identificacion'] ?? 'Blanco del método' : 'Blanco del método') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="blanco_lcm" value="2.61">
+                                                <input type="number" step="0.01" class="form-control" name="blanco_lcm" value="{{ old('blanco_lcm', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'blanco')->first()['datos_completos']['lcm'] ?? '2.61' : '2.61') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="blanco_valor_leido">
+                                                <input type="number" step="0.01" class="form-control" name="blanco_valor_leido" value="{{ old('blanco_valor_leido', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'blanco')->first()['datos_completos']['valor_leido'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="blanco_aceptable" readonly>
+                                                <input type="text" class="form-control" name="blanco_aceptable" value="{{ old('blanco_aceptable', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'blanco')->first()['datos_completos']['aceptable'] ?? '' : '') }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="blanco_observaciones">
+                                                <input type="text" class="form-control" name="blanco_observaciones" value="{{ old('blanco_observaciones', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'blanco')->first()['datos_completos']['observaciones'] ?? '' : '') }}">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -283,23 +305,23 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="error_identificacion" value="Muestra Referencia Certificada">
+                                                <input type="text" class="form-control" name="error_identificacion" value="{{ old('error_identificacion', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['identificacion'] ?? 'Muestra Referencia Certificada' : 'Muestra Referencia Certificada') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="error_valor_teorico">
+                                                <input type="number" step="0.01" class="form-control" name="error_valor_teorico" value="{{ old('error_valor_teorico', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['valor_teorico'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="error_valor_leido">
+                                                <input type="number" step="0.01" class="form-control" name="error_valor_leido" value="{{ old('error_valor_leido', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['valor_leido'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="error_porcentaje" readonly>
+                                                <input type="text" class="form-control" name="error_porcentaje" value="{{ old('error_porcentaje', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['porcentaje'] ?? '' : '') }}" readonly>
                                                 <small class="form-text text-muted">Criterio: Error Relativo ≤ 20%</small>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="error_aceptable" readonly>
+                                                <input type="text" class="form-control" name="error_aceptable" value="{{ old('error_aceptable', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['aceptable'] ?? '' : '') }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="error_observaciones">
+                                                <input type="text" class="form-control" name="error_observaciones" value="{{ old('error_observaciones', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'error')->first()['datos_completos']['observaciones'] ?? '' : '') }}">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -323,23 +345,23 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="recuperacion_identificacion" value="Muestra Fortificada">
+                                                <input type="text" class="form-control" name="recuperacion_identificacion" value="{{ old('recuperacion_identificacion', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['identificacion'] ?? 'Muestra Fortificada' : 'Muestra Fortificada') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="recuperacion_valor_teorico">
+                                                <input type="number" step="0.01" class="form-control" name="recuperacion_valor_teorico" value="{{ old('recuperacion_valor_teorico', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['valor_teorico'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="recuperacion_valor_leido">
+                                                <input type="number" step="0.01" class="form-control" name="recuperacion_valor_leido" value="{{ old('recuperacion_valor_leido', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['valor_leido'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="recuperacion_porcentaje" readonly>
+                                                <input type="text" class="form-control" name="recuperacion_porcentaje" value="{{ old('recuperacion_porcentaje', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['porcentaje'] ?? '' : '') }}" readonly>
                                                 <small class="form-text text-muted">Criterio: 70-130%</small>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="recuperacion_aceptable" readonly>
+                                                <input type="text" class="form-control" name="recuperacion_aceptable" value="{{ old('recuperacion_aceptable', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['aceptable'] ?? '' : '') }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="recuperacion_observaciones">
+                                                <input type="text" class="form-control" name="recuperacion_observaciones" value="{{ old('recuperacion_observaciones', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'recuperacion')->first()['datos_completos']['observaciones'] ?? '' : '') }}">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -363,23 +385,23 @@
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="dpr_identificacion" value="Muestra Duplicada">
+                                                <input type="text" class="form-control" name="dpr_identificacion" value="{{ old('dpr_identificacion', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['identificacion'] ?? 'Muestra Duplicada' : 'Muestra Duplicada') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="dpr_replica1">
+                                                <input type="number" step="0.01" class="form-control" name="dpr_replica1" value="{{ old('dpr_replica1', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['replica1'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="dpr_replica2">
+                                                <input type="number" step="0.01" class="form-control" name="dpr_replica2" value="{{ old('dpr_replica2', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['replica2'] ?? '' : '') }}">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="dpr_porcentaje" readonly>
+                                                <input type="text" class="form-control" name="dpr_porcentaje" value="{{ old('dpr_porcentaje', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['porcentaje'] ?? '' : '') }}" readonly>
                                                 <small class="form-text text-muted">Criterio: RPD ≤ 25%</small>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="dpr_aceptable" readonly>
+                                                <input type="text" class="form-control" name="dpr_aceptable" value="{{ old('dpr_aceptable', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['aceptable'] ?? '' : '') }}" readonly>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control" name="dpr_observaciones">
+                                                <input type="text" class="form-control" name="dpr_observaciones" value="{{ old('dpr_observaciones', isset($controlesAnaliticos) ? collect($controlesAnaliticos)->where('tipo', 'duplicados')->first()['datos_completos']['observaciones'] ?? '' : '') }}">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -455,7 +477,7 @@
 let itemIndices = {};
 
 // Inicializar índices de items para cada proceso
-@foreach($pendingProcesses as $process)
+@foreach($processesToShow as $process)
     itemIndices['{{ $process->process_id }}'] = 1;
 @endforeach
 

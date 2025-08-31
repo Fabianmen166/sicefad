@@ -23,6 +23,16 @@
                 $hasAnalyticalControls = isset($analysis->standard_a_identification) || isset($analysis->calibration_curve_value);
                 $hasTestItems = isset($analysis->test_items) && is_array($analysis->test_items) && count($analysis->test_items) > 0;
             @endphp
+            
+            <!-- Mensaje de debug para verificar que la vista se cargue -->
+            @if(config('app.debug'))
+                <div class="alert alert-info">
+                    <strong>Debug:</strong> Vista de Boro cargada correctamente. 
+                    Tipo: {{ $type ?? 'N/A' }}, 
+                    ID: {{ $analysis->id ?? 'N/A' }},
+                    Clase: {{ $analysisType ?? 'N/A' }}
+                </div>
+            @endif
 
             <!-- Información del Proceso -->
             <div class="card">
@@ -358,6 +368,10 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        console.log('Vista de revisión de Boro cargada correctamente');
+        console.log('Tipo de análisis:', '{{ $type ?? "N/A" }}');
+        console.log('ID del análisis:', '{{ $analysis->id ?? "N/A" }}');
+        
         // Activar pestañas
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             // Puedes agregar lógica adicional aquí si es necesario
@@ -373,6 +387,20 @@
                 if ($fb.length) { $fb.text('El motivo del rechazo es obligatorio.'); }
             }
         });
+        
+        // Asegurar que la página se cargue completamente
+        $(window).on('load', function() {
+            console.log('Página completamente cargada');
+        });
+        
+        // Verificar que todos los elementos estén presentes
+        setTimeout(function() {
+            console.log('Verificación de elementos de la vista:');
+            console.log('- Título de la página:', $('h1').text());
+            console.log('- Información del proceso:', $('.card:first .card-body').length > 0);
+            console.log('- Datos del análisis:', $('.card:eq(1) .card-body').length > 0);
+            console.log('- URL actual:', window.location.href);
+        }, 1000);
     });
 </script>
 @endpush

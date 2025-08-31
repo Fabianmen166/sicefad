@@ -63,7 +63,7 @@
                             <tbody>
                                 @forelse($processes as $process)
                                     @php
-                                        $cationicService = $process->serviceProcessDetails->where('service_id', 2)->first();
+                                        $cationicService = $process->serviceProcessDetails->where('service_id', 11)->first();
                                     @endphp
                                     @if($cationicService && $cationicService->status === 'pending')
                                         <tr data-process-id="{{ $process->process_id }}" data-service-type="cation_exchange">
@@ -86,7 +86,7 @@
                         </table>
                     </div>
                 </div>
-            </div>
+
         </div>
     </section>
 </div>

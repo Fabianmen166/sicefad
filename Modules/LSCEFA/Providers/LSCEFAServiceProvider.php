@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
 use Modules\LSCEFA\Http\Middleware\CheckLSCEFARole;
 use Modules\LSCEFA\Http\Middleware\RedirectIfNotLSCEFA;
+use Modules\LSCEFA\Http\Middleware\CheckLSCEFAPermission;
 
 class LSCEFAServiceProvider extends ServiceProvider
 {
@@ -36,6 +37,7 @@ class LSCEFAServiceProvider extends ServiceProvider
         // Registrar los middlewares
         $this->app['router']->aliasMiddleware('lscefa.role', CheckLSCEFARole::class);
         $this->app['router']->aliasMiddleware('lscefa.redirect', RedirectIfNotLSCEFA::class);
+        $this->app['router']->aliasMiddleware('lscefa.permission', CheckLSCEFAPermission::class);
         
         // Registrar comandos del módulo
         if ($this->app->runningInConsole()) {

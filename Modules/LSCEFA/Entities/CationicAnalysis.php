@@ -13,6 +13,7 @@ class CationicAnalysis extends Model
 
     protected $fillable = [
         'process_id',
+        'service_id',
         'consecutivo_no',
         'fecha_analisis',
         'hora_inicio',
@@ -25,6 +26,7 @@ class CationicAnalysis extends Model
         'resolucion_instrumental',
         'fecha_fin_analisis',
         'nombre_analista',
+        'codigo_interno',
         'peso_muestra',
         'vol_naoh_muestra',
         'vol_naoh_blanco',
@@ -79,6 +81,11 @@ class CationicAnalysis extends Model
     public function reviewer()
     {
         return $this->belongsTo(\App\Models\User::class, 'reviewed_by');
+    }
+
+    public function analyticalControl()
+    {
+        return $this->hasOne(\Modules\LSCEFA\Entities\AnalyticalControl::class, 'process_id', 'process_id');
     }
 
     protected static function newFactory()

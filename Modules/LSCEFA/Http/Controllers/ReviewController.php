@@ -13,10 +13,11 @@ use Modules\LSCEFA\Models\HardnessAnalysis;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
 use Modules\LSCEFA\Entities\AnalyticalControl;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
-use Modules\LSCEFA\Entities\BoronAnalysis;
+
 use Modules\LSCEFA\Entities\BoronAnalysisDetail;
-use Modules\LSCEFA\Entities\CarbonoAnalysis;
-use Modules\LSCEFA\Entities\AcidezAnalysis;
+use Modules\LSCEFA\Entities\MicronutrientsAnalysis;
+use Modules\LSCEFA\Entities\CationicAnalysis;
+use Modules\LSCEFA\Entities\SulfurAnalysis;
 
 class ReviewController extends Controller
 {
@@ -24,9 +25,6 @@ class ReviewController extends Controller
     public function index(Request $request)
     {
         try {
-            // Log para debug
-            \Log::info('ReviewController@index iniciado');
-            
             // Obtener análisis pendientes de revisión de todos los tipos
             $phAnalyses = PhAnalysis::with([
                     'analysis.process.quote.customer',
@@ -53,28 +51,19 @@ class ReviewController extends Controller
             $humidityAnalyses = HumidityAnalysis::with([
                 'process.quote.customer',
                 'user'
-            ])
-            ->where(function($q) {
-                $q->whereNull('review_status')
-                  ->orWhereNotIn('review_status', ['approved','rejected']);
+            ]);
+
+            // Para humedad, verificar que el detalle de proceso esté completado
+            $humidityAnalyses = $humidityAnalyses->whereExists(function($sub){
+                $sub->selectRaw('1')
+                    ->from('service_process_details as spd')
+                    ->whereColumn('spd.process_id', 'humidity_analyses.process_id')
+                    ->where('spd.status', 'completed');
             });
 
-            // Log para debug
-            \Log::info('Consulta de humedad configurada');
-            \Log::info('Total de análisis de humedad: ' . HumidityAnalysis::count());
-            \Log::info('Análisis de humedad pendientes: ' . $humidityAnalyses->count());
-            
-
-            // Solo filtrar por relación 'analysis' si existe la columna analysis_id
-            if (Schema::hasColumn('humidity_analyses', 'analysis_id')) {
-                $humidityAnalyses = $humidityAnalyses->whereHas('analysis', function($q) {
-                    $q->where('status', 'completed');
-                });
-            }
-
             $humidityAnalyses = $humidityAnalyses
-                ->where('review_status', '!=', 'approved')
-                ->where('review_status', '!=', 'rejected');
+            ->where('review_status', '!=', 'approved')
+            ->where('review_status', '!=', 'rejected');
                 
             // Fósforo: registros por ítem (no items_ensayo), relación directa a process/service
             $phosphorusAnalyses = PhosphorusAnalysis::with([
@@ -99,21 +88,22 @@ class ReviewController extends Controller
             }
 
             // Obtener análisis de textura SOLO si el detalle de proceso está completado
-            $textureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::all()->filter(function($item) {
-                if (!$item->process_id || !$item->service_id) return false;
+            $textureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['analyticalControls'])->where(function($q) {
+                $q->whereNotNull('process_id')
+                  ->whereNotNull('service_id');
+            })->get()->filter(function($item) {
                 $spd = \Modules\LSCEFA\Models\ServiceProcessDetail::where('process_id', $item->process_id)
                     ->where('service_id', $item->service_id)
                     ->first();
                 return $spd && $spd->status === 'completed';
             });
 
-            // Transformar resultados de textura
-            $textureResults = (is_object($textureAnalyses) && method_exists($textureAnalyses, 'map')
-                ? $textureAnalyses
-                : collect($textureAnalyses))
-                ->map(function($item) {
-                return $this->transformTextureAnalysis($item, 'texture');
-            });
+            // Filtrar por review_status si existe la columna
+            if (Schema::hasColumn('batch_texture_analyses', 'review_status')) {
+                $textureAnalyses = $textureAnalyses->filter(function($item) {
+                    return !in_array($item->review_status, ['approved', 'rejected']);
+                });
+            }
 
             // Obtener análisis de boro SOLO si el detalle de proceso está completado
             $boronAnalyses = BoronAnalysisDetail::with(['process.quote.customer', 'service'])
@@ -129,100 +119,82 @@ class ReviewController extends Controller
                 });
             }
 
-            // Obtener análisis de carbono SOLO si el detalle de proceso está completado
-            $carbonAnalyses = collect([]); // Inicializar como colección vacía
-            try {
-                \Log::info('Iniciando consulta de carbono...');
-                
-                // Primero, obtener todos los análisis de carbono para debug
-                $allCarbon = CarbonoAnalysis::all();
-                \Log::info('Total de análisis de carbono en BD: ' . $allCarbon->count());
-                
-                if ($allCarbon->count() > 0) {
-                    $sample = $allCarbon->first();
-                    \Log::info('Muestra de análisis de carbono:', [
-                        'id' => $sample->id,
-                        'process_id' => $sample->process_id,
-                        'status' => $sample->status ?? 'NULL',
-                        'review_status' => $sample->review_status ?? 'NULL',
-                        'consecutivo_no' => $sample->consecutivo_no
-                    ]);
-                }
-                
-                $carbonAnalyses = CarbonoAnalysis::with(['process.quote.customer', 'user'])
-                    ->whereHas('process.serviceProcessDetails', function($query) {
-                        $query->where('status', 'completed');
-                    })
-                    ->where(function($q) {
-                        $q->whereNull('review_status')
-                          ->orWhereNotIn('review_status', ['approved','rejected']);
-                    });
+            // Obtener análisis de micronutrientes SOLO si el detalle de proceso está completado
+            $micronutrientsAnalyses = MicronutrientsAnalysis::with(['analysis.process.quote.customer', 'analysis.service', 'user'])
+                ->whereHas('analysis', function($query) {
+                    $query->where('status', 'completed');
+                });
 
-                // Log para debug de carbono
-                \Log::info('Consulta de carbono configurada');
-                \Log::info('Total de análisis de carbono: ' . CarbonoAnalysis::count());
-                \Log::info('Análisis de carbono pendientes (query): ' . $carbonAnalyses->count());
-
-            } catch (\Exception $e) {
-                \Log::error('Error en consulta de carbono: ' . $e->getMessage());
-                $carbonAnalyses = collect([]);
+            // Evitar error si la columna review_status no existe aún
+            if (Schema::hasColumn('micronutrients_analyses', 'review_status')) {
+                $micronutrientsAnalyses = $micronutrientsAnalyses->where(function($q) {
+                    $q->whereNull('review_status')
+                      ->orWhereNotIn('review_status', ['approved','rejected']);
+                });
             }
 
-            // Obtener análisis de acidez SOLO si el detalle de proceso está completado
-            $acidityAnalyses = collect([]); // Inicializar como colección vacía
-            try {
-                \Log::info('Iniciando consulta de acidez...');
-                
-                // Primero, obtener todos los análisis de acidez para debug
-                $allAcidity = AcidezAnalysis::all();
-                \Log::info('Total de análisis de acidez en BD: ' . $allAcidity->count());
-                
-                if ($allAcidity->count() > 0) {
-                    $sample = $allAcidity->first();
-                    \Log::info('Muestra de análisis de acidez:', [
-                        'id' => $sample->id,
-                        'process_id' => $sample->process_id,
-                        'status' => $sample->status ?? 'NULL',
-                        'review_status' => $sample->review_status ?? 'NULL',
-                        'consecutivo_no' => $sample->consecutivo_no
-                    ]);
-                }
-                
-                $acidityAnalyses = AcidezAnalysis::with(['process.quote.customer', 'user'])
-                    ->whereHas('process.serviceProcessDetails', function($query) {
-                        $query->where('status', 'completed');
-                    })
-                    ->where(function($q) {
-                        $q->whereNull('review_status')
-                          ->orWhereNotIn('review_status', ['approved','rejected']);
-                    });
+            // Obtener análisis de intercambio catiónico si el detalle de proceso está completado o pendiente
+            $cationicAnalyses = CationicAnalysis::with(['process.quote.customer', 'analyticalControl'])
+                ->whereHas('process.serviceProcessDetails', function($query) {
+                    $query->where('service_id', 11) // ID del servicio de intercambio catiónico
+                          ->whereIn('status', ['completed', 'pending']);
+                });
 
-                // Log para debug de acidez
-                \Log::info('Consulta de acidez configurada');
-                \Log::info('Total de análisis de acidez: ' . AcidezAnalysis::count());
-                \Log::info('Análisis de acidez pendientes (query): ' . $acidityAnalyses->count());
-                
-                // Log adicional para debug de la consulta
-                if ($acidityAnalyses->count() == 0) {
-                    \Log::info('No se encontraron análisis de acidez. Verificando relaciones...');
-                    
-                    // Verificar si hay problemas con las relaciones
-                    $testAcidity = AcidezAnalysis::first();
-                    if ($testAcidity) {
-                        \Log::info('Verificando relaciones del primer análisis de acidez:');
-                        \Log::info('- Process: ' . ($testAcidity->process ? 'Existe' : 'No existe'));
-                        if ($testAcidity->process) {
-                            \Log::info('- ServiceProcessDetails: ' . $testAcidity->process->serviceProcessDetails->count());
-                            \Log::info('- Status de ServiceProcessDetails: ' . $testAcidity->process->serviceProcessDetails->pluck('status')->implode(', '));
-                        }
-                    }
-                }
-
-            } catch (\Exception $e) {
-                \Log::error('Error en consulta de acidez: ' . $e->getMessage());
-                \Log::error('Stack trace: ' . $e->getTraceAsString());
-                $acidityAnalyses = collect([]);
+            // Evitar error si la columna review_status no existe aún
+            if (Schema::hasColumn('cationic_analyses', 'review_status')) {
+                $cationicAnalyses = $cationicAnalyses->where(function($q) {
+                    $q->whereNull('review_status')
+                      ->orWhereNotIn('review_status', ['approved','rejected']);
+                });
             }
+
+            // Obtener análisis de azufre si el detalle de proceso está completado
+            $sulfurAnalyses = SulfurAnalysis::with(['process.quote.customer', 'analyticalControl'])
+                ->whereHas('process.serviceProcessDetails', function($query) {
+                    $query->where('service_id', 6) // ID del servicio de azufre
+                          ->where('status', 'completed');
+                });
+
+            // Evitar error si la columna review_status no existe aún
+            if (Schema::hasColumn('sulfur_analyses', 'review_status')) {
+                $sulfurAnalyses = $sulfurAnalyses->where(function($q) {
+                    $q->whereNull('review_status')
+                      ->orWhereNotIn('review_status', ['approved','rejected']);
+                });
+            }
+
+            // Aplicar filtros específicos para análisis de textura
+            if ($request->filled('texture_filter')) {
+                $textureFilter = $request->get('texture_filter');
+                
+                $textureAnalyses = $this->applyTextureFilters($textureAnalyses, $textureFilter);
+            }
+
+            // Aplicar filtros específicos para análisis de boro
+            if ($request->filled('boron_filter')) {
+                $boronFilter = $request->get('boron_filter');
+                
+                $boronAnalyses = $this->applyBoronFilters($boronAnalyses, $boronFilter);
+            }
+
+            // Transformar resultados de textura
+            $textureResults = $textureAnalyses->map(function($item) {
+                return $this->transformTextureAnalysis($item, 'texture');
+            });
+
+            // Obtener estadísticas de textura si se aplicaron filtros
+            $textureStats = null;
+            if ($request->filled('texture_filter')) {
+                $textureStats = $this->getTextureAnalysisStats($textureAnalyses);
+            }
+
+            // Obtener estadísticas de boro si se aplicaron filtros
+            $boronStats = null;
+            if ($request->filled('boron_filter')) {
+                $boronStats = $this->getBoronAnalysisStats($boronAnalyses);
+            }
+
+
 
             // Aplicar filtro de búsqueda si existe
             if ($request->filled('q')) {
@@ -236,14 +208,12 @@ class ReviewController extends Controller
 
                 $phAnalyses->where($searchCallback);
                 $conductivityAnalyses->where($searchCallback);
-                // Humedad: aplicar búsqueda segura según esquema
+                // Humedad: aplicar búsqueda segura
                 $humidityAnalyses->where(function($q) use ($search) {
-                    $q->where('consecutivo_no', 'like', "%{$search}%");
-                    if (Schema::hasColumn('humidity_analyses', 'analysis_id')) {
-                        $q->orWhereHas('analysis.process.quote.customer', function($qq) use ($search) {
-                            $qq->where('applicant', 'like', "%{$search}%");
-                        });
-                    }
+                    $q->where('consecutivo_no', 'like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search) {
+                          $qq->where('applicant', 'like', "%{$search}%");
+                      });
                 });
                 // Búsqueda para fósforo usando su relación process->quote->customer
                 $phosphorusAnalyses->where(function($q) use ($search){
@@ -266,11 +236,11 @@ class ReviewController extends Controller
                             ->where('spd.consecutivo_no', 'like', "%{$search}%");
                     })
                     // Buscar por cliente (applicant/nombre)
-                    ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
                         $qq->where('applicant', 'like', "%{$search}%")
                            ->orWhere('nombre', 'like', "%{$search}%")
                            ->orWhere('name', 'like', "%{$search}%");
-                    });
+                      });
                 });
                 // Búsqueda para boro
                 $boronAnalyses->where(function($q) use ($search){
@@ -279,26 +249,69 @@ class ReviewController extends Controller
                           $qq->where('applicant', 'like', "%{$search}%");
                       });
                 });
-                // Búsqueda para carbono
-                $carbonAnalyses->where(function($q) use ($search){
+                // Búsqueda para micronutrientes
+                $micronutrientsAnalyses->where(function($q) use ($search){
                     $q->where('consecutivo_no', 'like', "%{$search}%")
-                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                      ->orWhereHas('analysis.process.quote.customer', function($qq) use ($search){
                           $qq->where('applicant', 'like', "%{$search}%");
                       });
                 });
-                // Búsqueda para acidez
-                $acidityAnalyses->where(function($q) use ($search){
+                // Búsqueda para intercambio catiónico
+                $cationicAnalyses->where(function($q) use ($search){
                     $q->where('consecutivo_no', 'like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                          $qq->where('applicant', 'like', "%{$search}%")
+                             ->orWhere('nombre', 'like', "%{$search}%")
+                             ->orWhere('name', 'like', "%{$search}%");
+                      });
+                });
+                // Búsqueda para azufre
+                $sulfurAnalyses->where(function($q) use ($search){
+                    $q->where('consecutive_no', 'like', "%{$search}%")
+                      ->orWhere('internal_code', 'like', "%{$search}%")
+                      ->orWhere('process_id', 'like', "%{$search}%")
+                      ->orWhere('analyst_name', 'like', "%{$search}%")
                       ->orWhereHas('process.quote.customer', function($qq) use ($search){
                           $qq->where('applicant', 'like', "%{$search}%");
                       });
                 });
             }
 
-            // Si se especifica un tipo, deshabilitar los demás para facilitar el filtrado/diagnóstico
+            // Aplicar filtro por muestra (codigo_probeta)
+            if ($request->filled('muestra') && trim($request->get('muestra')) !== '') {
+                $muestra = trim($request->get('muestra'));
+                $muestraCallback = function($query) use ($muestra) {
+                    $query->where('codigo_probeta', 'like', "%{$muestra}%");
+                };
+
+                $phAnalyses->where($muestraCallback);
+                $conductivityAnalyses->where($muestraCallback);
+                // Para humedad, buscar en codigo_interno si existe
+                if (Schema::hasColumn('humidity_analyses', 'codigo_interno')) {
+                    $humidityAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                }
+                // Para fósforo, buscar en codigo_interno
+                $phosphorusAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                // Para boro, buscar en codigo_interno
+                $boronAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                // Para micronutrientes, buscar en items_ensayo
+                $micronutrientsAnalyses->whereRaw('JSON_SEARCH(items_ensayo, "one", ?, null, "$[*].codigo_interno")', ["%{$muestra}%"]);
+                // Para intercambio catiónico, buscar en consecutivo_no
+                $cationicAnalyses->where('consecutivo_no', 'like', "%{$muestra}%");
+                // Para azufre, buscar en internal_code y otros campos relevantes
+                $sulfurAnalyses->where(function($q) use ($muestra) {
+                    $q->where('internal_code', 'like', "%{$muestra}%")
+                      ->orWhere('consecutive_no', 'like', "%{$muestra}%")
+                      ->orWhere('process_id', 'like', "%{$muestra}%");
+                });
+            }
+
+
+
+            // Si se especifica un tipo específico, deshabilitar los demás para facilitar el filtrado/diagnóstico
             $typeFilter = $request->get('type');
-            if ($typeFilter) {
-                $validTypes = ['ph','conductivity','humidity','phosphorus','texture','boron','carbon','acidity'];
+            if ($typeFilter && $typeFilter !== 'all' && trim($typeFilter) !== '') {
+                $validTypes = ['ph','conductivity','humidity','phosphorus','texture','boron','micronutrients','cationic','sulfur'];
                 if (in_array($typeFilter, $validTypes, true)) {
                     if ($typeFilter !== 'ph') { $phAnalyses->whereRaw('1=0'); }
                     if ($typeFilter !== 'conductivity') { $conductivityAnalyses->whereRaw('1=0'); }
@@ -306,8 +319,9 @@ class ReviewController extends Controller
                     if ($typeFilter !== 'phosphorus') { $phosphorusAnalyses->whereRaw('1=0'); }
                     if ($typeFilter !== 'texture') { $textureAnalyses = collect(); }
                     if ($typeFilter !== 'boron') { $boronAnalyses->whereRaw('1=0'); }
-                    if ($typeFilter !== 'carbon') { $carbonAnalyses = collect([]); }
-                    if ($typeFilter !== 'acidity') { $acidityAnalyses = collect([]); }
+                    if ($typeFilter !== 'micronutrients') { $micronutrientsAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'cationic') { $cationicAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'sulfur') { $sulfurAnalyses->whereRaw('1=0'); }
                 }
             }
 
@@ -324,20 +338,37 @@ class ReviewController extends Controller
                 return $this->transformAnalysis($item, 'humidity');
             });
 
-            // Log para debug de resultados
-            \Log::info('Resultados de humedad procesados: ' . $humidityResults->count());
-            if ($humidityResults->count() > 0) {
-                \Log::info('Primer resultado de humedad: ' . json_encode($humidityResults->first()));
-            }
-
             $phosphorusResults = $phosphorusAnalyses->get()->map(function($item) {
                 return $this->transformAnalysis($item, 'phosphorus');
             });
 
             // Transformar resultados de boro (después de aplicar filtros)
+            \Log::debug('ReviewController: Iniciando transformación de boro...');
             $boronResults = $boronAnalyses->get()->map(function($item) {
                 return $this->transformBoronAnalysis($item, 'boron');
             });
+            \Log::debug('ReviewController: Transformación de boro completada. Total: ' . $boronResults->count());
+
+            // Transformar resultados de micronutrientes
+            \Log::debug('ReviewController: Iniciando transformación de micronutrientes...');
+            $micronutrientsResults = $micronutrientsAnalyses->get()->map(function($item) {
+                return $this->transformMicronutrientsAnalysis($item, 'micronutrients');
+            });
+            \Log::debug('ReviewController: Transformación de micronutrientes completada. Total: ' . $micronutrientsResults->count());
+
+            // Transformar resultados de intercambio catiónico
+            \Log::debug('ReviewController: Iniciando transformación de intercambio catiónico...');
+            $cationicResults = $cationicAnalyses->get()->map(function($item) {
+                return $this->transformCationicAnalysis($item, 'cationic');
+            });
+            \Log::debug('ReviewController: Transformación de intercambio catiónico completada. Total: ' . $cationicResults->count());
+
+            // Transformar resultados de azufre
+            \Log::debug('ReviewController: Iniciando transformación de azufre...');
+            $sulfurResults = $sulfurAnalyses->get()->map(function($item) {
+                return $this->transformSulfurAnalysis($item, 'sulfur');
+            });
+            \Log::debug('ReviewController: Transformación de azufre completada. Total: ' . $sulfurResults->count());
 
             // Log de depuración de conteos
             \Log::debug('ReviewController@index counts', [
@@ -347,74 +378,26 @@ class ReviewController extends Controller
                 'humidity' => $humidityResults->count(),
                 'phosphorus' => $phosphorusResults->count(),
                 'texture' => $textureResults->count(),
-                'boron' => null // se calcula luego
+                'boron' => $boronResults->count(),
+                'micronutrients' => $micronutrientsResults->count(),
+                'cationic' => $cationicResults->count(),
+                'sulfur' => $sulfurResults->count()
             ]);
-            // Transformar resultados de carbono
-            $carbonResults = $carbonAnalyses->get()->map(function($item) {
-                return $this->transformCarbonAnalysis($item, 'carbon');
-            });
 
-            // Transformar resultados de acidez
-            $acidityResults = $acidityAnalyses->get()->map(function($item) {
-                return $this->transformAcidityAnalysis($item, 'acidity');
-            });
-
-            // Log para debug de resultados de carbono
-            \Log::info('Resultados de carbono procesados: ' . $carbonResults->count());
-            if ($carbonResults->count() > 0) {
-                \Log::info('Primer resultado de carbono: ' . json_encode($carbonResults->first()));
-                
-                // Log adicional para debug del análisis específico
-                $firstCarbon = $carbonResults->first();
-                \Log::info('Detalles del primer carbono:', [
-                    'id' => $firstCarbon->id ?? 'N/A',
-                    'type' => $firstCarbon->type ?? 'N/A',
-                    'consecutivo_no' => $firstCarbon->consecutivo_no ?? 'N/A',
-                    'service_name' => $firstCarbon->service_name ?? 'N/A',
-                    'review_status' => $firstCarbon->review_status ?? 'N/A',
-                    'items_ensayo_count' => count($firstCarbon->items_ensayo ?? [])
-                ]);
-            }
-
-            // Log para debug de resultados de acidez
-            \Log::info('Resultados de acidez procesados: ' . $acidityResults->count());
-            if ($acidityResults->count() > 0) {
-                \Log::info('Primer resultado de acidez: ' . json_encode($acidityResults->first()));
-                
-                // Log adicional para debug del análisis específico
-                $firstAcidity = $acidityResults->first();
-                \Log::info('Detalles del primer acidez:', [
-                    'id' => $firstAcidity->id ?? 'N/A',
-                    'type' => $firstAcidity->type ?? 'N/A',
-                    'consecutivo_no' => $firstAcidity->consecutivo_no ?? 'N/A',
-                    'service_name' => $firstAcidity->service_name ?? 'N/A',
-                    'review_status' => $firstAcidity->review_status ?? 'N/A',
-                    'items_ensayo_count' => count($firstAcidity->items_ensayo ?? [])
-                ]);
-            }
-
+            \Log::debug('ReviewController: Iniciando combinación de resultados...');
             // Combinar todos los resultados
-            $allResults = $phResults->concat($conductivityResults)
-                               ->concat($humidityResults)->concat($phosphorusResults)->concat($textureResults)->concat($boronResults)->concat($carbonResults)->concat($acidityResults);
-
-            // Log para debug de todos los resultados
-            \Log::info('Total de resultados combinados: ' . $allResults->count());
-            \Log::info('Desglose por tipo:');
-            \Log::info('- pH: ' . $phResults->count());
-            \Log::info('- Conductividad: ' . $conductivityResults->count());
-            \Log::info('- Humedad: ' . $humidityResults->count());
-            \Log::info('- Fósforo: ' . $phosphorusResults->count());
-            \Log::info('- Textura: ' . $textureResults->count());
-            \Log::info('- Boro: ' . $boronResults->count());
-            \Log::info('- Carbono: ' . $carbonResults->count());
-            \Log::info('- Acidez: ' . $acidityResults->count());
             $allResults = $phResults
                 ->concat($conductivityResults)
                 ->concat($humidityResults)
                 ->concat($phosphorusResults)
                 ->concat($textureResults)
-                ->concat($boronResults);
+                ->concat($boronResults)
+                ->concat($micronutrientsResults)
+                ->concat($cationicResults)
+                ->concat($sulfurResults);
+            \Log::debug('ReviewController: Combinación completada. Total: ' . $allResults->count());
 
+            \Log::debug('ReviewController: Iniciando agrupación de resultados...');
             // Agrupar por servicio para humedad, por consecutivo para otros
             $groupedResults = $allResults->groupBy(function($item) {
                 // Para humedad, agrupar por service_id + analysis_id (mismo servicio)
@@ -450,38 +433,16 @@ class ReviewController extends Controller
                 
                 return $first;
             });
+            \Log::debug('ReviewController: Agrupación completada. Total grupos: ' . $groupedResults->count());
 
-            // Log para debug de agrupación
-            \Log::info('Resultados agrupados: ' . $groupedResults->count());
-            \Log::info('Tipos de análisis en resultados agrupados:');
-            foreach ($groupedResults as $key => $group) {
-                \Log::info('- Grupo ' . $key . ': tipo=' . $group->type . ', consecutivo=' . $group->consecutivo_no);
-                
-                                 // Log específico para carbono
-                 if ($group->type === 'carbon') {
-                     \Log::info('  CARBONO ENCONTRADO en grupo:');
-                     \Log::info('    - ID: ' . $group->id);
-                     \Log::info('    - Consecutivo: ' . $group->consecutivo_no);
-                     \Log::info('    - Service Name: ' . $group->service_name);
-                     \Log::info('    - Review Status: ' . $group->review_status);
-                     \Log::info('    - Items Ensayo: ' . count($group->items_ensayo ?? []));
-                 }
-                 // Log específico para acidez
-                 if ($group->type === 'acidity') {
-                     \Log::info('  ACIDEZ ENCONTRADA en grupo:');
-                     \Log::info('    - ID: ' . $group->id);
-                     \Log::info('    - Consecutivo: ' . $group->consecutivo_no);
-                     \Log::info('    - Service Name: ' . $group->service_name);
-                     \Log::info('    - Review Status: ' . $group->review_status);
-                     \Log::info('    - Items Ensayo: ' . count($group->items_ensayo ?? []));
-                 }
-            }
-
+            \Log::debug('ReviewController: Iniciando ordenamiento...');
             // Ordenar por fecha de creación (más reciente primero)
             $sortedResults = $groupedResults->sortByDesc(function($item) {
                 return $item->created_at;
             });
+            \Log::debug('ReviewController: Ordenamiento completado');
 
+            \Log::debug('ReviewController: Iniciando paginación...');
             // Paginación manual
             $perPage = 10;
             $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
@@ -494,8 +455,20 @@ class ReviewController extends Controller
                 $currentPage,
                 ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
             );
+            \Log::debug('ReviewController: Paginación completada. Total: ' . $analyses->total());
 
-            return view('lscefa::reviews.index', ['allAnalyses' => $analyses]);
+            \Log::debug('ReviewController: Preparando vista...');
+            return view('lscefa::reviews.index', [
+                'allAnalyses' => $analyses,
+                'textureStats' => $textureStats,
+                'textureFilters' => $request->get('texture_filter'),
+                'textureFiltersSummary' => $this->getTextureFiltersSummary($request->get('texture_filter')),
+                'predefinedTextureFilters' => $this->getPredefinedTextureFilters(),
+                'boronStats' => $boronStats,
+                'boronFilters' => $request->get('boron_filter'),
+                'boronFiltersSummary' => $this->getBoronFiltersSummary($request->get('boron_filter')),
+                'predefinedBoronFilters' => $this->getPredefinedBoronFilters()
+            ]);
             
         } catch (\Exception $e) {
             \Log::error('Error en ReviewController@index: ' . $e->getMessage());
@@ -566,6 +539,614 @@ class ReviewController extends Controller
     }
 
     /**
+     * Prepara datos específicos para análisis de textura (controles analíticos, etc.)
+     */
+    protected function prepareTextureData($analysis): array
+    {
+        $data = [];
+        try {
+            $processId = $analysis->process_id ?? null;
+            if ($processId) {
+                // Buscar AnalyticalControl por process y tipo textura
+                $controls = AnalyticalControl::where('process_id', $processId)
+                    ->whereIn('analysis_type', ['texture', 'textura'])
+                    ->orderByDesc('id')
+                    ->get();
+                
+                if ($controls->isNotEmpty()) {
+                    $data['analyticalControls'] = $controls;
+                    \Log::debug('prepareTextureData: AnalyticalControls found', [
+                        'process_id' => $processId,
+                        'controls_count' => $controls->count(),
+                        'analysis_types' => $controls->pluck('analysis_type')->toArray()
+                    ]);
+                } else {
+                    // Si no se encontraron controles específicos de textura, buscar cualquier control del proceso
+                    $fallbackControls = AnalyticalControl::where('process_id', $processId)->get();
+                    if ($fallbackControls->isNotEmpty()) {
+                        $data['analyticalControls'] = $fallbackControls;
+                        \Log::debug('prepareTextureData: Fallback controls found', [
+                            'process_id' => $processId,
+                            'controls_count' => $fallbackControls->count()
+                        ]);
+                    }
+                }
+                
+                // También buscar en el campo JSON controles_analiticos del propio análisis
+                if (isset($analysis->analytical_controls) && !empty($analysis->analytical_controls)) {
+                    $jsonControls = is_array($analysis->analytical_controls) ? 
+                        $analysis->analytical_controls : 
+                        json_decode($analysis->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        $data['jsonAnalyticalControls'] = $jsonControls;
+                        \Log::debug('prepareTextureData: JSON controls found', [
+                            'process_id' => $processId,
+                            'json_controls_count' => count($jsonControls),
+                            'json_controls_keys' => array_keys($jsonControls)
+                        ]);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('prepareTextureData error: ' . $e->getMessage());
+        }
+        return $data;
+    }
+
+    /**
+     * Prepara los datos específicos para análisis de Boro
+     */
+    protected function prepareBoronData($analysis): array
+    {
+        $data = [];
+        try {
+            // Preparar datos específicos del análisis de Boro
+            $data['boronAnalysis'] = $analysis;
+            
+            // Si hay test_items, procesarlos
+            if (isset($analysis->test_items) && is_array($analysis->test_items)) {
+                $data['testItems'] = $analysis->test_items;
+            }
+            
+            // Si hay controles analíticos, procesarlos
+            if (isset($analysis->analytical_controls) && !empty($analysis->analytical_controls)) {
+                $jsonControls = is_array($analysis->analytical_controls) ? 
+                    $analysis->analytical_controls : 
+                    json_decode($analysis->analytical_controls, true);
+                
+                if (is_array($jsonControls)) {
+                    $data['analyticalControls'] = $jsonControls;
+                }
+            }
+            
+            \Log::debug('prepareBoronData: Datos preparados correctamente', [
+                'analysis_id' => $analysis->id ?? null,
+                'has_test_items' => isset($data['testItems']),
+                'has_analytical_controls' => isset($data['analyticalControls'])
+            ]);
+            
+        } catch (\Throwable $e) {
+            \Log::warning('prepareBoronData error: ' . $e->getMessage());
+        }
+        return $data;
+    }
+
+    /**
+     * Prepara los datos específicos para análisis de micronutrientes
+     */
+    protected function prepareMicronutrientsData($analysis): array
+    {
+        $data = [];
+        try {
+            // Preparar datos específicos del análisis de micronutrientes
+            $data['micronutrientsAnalysis'] = $analysis;
+            
+            // Si hay items_ensayo, procesarlos
+            if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
+                $data['itemsEnsayo'] = $analysis->items_ensayo;
+            }
+            
+            // Si hay controles analíticos, procesarlos
+            if (isset($analysis->controles_analiticos) && !empty($analysis->controles_analiticos)) {
+                $jsonControls = is_array($analysis->controles_analiticos) ? 
+                    $analysis->controles_analiticos : 
+                    json_decode($analysis->controles_analiticos, true);
+                
+                if (is_array($jsonControls)) {
+                    $data['controlesAnaliticos'] = $jsonControls;
+                }
+            }
+            
+            \Log::debug('prepareMicronutrientsData: Datos preparados correctamente', [
+                'analysis_id' => $analysis->id ?? null,
+                'has_items_ensayo' => isset($data['itemsEnsayo']),
+                'has_controles_analiticos' => isset($data['controlesAnaliticos'])
+            ]);
+            
+        } catch (\Throwable $e) {
+            \Log::warning('prepareMicronutrientsData error: ' . $e->getMessage());
+        }
+        return $data;
+    }
+
+    /**
+     * Aplica filtros específicos para análisis de textura
+     */
+    protected function applyTextureFilters($textureAnalyses, $filters)
+    {
+        return $textureAnalyses->filter(function($item) use ($filters) {
+            // Filtro por código de muestra (consecutivo)
+            if (isset($filters['codigo_muestra']) && !empty($filters['codigo_muestra'])) {
+                $codigoMuestra = strtolower(trim($filters['codigo_muestra']));
+                $itemConsecutivo = strtolower($item->consecutive_no ?? '');
+                if (strpos($itemConsecutivo, $codigoMuestra) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por analista
+            if (isset($filters['analista']) && !empty($filters['analista'])) {
+                $analista = strtolower(trim($filters['analista']));
+                $itemAnalista = strtolower($item->analyst_name ?? '');
+                if (strpos($itemAnalista, $analista) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por fecha de análisis
+            if (isset($filters['fecha_desde']) && !empty($filters['fecha_desde'])) {
+                try {
+                    $fechaDesde = \Carbon\Carbon::parse($filters['fecha_desde']);
+                    $itemFecha = \Carbon\Carbon::parse($item->analysis_date);
+                    if ($itemFecha->lt($fechaDesde)) {
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error parsing fecha_desde: ' . $e->getMessage());
+                }
+            }
+            
+            if (isset($filters['fecha_hasta']) && !empty($filters['fecha_hasta'])) {
+                try {
+                    $fechaHasta = \Carbon\Carbon::parse($filters['fecha_hasta']);
+                    $itemFecha = \Carbon\Carbon::parse($item->analysis_date);
+                    if ($itemFecha->gt($fechaHasta)) {
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error parsing fecha_hasta: ' . $e->getMessage());
+                }
+            }
+            
+            // Filtro por metodología
+            if (isset($filters['metodologia']) && !empty($filters['metodologia'])) {
+                $metodologia = strtolower(trim($filters['metodologia']));
+                $itemMetodologia = strtolower($item->methodology_used ?? '');
+                if (strpos($itemMetodologia, $metodologia) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por equipo utilizado
+            if (isset($filters['equipo']) && !empty($filters['equipo'])) {
+                $equipo = strtolower(trim($filters['equipo']));
+                $itemEquipo = strtolower($item->equipment_used ?? '');
+                if (strpos($itemEquipo, $equipo) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por estado de revisión específico
+            if (isset($filters['estado_revision']) && !empty($filters['estado_revision'])) {
+                $estado = $filters['estado_revision'];
+                $itemEstado = $item->review_status ?? 'pending';
+                if ($estado !== $itemEstado) {
+                    return false;
+                }
+            }
+            
+            // Filtro por código de termómetro
+            if (isset($filters['codigo_termometro']) && !empty($filters['codigo_termometro'])) {
+                $codigoTerm = strtolower(trim($filters['codigo_termometro']));
+                $itemCodigoTerm = strtolower($item->thermometer_code ?? '');
+                if (strpos($itemCodigoTerm, $codigoTerm) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por código de hidrómetro
+            if (isset($filters['codigo_hidrometro']) && !empty($filters['codigo_hidrometro'])) {
+                $codigoHidro = strtolower(trim($filters['codigo_hidrometro']));
+                $itemCodigoHidro = strtolower($item->hydrometer_code ?? '');
+                if (strpos($itemCodigoHidro, $codigoHidro) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por muestras específicas (buscar en el array de muestras)
+            if (isset($filters['muestra_especifica']) && !empty($filters['muestra_especifica'])) {
+                $muestraEspecifica = strtolower(trim($filters['muestra_especifica']));
+                $samples = is_array($item->samples) ? $item->samples : [];
+                $encontrado = false;
+                
+                foreach ($samples as $sample) {
+                    if (is_array($sample) && isset($sample['codigo_interno'])) {
+                        $codigoInterno = strtolower($sample['codigo_interno']);
+                        if (strpos($codigoInterno, $muestraEspecifica) !== false) {
+                            $encontrado = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$encontrado) {
+                    return false;
+                }
+            }
+            
+            // Filtro por blanco del método (primera muestra del array)
+            if (isset($filters['blanco_metodo']) && !empty($filters['blanco_metodo'])) {
+                $blancoMetodo = strtolower(trim($filters['blanco_metodo']));
+                $samples = is_array($item->samples) ? $item->samples : [];
+                
+                // El blanco del método es la primera muestra del array
+                if (!empty($samples) && isset($samples[0])) {
+                    $blanco = $samples[0];
+                    $encontrado = false;
+                    
+                    // Buscar en código interno del blanco
+                    if (isset($blanco['codigo_interno'])) {
+                        $codigoInterno = strtolower($blanco['codigo_interno']);
+                        if (strpos($codigoInterno, $blancoMetodo) !== false) {
+                            $encontrado = true;
+                        }
+                    }
+                    
+                    // Buscar en identificacion del blanco
+                    if (!$encontrado && isset($blanco['identificacion'])) {
+                        $identificacion = strtolower($blanco['identificacion']);
+                        if (strpos($identificacion, $blancoMetodo) !== false) {
+                            $encontrado = true;
+                        }
+                    }
+                    
+                    // Buscar en descripción del blanco
+                    if (!$encontrado && isset($blanco['descripcion'])) {
+                        $descripcion = strtolower($blanco['descripcion']);
+                        if (strpos($descripcion, $blancoMetodo) !== false) {
+                            $encontrado = true;
+                        }
+                    }
+                    
+                    if (!$encontrado) {
+                        return false;
+                    }
+                } else {
+                    // Si no hay muestras, no puede cumplir el filtro de blanco
+                    return false;
+                }
+            }
+            
+            // Filtro por clase textural específica
+            if (isset($filters['clase_textural']) && !empty($filters['clase_textural'])) {
+                $claseTextural = strtolower(trim($filters['clase_textural']));
+                $samples = is_array($item->samples) ? $item->samples : [];
+                $encontrado = false;
+                
+                foreach ($samples as $sample) {
+                    if (is_array($sample) && isset($sample['clase_textural'])) {
+                        $clase = strtolower($sample['clase_textural']);
+                        if (strpos($clase, $claseTextural) !== false) {
+                            $encontrado = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$encontrado) {
+                    return false;
+                }
+            }
+            
+            // Filtro por rango de porcentajes (arena, arcilla, limo)
+            if (isset($filters['porcentaje_min']) && is_numeric($filters['porcentaje_min'])) {
+                $porcentajeMin = (float)$filters['porcentaje_min'];
+                $samples = is_array($item->samples) ? $item->samples : [];
+                $cumple = false;
+                
+                foreach ($samples as $sample) {
+                    if (is_array($sample)) {
+                        $arena = (float)($sample['arena'] ?? 0);
+                        $arcilla = (float)($sample['arcilla'] ?? 0);
+                        $limo = (float)($sample['limo'] ?? 0);
+                        
+                        if ($arena >= $porcentajeMin || $arcilla >= $porcentajeMin || $limo >= $porcentajeMin) {
+                            $cumple = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$cumple) {
+                    return false;
+                }
+            }
+            
+            if (isset($filters['porcentaje_max']) && is_numeric($filters['porcentaje_max'])) {
+                $porcentajeMax = (float)$filters['porcentaje_max'];
+                $samples = is_array($item->samples) ? $item->samples : [];
+                $cumple = false;
+                
+                foreach ($samples as $sample) {
+                    if (is_array($sample)) {
+                        $arena = (float)($sample['arena'] ?? 0);
+                        $arcilla = (float)($sample['arcilla'] ?? 0);
+                        $limo = (float)($sample['limo'] ?? 0);
+                        
+                        if ($arena <= $porcentajeMax || $arcilla <= $porcentajeMax || $limo <= $porcentajeMax) {
+                            $cumple = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!$cumple) {
+                    return false;
+                }
+            }
+            
+            // ===== FILTROS PARA CONTROLES ANALÍTICOS =====
+            
+            // Filtro por tipo de control analítico
+            if (isset($filters['tipo_control']) && !empty($filters['tipo_control'])) {
+                $tipoControl = strtolower(trim($filters['tipo_control']));
+                $tieneControl = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        foreach ($jsonControls as $key => $controlData) {
+                            if (is_array($controlData) && isset($controlData['identificacion'])) {
+                                $identificacion = strtolower($controlData['identificacion']);
+                                if (strpos($identificacion, $tipoControl) !== false) {
+                                    $tieneControl = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$tieneControl && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    foreach ($item->analyticalControls as $control) {
+                        if (isset($control->controles_analiticos) && is_array($control->controles_analiticos)) {
+                            foreach ($control->controles_analiticos as $key => $controlData) {
+                                if (is_array($controlData) && isset($controlData['identificacion'])) {
+                                    $identificacion = strtolower($controlData['identificacion']);
+                                    if (strpos($identificacion, $tipoControl) !== false) {
+                                        $tieneControl = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!$tieneControl) {
+                    return false;
+                }
+            }
+            
+            // Filtro por aceptabilidad de controles analíticos
+            if (isset($filters['aceptabilidad_control']) && !empty($filters['aceptabilidad_control'])) {
+                $aceptabilidad = strtolower(trim($filters['aceptabilidad_control']));
+                $tieneAceptabilidad = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        foreach ($jsonControls as $key => $controlData) {
+                            if (is_array($controlData) && isset($controlData['aceptabilidad_control'])) {
+                                $aceptabilidadControl = strtolower($controlData['aceptabilidad_control']);
+                                if (strpos($aceptabilidadControl, $aceptabilidad) !== false) {
+                                    $tieneAceptabilidad = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$tieneAceptabilidad && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    foreach ($item->analyticalControls as $control) {
+                        if (isset($control->controles_analiticos) && is_array($control->controles_analiticos)) {
+                            foreach ($control->controles_analiticos as $key => $controlData) {
+                                if (is_array($controlData) && isset($controlData['aceptabilidad_control'])) {
+                                    $aceptabilidadControl = strtolower($controlData['aceptabilidad_control']);
+                                    if (strpos($aceptabilidadControl, $aceptabilidad) !== false) {
+                                        $tieneAceptabilidad = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!$tieneAceptabilidad) {
+                    return false;
+                }
+            }
+            
+            // Filtro por rango de DPR (Diferencia Porcentual Relativa)
+            if (isset($filters['dpr_min']) && is_numeric($filters['dpr_min'])) {
+                $dprMin = (float)$filters['dpr_min'];
+                $cumpleDprMin = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        foreach ($jsonControls as $key => $controlData) {
+                            if (is_array($controlData)) {
+                                $dprArena = (float)($controlData['dpr_arena'] ?? 0);
+                                $dprArcilla = (float)($controlData['dpr_arcilla'] ?? 0);
+                                $dprLimo = (float)($controlData['dpr_limo'] ?? 0);
+                                
+                                if ($dprArena >= $dprMin || $dprArcilla >= $dprMin || $dprLimo >= $dprMin) {
+                                    $cumpleDprMin = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$cumpleDprMin && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    foreach ($item->analyticalControls as $control) {
+                        if (isset($control->controles_analiticos) && is_array($control->controles_analiticos)) {
+                            foreach ($control->controles_analiticos as $key => $controlData) {
+                                if (is_array($controlData)) {
+                                    $dprArena = (float)($controlData['dpr_arena'] ?? 0);
+                                    $dprArcilla = (float)($controlData['dpr_arcilla'] ?? 0);
+                                    $dprLimo = (float)($controlData['dpr_limo'] ?? 0);
+                                    
+                                    if ($dprArena >= $dprMin || $dprArcilla >= $dprMin || $dprLimo >= $dprMin) {
+                                        $cumpleDprMin = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!$cumpleDprMin) {
+                    return false;
+                }
+            }
+            
+            if (isset($filters['dpr_max']) && is_numeric($filters['dpr_max'])) {
+                $dprMax = (float)$filters['dpr_max'];
+                $cumpleDprMax = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        foreach ($jsonControls as $key => $controlData) {
+                            if (is_array($controlData)) {
+                                $dprArena = (float)($controlData['dpr_arena'] ?? 0);
+                                $dprArcilla = (float)($controlData['dpr_arcilla'] ?? 0);
+                                $dprLimo = (float)($controlData['dpr_limo'] ?? 0);
+                                
+                                if ($dprArena <= $dprMax || $dprArcilla <= $dprMax || $dprLimo <= $dprMax) {
+                                    $cumpleDprMax = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$cumpleDprMax && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    foreach ($item->analyticalControls as $control) {
+                        if (isset($control->controles_analiticos) && is_array($control->controles_analiticos)) {
+                            foreach ($control->controles_analiticos as $key => $controlData) {
+                                if (is_array($controlData)) {
+                                    $dprArena = (float)($controlData['dpr_arena'] ?? 0);
+                                    $dprArcilla = (float)($controlData['dpr_arcilla'] ?? 0);
+                                    $dprLimo = (float)($controlData['dpr_limo'] ?? 0);
+                                    
+                                    if ($dprArena <= $dprMax || $dprArcilla <= $dprMax || $dprLimo <= $dprMax) {
+                                        $cumpleDprMax = true;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!$cumpleDprMax) {
+                    return false;
+                }
+            }
+            
+            // Filtro por presencia de controles analíticos
+            if (isset($filters['tiene_controles']) && $filters['tiene_controles'] === '1') {
+                $tieneControles = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls) && count($jsonControls) > 0) {
+                        $tieneControles = true;
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$tieneControles && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    $tieneControles = true;
+                }
+                
+                if (!$tieneControles) {
+                    return false;
+                }
+            }
+            
+            if (isset($filters['tiene_controles']) && $filters['tiene_controles'] === '0') {
+                $tieneControles = false;
+                
+                // Verificar en el campo JSON del análisis
+                if (isset($item->analytical_controls) && !empty($item->analytical_controls)) {
+                    $jsonControls = is_array($item->analytical_controls) ? 
+                        $item->analytical_controls : 
+                        json_decode($item->analytical_controls, true);
+                    
+                    if (is_array($jsonControls) && count($jsonControls) > 0) {
+                        $tieneControles = true;
+                    }
+                }
+                
+                // Verificar en la relación analyticalControls
+                if (!$tieneControles && isset($item->analyticalControls) && $item->analyticalControls->count() > 0) {
+                    $tieneControles = true;
+                }
+                
+                if ($tieneControles) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+    }
+
+    /**
      * Transforma un análisis al formato común
      */
     protected function transformAnalysis($analysis, $type)
@@ -628,68 +1209,6 @@ class ReviewController extends Controller
                 'created_at' => $analysis->created_at,
                 'items_ensayo' => [$item],
             ];
-        } elseif ($type === 'humidity') {
-            // Humedad: cada fila es un item. Construimos items_ensayo sintético
-            $process = $analysis->process ?? null;
-            $quote = $process->quote ?? null;
-            $customer = $quote->customer ?? null;
-
-            $item = [
-                'identificacion' => $analysis->codigo_interno ?? 'N/A',
-                'valor_leido' => $analysis->porcentaje_humedad ?? null,
-                'observaciones' => $analysis->observaciones ?? '',
-            ];
-
-            return (object) [
-                'id' => $analysis->id,
-                'type' => $type,
-                'analysis_id' => $analysis->analysis_id,
-                'service_id' => $analysis->service_id ?? null,
-                'consecutivo_no' => $analysis->consecutivo_no,
-                'fecha_analisis' => $analysis->fecha_analisis,
-                'codigo_probeta' => null,
-                'codigo_equipo' => $analysis->equipo_utilizado
-                    ?? $analysis->equipment_used
-                    ?? null,
-                'review_status' => $analysis->review_status ?? 'pending',
-                'user' => $analysis->user,
-                'process' => $process,
-                'quote' => $quote,
-                'customer' => $customer,
-                'first_item' => (object)$item,
-                'created_at' => $analysis->created_at,
-                'items_ensayo' => [$item],
-            ];
-        } elseif ($type === 'humidity') {
-            // Humedad: cada fila es un item. Construimos items_ensayo sintético
-            $process = $analysis->process ?? null;
-            $quote = $process->quote ?? null;
-            $customer = $quote->customer ?? null;
-
-            $item = [
-                'identificacion' => $analysis->codigo_interno ?? 'N/A',
-                'valor_leido' => $analysis->porcentaje_humedad ?? null,
-                'observaciones' => $analysis->observaciones ?? '',
-            ];
-
-            return (object) [
-                'id' => $analysis->id,
-                'type' => $type,
-                'analysis_id' => $analysis->analysis_id,
-                'service_id' => $analysis->service_id ?? null,
-                'consecutivo_no' => $analysis->consecutivo_no,
-                'fecha_analisis' => $analysis->fecha_analisis,
-                'codigo_probeta' => $analysis->codigo_interno ?? null,
-                'codigo_equipo' => $analysis->equipo_utilizado ?? null,
-                'review_status' => $analysis->review_status ?? 'pending',
-                'user' => $analysis->user,
-                'process' => $process,
-                'quote' => $quote,
-                'customer' => $customer,
-                'first_item' => (object)$item,
-                'created_at' => $analysis->created_at,
-                'items_ensayo' => [$item],
-            ];
         } else {
             $items = is_array($analysis->items_ensayo) ? $analysis->items_ensayo : [];
             $firstItem = !empty($items) ? (object)$items[0] : null;
@@ -697,17 +1216,30 @@ class ReviewController extends Controller
             $quote = $process->quote ?? null;
             $customer = $quote->customer ?? null;
 
+            // Asegurar que se obtenga el usuario correctamente
+            $user = $analysis->user;
+            if (!$user && isset($analysis->user_id)) {
+                // Si no se cargó la relación, intentar cargar el usuario manualmente
+                $user = \App\Models\User::find($analysis->user_id);
+            }
+
+            // Para análisis de pH y conductividad, intentar obtener el código de probeta del primer item si no existe
+            $codigoProbeta = $analysis->codigo_probeta;
+            if (!$codigoProbeta && !empty($items)) {
+                $codigoProbeta = $items[0]['codigo_probeta'] ?? $items[0]['identificacion'] ?? null;
+            }
+
             return (object)[
                 'id' => $analysis->id,
                 'type' => $type,
                 'analysis_id' => $analysis->analysis_id,
                 'service_id' => $analysis->service_id ?? null,
-            'consecutivo_no' => $analysis->consecutivo_no,
+                'consecutivo_no' => $analysis->consecutivo_no,
                 'fecha_analisis' => $analysis->fecha_analisis,
-                'codigo_probeta' => $analysis->codigo_probeta ?? null,
+                'codigo_probeta' => $codigoProbeta,
                 'codigo_equipo' => $analysis->codigo_equipo ?? null,
                 'review_status' => $analysis->review_status ?? 'pending',
-                'user' => $analysis->user,
+                'user' => $user,
                 'process' => $process,
                 'quote' => $quote,
                 'customer' => $customer,
@@ -723,7 +1255,14 @@ class ReviewController extends Controller
      */
     protected function transformTextureAnalysis($analysis, $type)
     {
-        $items = is_array($analysis->samples) ? $analysis->samples : [];
+        // Asegurar que samples sea un array
+        $items = [];
+        if (is_array($analysis->samples)) {
+            $items = $analysis->samples;
+        } elseif (is_string($analysis->samples)) {
+            $items = json_decode($analysis->samples, true) ?? [];
+        }
+        
         $firstItem = !empty($items) ? (object)$items[0] : null;
         $process = null;
         $quote = null;
@@ -731,7 +1270,7 @@ class ReviewController extends Controller
         // Servicio: mostrar el tipo de análisis en texto
         $serviceName = 'Textura';
         return (object)[
-            'id' => $analysis->id,
+                'id' => $analysis->id,
             'type' => $type, // Esto se usará para el badge arriba
             'service_name' => $serviceName,
             'analysis_id' => $analysis->id,
@@ -739,13 +1278,13 @@ class ReviewController extends Controller
             'fecha_analisis' => $analysis->analysis_date,
             'codigo_probeta' => $analysis->consecutive_no, // Mostrar consecutivo como muestra
             'codigo_equipo' => null,
-            'review_status' => $analysis->review_status ?? 'pending',
+                'review_status' => $analysis->review_status ?? 'pending',
             'user' => (object)['name' => $analysis->analyst_name], // Analista
-            'process' => $process,
-            'quote' => $quote,
-            'customer' => $customer,
+                'process' => $process,
+                'quote' => $quote,
+                'customer' => $customer,
             'first_item' => $firstItem,
-            'created_at' => $analysis->created_at,
+                'created_at' => $analysis->created_at,
             'items_ensayo' => $items
         ];
     }
@@ -769,14 +1308,14 @@ class ReviewController extends Controller
         ];
 
         $process = $analysis->process ?? null;
-        $quote = $process->quote ?? null;
+            $quote = $process->quote ?? null;
         $customer = $quote->customer ?? null;
         
         // Servicio: mostrar el tipo de análisis en texto
         $serviceName = 'Boro';
-        
-        return (object)[
-            'id' => $analysis->id,
+
+            return (object)[
+                'id' => $analysis->id,
             'type' => $type, // Esto se usará para el badge arriba
             'service_name' => $serviceName,
             'analysis_id' => $analysis->id,
@@ -784,137 +1323,117 @@ class ReviewController extends Controller
             'fecha_analisis' => $analysis->analysis_date,
             'codigo_probeta' => $analysis->internal_code ?? 'N/A',
             'codigo_equipo' => $analysis->equipment_used,
+                'review_status' => $analysis->review_status ?? 'pending',
+            'user' => $analysis->user ?? (object)['name' => $analysis->analyst_name ?? 'N/A'], // Analista
+                'process' => $process,
+                'quote' => $quote,
+                'customer' => $customer,
+            'first_item' => (object)$item,
+                'created_at' => $analysis->created_at,
+            'items_ensayo' => [$item]
+            ];
+    }
+
+    /**
+     * Transforma un análisis de micronutrientes al formato común
+     */
+    protected function transformMicronutrientsAnalysis($analysis, $type)
+    {
+        // Para micronutrientes, usar los items_ensayo del análisis
+        $items = is_array($analysis->items_ensayo) ? $analysis->items_ensayo : [];
+        $firstItem = !empty($items) ? (object)$items[0] : null;
+        
+        $process = $analysis->analysis->process ?? null;
+        $quote = $process->quote ?? null;
+        $customer = $quote->customer ?? null;
+        
+        // Servicio: mostrar el tipo de análisis en texto
+        $serviceName = 'Micronutrientes';
+
+        return (object)[
+            'id' => $analysis->id,
+            'type' => $type, // Esto se usará para el badge arriba
+            'service_name' => $serviceName,
+            'analysis_id' => $analysis->analysis_id,
+            'consecutivo_no' => $analysis->consecutivo_no ?? 'N/A',
+            'fecha_analisis' => $analysis->fecha_analisis,
+            'codigo_probeta' => $firstItem ? ($firstItem->codigo_interno ?? 'N/A') : 'N/A',
+            'codigo_equipo' => $analysis->equipo_utilizado,
             'review_status' => $analysis->review_status ?? 'pending',
-            'user' => (object)['name' => $analysis->analyst_name], // Analista
+            'user' => $analysis->user ?? (object)['name' => 'N/A'], // Analista
             'process' => $process,
             'quote' => $quote,
             'customer' => $customer,
-            'first_item' => (object)$item,
+            'first_item' => $firstItem,
             'created_at' => $analysis->created_at,
-            'items_ensayo' => [$item]
+            'items_ensayo' => $items
         ];
     }
 
     /**
-     * Transforma un análisis de carbono al formato común
+     * Transforma un análisis de intercambio catiónico para la vista de revisiones
      */
-    protected function transformCarbonAnalysis($analysis, $type)
+    protected function transformCationicAnalysis($analysis, $type)
     {
-        // Log para debug
-        \Log::info('Transformando análisis de carbono', [
-            'analysis_id' => $analysis->id ?? 'N/A',
-            'consecutivo_no' => $analysis->consecutivo_no ?? 'N/A',
-            'process_id' => $analysis->process_id ?? 'N/A',
-            'type' => $type
-        ]);
-        
-        // Para carbono, cada fila es un item individual
-        $item = [
-            'identificacion' => $analysis->codigo_interno ?? 'N/A',
-            'peso_muestra' => $analysis->peso_muestra ?? 'N/A',
-            'porcentaje_co_total' => $analysis->porcentaje_co_total ?? 'N/A',
-            'porcentaje_cot' => $analysis->porcentaje_cot ?? 'N/A',
-            'porcentaje_mo' => $analysis->porcentaje_mo ?? 'N/A',
-            'porcentaje_humedad' => $analysis->porcentaje_humedad ?? 'N/A',
-            'observaciones' => $analysis->observaciones ?? '',
-            'parametro' => 'Carbono', // Agregar parámetro para mostrar en la vista
-        ];
-
         $process = $analysis->process ?? null;
         $quote = $process->quote ?? null;
         $customer = $quote->customer ?? null;
         
         // Servicio: mostrar el tipo de análisis en texto
-        $serviceName = 'Carbono';
-        
-        $result = (object)[
+        $serviceName = 'Intercambio Catiónico';
+
+        return (object)[
             'id' => $analysis->id,
             'type' => $type, // Esto se usará para el badge arriba
             'service_name' => $serviceName,
-            'analysis_id' => $analysis->id,
+            'analysis_id' => $analysis->id, // Para intercambio catiónico, usar el mismo ID
             'consecutivo_no' => $analysis->consecutivo_no ?? 'N/A',
             'fecha_analisis' => $analysis->fecha_analisis,
             'codigo_probeta' => $analysis->codigo_interno ?? 'N/A',
             'codigo_equipo' => $analysis->equipo_utilizado,
             'review_status' => $analysis->review_status ?? 'pending',
-            'user' => $analysis->user,
+            'user' => (object)['name' => $analysis->nombre_analista ?? 'N/A'], // Analista
             'process' => $process,
             'quote' => $quote,
             'customer' => $customer,
-            'first_item' => (object)$item,
+            'first_item' => $analysis,
             'created_at' => $analysis->created_at,
-            'items_ensayo' => [$item]
+            'analytical_control' => $analysis->analyticalControl,
+            'items_ensayo' => [] // Para intercambio catiónico, array vacío ya que no usa items_ensayo
         ];
-        
-        // Log para debug del resultado
-        \Log::info('Resultado de transformación de carbono', [
-            'result_type' => $result->type,
-            'result_service_name' => $result->service_name,
-            'result_consecutivo_no' => $result->consecutivo_no
-        ]);
-        
-        return $result;
     }
 
     /**
-     * Transforma un análisis de acidez al formato común
+     * Transforma un análisis de azufre para la vista de revisión
      */
-    protected function transformAcidityAnalysis($analysis, $type)
+    protected function transformSulfurAnalysis($analysis, $type)
     {
-        // Log para debug
-        \Log::info('Transformando análisis de acidez', [
-            'analysis_id' => $analysis->id ?? 'N/A',
-            'consecutivo_no' => $analysis->consecutivo_no ?? 'N/A',
-            'process_id' => $analysis->process_id ?? 'N/A',
-            'type' => $type
-        ]);
-        
-        // Para acidez, cada fila es un item individual
-        $item = [
-            'identificacion' => $analysis->codigo_interno ?? 'N/A',
-            'peso_muestra' => $analysis->peso_muestra ?? 'N/A',
-            'consumido_blanco' => $analysis->consumido_blanco ?? 'N/A',
-            'consumido_muestra' => $analysis->consumido_muestra ?? 'N/A',
-            'acidez' => $analysis->acidez ?? 'N/A',
-            'valor_leido' => $analysis->acidez ?? 'N/A', // Agregar valor_leido para compatibilidad
-            'observaciones' => $analysis->observaciones ?? '',
-            'parametro' => 'Acidez', // Agregar parámetro para mostrar en la vista
-        ];
-
         $process = $analysis->process ?? null;
         $quote = $process->quote ?? null;
-        $customer = $process->customer ?? null;
+        $customer = $quote->customer ?? null;
         
         // Servicio: mostrar el tipo de análisis en texto
-        $serviceName = 'Acidez';
-        
-        $result = (object)[
+        $serviceName = 'Análisis de Azufre';
+
+        return (object)[
             'id' => $analysis->id,
             'type' => $type, // Esto se usará para el badge arriba
             'service_name' => $serviceName,
-            'analysis_id' => $analysis->id,
-            'consecutivo_no' => $analysis->consecutivo_no ?? 'N/A',
-            'fecha_analisis' => $analysis->fecha_analisis,
-            'codigo_probeta' => $analysis->codigo_interno ?? 'N/A',
-            'codigo_equipo' => $analysis->equipo_utilizado,
+            'analysis_id' => $analysis->id, // Para azufre, usar el mismo ID
+            'consecutivo_no' => $analysis->consecutive_no ?? 'N/A',
+            'fecha_analisis' => $analysis->analysis_date,
+            'codigo_probeta' => $analysis->internal_code ?? 'N/A',
+            'codigo_equipo' => $analysis->equipment_used,
             'review_status' => $analysis->review_status ?? 'pending',
-            'user' => $analysis->user,
+            'user' => (object)['name' => $analysis->analyst_name ?? 'N/A'], // Analista
             'process' => $process,
             'quote' => $quote,
             'customer' => $customer,
-            'first_item' => (object)$item,
+            'first_item' => $analysis,
             'created_at' => $analysis->created_at,
-            'items_ensayo' => [$item]
+            'analytical_control' => $analysis->analyticalControl,
+            'items_ensayo' => [] // Para azufre, array vacío ya que no usa items_ensayo
         ];
-        
-        // Log para debug del resultado
-        \Log::info('Resultado de transformación de acidez', [
-            'result_type' => $result->type,
-            'result_service_name' => $result->service_name,
-            'result_consecutivo_no' => $result->consecutivo_no
-        ]);
-        
-        return $result;
     }
 
     // Ver detalle de un análisis para revisión
@@ -932,19 +1451,19 @@ class ReviewController extends Controller
                     case 'ph':
                         $analysis = PhAnalysis::with([
                             'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
-                        ])->find($id);
+                ])->find($id);
                         $type = $analysis ? 'ph' : null;
                         break;
                     case 'conductivity':
                         $analysis = ConductivityAnalysis::with([
                             'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
-                        ])->find($id);
+            ])->find($id);
                         $type = $analysis ? 'conductivity' : null;
                         break;
                     case 'humidity':
                         $analysis = HumidityAnalysis::with([
                             'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
-                        ])->find($id);
+            ])->find($id);
                         $type = $analysis ? 'humidity' : null;
                         break;
                     case 'phosphorus':
@@ -968,19 +1487,23 @@ class ReviewController extends Controller
                         }
                         break;
                     case 'texture':
-                        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer','service'])->find($id);
+                        $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer', 'analyticalControls'])->find($id);
                         $type = $analysis ? 'texture' : null;
                         break;
                     case 'boron':
-                        $analysis = BoronAnalysisDetail::with(['process.quote.customer','service'])->find($id);
+                        $analysis = BoronAnalysisDetail::with(['process.quote.customer','service','user'])->find($id);
                         $type = $analysis ? 'boron' : null;
+                        break;
+                    case 'micronutrients':
+                        $analysis = MicronutrientsAnalysis::with(['analysis.process.quote.customer','analysis.service','user'])->find($id);
+                        $type = $analysis ? 'micronutrients' : null;
                         if (!$analysis) {
                             $phTmp = PhAnalysis::with(['analysis'])->find($id);
                             $condTmp = $phTmp ? null : ConductivityAnalysis::with(['analysis'])->find($id);
                             $procId = $phTmp->analysis->process_id ?? $phTmp->process_id ?? ($condTmp->analysis->process_id ?? $condTmp->process_id ?? null);
                             $servId = $phTmp->analysis->service_id ?? $phTmp->service_id ?? ($condTmp->analysis->service_id ?? $condTmp->service_id ?? null);
                             if ($procId && $servId) {
-                                $analysis = BoronAnalysisDetail::with(['process.quote.customer','service'])
+                                $analysis = BoronAnalysisDetail::with(['process.quote.customer','service','user'])
                                     ->where('process_id', $procId)
                                     ->where('service_id', $servId)
                                     ->orderByDesc('id')
@@ -989,30 +1512,31 @@ class ReviewController extends Controller
                             }
                         }
                         break;
-                    case 'carbon':
-                        $analysis = CarbonoAnalysis::with(['process.quote.customer','user'])->find($id);
-                        $type = $analysis ? 'carbon' : null;
+                    case 'cationic':
+                        $analysis = CationicAnalysis::with(['process.quote.customer','analyticalControl'])->find($id);
+                        $type = $analysis ? 'cationic' : null;
                         break;
-                    case 'acidity':
-                        $analysis = AcidezAnalysis::with(['process.quote.customer','user'])->find($id);
-                        $type = $analysis ? 'acidity' : null;
+                    case 'sulfur':
+                        $analysis = SulfurAnalysis::with(['process.quote.customer','analyticalControl'])->find($id);
+                        $type = $analysis ? 'sulfur' : null;
+                        break;
                         break;
                 }
             }
 
             // Fallback: autodetección por ID si no vino tipo o no se encontró el registro del tipo indicado
-            if (!$analysis) {
-                // Buscar en análisis de pH
-                $phAnalysis = PhAnalysis::with([
-                    'analysis.process.quote', 
-                    'analysis.service',
-                    'analysis.process.customer',
-                    'analysis.process.quote.customer',
-                    'user'
-                ])->find($id);
-                if ($phAnalysis) {
-                    $analysis = $phAnalysis;
-                    $type = 'ph';
+        if (!$analysis) {
+            // Buscar en análisis de pH
+            $phAnalysis = PhAnalysis::with([
+                'analysis.process.quote', 
+                'analysis.service',
+                'analysis.process.customer',
+                'analysis.process.quote.customer',
+                'user'
+            ])->find($id);
+            if ($phAnalysis) {
+                $analysis = $phAnalysis;
+                $type = 'ph';
                 }
             }
             if (!$analysis) {
@@ -1026,8 +1550,8 @@ class ReviewController extends Controller
             }
             if (!$analysis) {
                 $humidityAnalysis = HumidityAnalysis::with([
-                    'analysis.process.quote', 'analysis.service', 'analysis.process.customer', 'analysis.process.quote.customer', 'user'
-                ])->find($id);
+                    'process.quote', 'process.customer', 'user'
+                    ])->find($id);
                 if ($humidityAnalysis) {
                     $analysis = $humidityAnalysis;
                     $type = 'humidity';
@@ -1041,66 +1565,64 @@ class ReviewController extends Controller
                 }
             }
             if (!$analysis) {
-                $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer','service'])->find($id);
+                $textureAnalysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['process.quote.customer', 'analyticalControls'])->find($id);
                 if ($textureAnalysis) {
                     $analysis = $textureAnalysis;
                     $type = 'texture';
                 }
             }
             if (!$analysis) {
-                $boronAnalysis = BoronAnalysisDetail::with(['process.quote.customer','service'])->find($id);
+                $boronAnalysis = BoronAnalysisDetail::with(['process.quote.customer','service','user'])->find($id);
                 if ($boronAnalysis) {
                     $analysis = $boronAnalysis;
                     $type = 'boron';
                 }
             }
             if (!$analysis) {
-                $carbonAnalysis = CarbonoAnalysis::with(['process.quote.customer','user'])->find($id);
-                if ($carbonAnalysis) {
-                    $analysis = $carbonAnalysis;
-                    $type = 'carbon';
+                $micronutrientsAnalysis = MicronutrientsAnalysis::with(['analysis.process.quote.customer','analysis.service','user'])->find($id);
+                if ($micronutrientsAnalysis) {
+                    $analysis = $micronutrientsAnalysis;
+                    $type = 'micronutrients';
                 }
             }
             if (!$analysis) {
-                $acidityAnalysis = AcidezAnalysis::with(['process.quote.customer','user'])->find($id);
-                if ($acidityAnalysis) {
-                    $analysis = $acidityAnalysis;
-                    $type = 'acidity';
+                $cationicAnalysis = CationicAnalysis::with(['process.quote.customer','analyticalControl'])->find($id);
+                if ($cationicAnalysis) {
+                    $analysis = $cationicAnalysis;
+                    $type = 'cationic';
                 }
             }
-
-            // Si no se encontró ningún análisis
             if (!$analysis) {
-                \Log::error('No se encontró ningún análisis con ID: ' . $id);
-                return redirect()->route('lscefa.quality.reviews.index')
-                    ->with('error', 'No se encontró el análisis solicitado.');
+                $sulfurAnalysis = SulfurAnalysis::with(['process.quote.customer','analyticalControl'])->find($id);
+                if ($sulfurAnalysis) {
+                    $analysis = $sulfurAnalysis;
+                    $type = 'sulfur';
+                }
             }
-
-            \Log::info('Análisis encontrado', [
-                'id' => $id,
-                'type' => $type,
-                'analysis_class' => get_class($analysis)
-            ]);
-
-            // Preparar datos básicos
+        
+        if (!$analysis) {
+            return redirect()->route('lscefa.quality.reviews.index')
+                ->with('error', 'No se encontró el análisis solicitado.');
+        }
+        
             $detail = $analysis->analysis ?? null;
             $process = $detail->process ?? $analysis->process ?? null;
             $quote = $process->quote ?? null;
             $customer = $process->customer ?? ($quote->customer ?? null);
-
-            // Resolver nombre del técnico responsable
-            $technicianName = null;
-            try {
-                if (isset($analysis->user) && $analysis->user) {
-                    $technicianName = $analysis->user->nickname ?? $analysis->user->name ?? null;
-                }
-                if (!$technicianName && !empty($analysis->user_id)) {
-                    $user = \App\Models\User::find($analysis->user_id);
-                    $technicianName = $user->nickname ?? $user->name ?? null;
-                }
-            } catch (\Throwable $e) {
-                \Log::warning('No se pudo resolver el técnico responsable: ' . $e->getMessage());
+        
+        // Resolver nombre del técnico responsable con fallback
+        $technicianName = null;
+        try {
+            if (isset($analysis->user) && $analysis->user) {
+                $technicianName = $analysis->user->nickname ?? $analysis->user->name ?? null;
             }
+            if (!$technicianName && !empty($analysis->user_id)) {
+                $user = \App\Models\User::find($analysis->user_id);
+                $technicianName = $user->nickname ?? $user->name ?? null;
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudo resolver el técnico responsable en ReviewController@show: ' . $e->getMessage());
+        }
             
             // Si es un tipo sin relación directa 'analysis' (p.ej., fósforo, boro), resolver el detail por process_id + service_id
             if (!$detail && in_array($type, ['phosphorus','boron'])) {
@@ -1114,6 +1636,20 @@ class ReviewController extends Controller
                     \Log::warning('ReviewController@show: no se pudo resolver ServiceProcessDetail para tipo '.$type.' - '.$e->getMessage());
                 }
             }
+            
+            // Para humedad, resolver el detail solo por process_id
+            if (!$detail && $type === 'humidity') {
+                try {
+                    if (!empty($analysis->process_id)) {
+                        $detail = ServiceProcessDetail::where('process_id', $analysis->process_id)
+                            ->where('service_id', 'LIKE', '%humedad%')
+                            ->orWhere('service_id', 'LIKE', '%humidity%')
+                            ->first();
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('ReviewController@show: no se pudo resolver ServiceProcessDetail para humedad - '.$e->getMessage());
+                }
+            }
 
             // Si logramos resolver $detail posteriormente y faltan datos de proceso/cliente, recomputarlos
             if ($detail && (!$process)) {
@@ -1124,26 +1660,22 @@ class ReviewController extends Controller
                 } catch (\Throwable $e) {
                     \Log::debug('ReviewController@show recompute process/customer failed: '.$e->getMessage());
                 }
-            }
-
-            // Determinar qué vista usar según el tipo de análisis
-            $view = match($type) {
-                'ph' => 'lscefa::reviews.ph_review',
-                'conductivity' => 'lscefa::reviews.conductivity_show',
+        }
+        
+        // Determinar qué vista usar según el tipo de análisis
+        $view = match($type) {
+            'ph' => 'lscefa::reviews.ph_review',
+            'conductivity' => 'lscefa::reviews.conductivity_show',
                 'humidity' => 'lscefa::reviews.humidity_show',
-                'phosphorus' => 'lscefa::reviews.phosphorus_review',
-                'texture' => 'lscefa::reviews.texture_readonly',
-                'boron' => 'lscefa::reviews.boron_readonly',
-                'carbon' => 'lscefa::reviews.carbon_show',
-                'acidity' => 'lscefa::reviews.acidity_show', // Restaurar vista original
-                default => 'lscefa::reviews.ph_review'
-            };
-
-            \Log::info('Vista seleccionada', [
-                'type' => $type,
-                'view' => $view
-            ]);
-
+            'phosphorus' => 'lscefa::reviews.phosphorus_review',
+            'texture' => 'lscefa::reviews.texture_readonly',
+            'boron' => 'lscefa::reviews.boron_readonly',
+            'micronutrients' => 'lscefa::reviews.micronutrients_readonly',
+            'cationic' => 'lscefa::reviews.cationic_readonly',
+            'sulfur' => 'lscefa::reviews.sulfur_readonly',
+            default => 'lscefa::reviews.ph_review'
+        };
+        
             // Preparar datos específicos según el tipo de análisis
             $viewData = [
                 'detail' => $detail,
@@ -1155,7 +1687,7 @@ class ReviewController extends Controller
                 'technicianName' => $technicianName,
                 'type' => $type,
             ];
-
+            
             // Agregar datos específicos según el tipo
             if ($type === 'ph') {
                 $viewData = array_merge($viewData, $this->preparePhData($analysis));
@@ -1163,10 +1695,16 @@ class ReviewController extends Controller
                 $viewData = array_merge($viewData, $this->prepareHumidityData($analysis));
             } elseif ($type === 'phosphorus') {
                 $viewData = array_merge($viewData, $this->preparePhosphorusData($analysis));
-            } elseif ($type === 'carbon') {
-                $viewData = array_merge($viewData, $this->prepareCarbonData($analysis));
-            } elseif ($type === 'acidity') {
-                $viewData = array_merge($viewData, $this->prepareAcidityData($analysis));
+            } elseif ($type === 'texture') {
+                $viewData = array_merge($viewData, $this->prepareTextureData($analysis));
+            } elseif ($type === 'boron') {
+                $viewData = array_merge($viewData, $this->prepareBoronData($analysis));
+            } elseif ($type === 'micronutrients') {
+                $viewData = array_merge($viewData, $this->prepareMicronutrientsData($analysis));
+            } elseif ($type === 'cationic') {
+                $viewData = array_merge($viewData, $this->prepareCationicData($analysis));
+            } elseif ($type === 'sulfur') {
+                $viewData = array_merge($viewData, $this->prepareSulfurData($analysis));
             }
 
             try {
@@ -1192,6 +1730,15 @@ class ReviewController extends Controller
                 'service_id' => $analysis->service_id ?? ($detail->service_id ?? null),
                 'detail_id' => $detail->id ?? null,
             ]);
+            
+            // Log específico para debugging de Boro
+            if ($type === 'boron') {
+                \Log::info('ReviewController@show: Análisis de Boro detectado', [
+                    'analysis_id' => $analysis->id,
+                    'view' => $view,
+                    'has_prepareBoronData' => method_exists($this, 'prepareBoronData')
+                ]);
+            }
 
             return view($view, $viewData);
             
@@ -1235,77 +1782,77 @@ class ReviewController extends Controller
             }
         }
 
-        // Procesar controles analíticos
-        if (isset($analysis->controles_analiticos)) {
-            if (is_string($analysis->controles_analiticos)) {
-                $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
-            } elseif (is_array($analysis->controles_analiticos)) {
-                $controles_analiticos = $analysis->controles_analiticos;
-            } elseif (is_object($analysis->controles_analiticos)) {
-                $controles_analiticos = (array)$analysis->controles_analiticos;
-            }
-            
-            $controles_analiticos = array_values($controles_analiticos);
-            
-            foreach ($controles_analiticos as $k => $ctrl) {
-                if (is_object($ctrl)) {
-                    $controles_analiticos[$k] = (array) $ctrl;
+            // Procesar controles analíticos
+            if (isset($analysis->controles_analiticos)) {
+                if (is_string($analysis->controles_analiticos)) {
+                    $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
+                } elseif (is_array($analysis->controles_analiticos)) {
+                    $controles_analiticos = $analysis->controles_analiticos;
+                } elseif (is_object($analysis->controles_analiticos)) {
+                    $controles_analiticos = (array)$analysis->controles_analiticos;
                 }
-            }
-        }
-        
-        // Procesar precisión analítica
-        if (isset($analysis->precision_analitica)) {
-            if (is_string($analysis->precision_analitica)) {
-                $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
-            } elseif (is_array($analysis->precision_analitica)) {
-                $precision_analitica = $analysis->precision_analitica;
-            } elseif (is_object($analysis->precision_analitica)) {
-                $precision_analitica = (array)$analysis->precision_analitica;
-            }
-            
-            if (isset($precision_analitica['duplicados'])) {
-                $duplicados = $precision_analitica['duplicados'];
-                if (is_string($duplicados)) {
-                    $duplicados = json_decode($duplicados, true) ?? [];
-                }
-                $precision_analitica['duplicados'] = $duplicados;
-            }
-            
-            if (isset($precision_analitica['replicas'])) {
-                $replicas = $precision_analitica['replicas'];
-                if (is_string($replicas)) {
-                    $replicas = json_decode($replicas, true) ?? [];
-                }
-                $precision_analitica['replicas'] = $replicas;
-            }
-        }
-        
-        // Procesar muestra de referencia
-        if (isset($analysis->muestra_referencia)) {
-            if (is_string($analysis->muestra_referencia)) {
-                $muestra_referencia = json_decode($analysis->muestra_referencia, true) ?? [];
-            } elseif (is_array($analysis->muestra_referencia)) {
-                $muestra_referencia = $analysis->muestra_referencia;
-            } elseif (is_object($analysis->muestra_referencia)) {
-                $muestra_referencia = (array)$analysis->muestra_referencia;
-            }
-        } elseif (isset($controles_analiticos[3])) {
-            $muestra_referencia = is_array($controles_analiticos[3]) 
-                ? $controles_analiticos[3] 
-                : (array)$controles_analiticos[3];
                 
-            $muestra_referencia = array_merge([
-                'identificacion' => 'Muestra de referencia o MRC',
-                'lote' => '',
-                'peso' => '',
-                'volumen_agua' => '',
-                'temperatura' => '',
-                'valor_leido' => '',
-                'valor_esperado' => '',
-                'aceptable' => false,
-                'observaciones' => ''
-            ], $muestra_referencia);
+                $controles_analiticos = array_values($controles_analiticos);
+
+                foreach ($controles_analiticos as $k => $ctrl) {
+                    if (is_object($ctrl)) {
+                        $controles_analiticos[$k] = (array) $ctrl;
+                    }
+                }
+            }
+            
+            // Procesar precisión analítica
+            if (isset($analysis->precision_analitica)) {
+                if (is_string($analysis->precision_analitica)) {
+                    $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
+                } elseif (is_array($analysis->precision_analitica)) {
+                    $precision_analitica = $analysis->precision_analitica;
+                } elseif (is_object($analysis->precision_analitica)) {
+                    $precision_analitica = (array)$analysis->precision_analitica;
+                }
+                
+                if (isset($precision_analitica['duplicados'])) {
+                    $duplicados = $precision_analitica['duplicados'];
+                    if (is_string($duplicados)) {
+                        $duplicados = json_decode($duplicados, true) ?? [];
+                    }
+                    $precision_analitica['duplicados'] = $duplicados;
+                }
+                
+                if (isset($precision_analitica['replicas'])) {
+                    $replicas = $precision_analitica['replicas'];
+                    if (is_string($replicas)) {
+                        $replicas = json_decode($replicas, true) ?? [];
+                    }
+                    $precision_analitica['replicas'] = $replicas;
+                }
+            }
+            
+        // Procesar muestra de referencia
+            if (isset($analysis->muestra_referencia)) {
+                if (is_string($analysis->muestra_referencia)) {
+                    $muestra_referencia = json_decode($analysis->muestra_referencia, true) ?? [];
+                } elseif (is_array($analysis->muestra_referencia)) {
+                    $muestra_referencia = $analysis->muestra_referencia;
+                } elseif (is_object($analysis->muestra_referencia)) {
+                    $muestra_referencia = (array)$analysis->muestra_referencia;
+                }
+            } elseif (isset($controles_analiticos[3])) { 
+                $muestra_referencia = is_array($controles_analiticos[3]) 
+                    ? $controles_analiticos[3] 
+                    : (array)$controles_analiticos[3];
+                    
+                $muestra_referencia = array_merge([
+                    'identificacion' => 'Muestra de referencia o MRC',
+                    'lote' => '',
+                    'peso' => '',
+                    'volumen_agua' => '',
+                    'temperatura' => '',
+                    'valor_leido' => '',
+                    'valor_esperado' => '',
+                    'aceptable' => false,
+                    'observaciones' => ''
+                ], $muestra_referencia);
         }
         
         // Calcular estadísticas
@@ -1340,9 +1887,8 @@ class ReviewController extends Controller
      */
     protected function prepareHumidityData($analysis)
     {
-        // Obtener todos los análisis de humedad del mismo servicio
-        $allHumidityAnalyses = HumidityAnalysis::where('service_id', $analysis->service_id)
-            ->where('analysis_id', $analysis->analysis_id)
+        // Obtener todos los análisis de humedad del mismo proceso
+        $allHumidityAnalyses = HumidityAnalysis::where('process_id', $analysis->process_id)
             ->orderBy('consecutivo_no')
             ->get();
         
@@ -1396,29 +1942,22 @@ class ReviewController extends Controller
         
         // *** NUEVA LÓGICA PARA OBTENER CONTROLES ANALÍTICOS ***
         // Obtener todos los controles analíticos asociados a este proceso
-        $controles_analiticos = AnalyticalControl::where('process_id', $analysis->process_id)
-            ->where(function($query) use ($analysis) {
-                $query->where('analysis_id', $analysis->analysis_id) // analysis_id del ServiceProcessDetail
-                      ->orWhere('humidity_analysis_id', $analysis->id); // humidity_analysis_id directo
-            })
+        $controles_analiticos = \Modules\LSCEFA\Entities\AnalyticalControl::where('process_id', $analysis->process_id)
+            ->where('humidity_analysis_id', $analysis->id) // humidity_analysis_id directo
             ->get();
         
         // Debug: Log de la consulta y resultados
         \Log::info('Consulta controles analíticos para humedad:', [
             'process_id' => $analysis->process_id,
-            'analysis_id' => $analysis->analysis_id,
             'humidity_analysis_id' => $analysis->id,
             'controles_encontrados' => $controles_analiticos->count(),
-            'sql' => AnalyticalControl::where('process_id', $analysis->process_id)
-                ->where(function($query) use ($analysis) {
-                    $query->where('analysis_id', $analysis->analysis_id)
-                          ->orWhere('humidity_analysis_id', $analysis->id);
-                })->toSql()
+            'sql' => \Modules\LSCEFA\Entities\AnalyticalControl::where('process_id', $analysis->process_id)
+                ->where('humidity_analysis_id', $analysis->id)->toSql()
         ]);
         
         // Si no se encontraron controles, intentar con una consulta más amplia
         if ($controles_analiticos->isEmpty()) {
-            $controles_analiticos = AnalyticalControl::where('process_id', $analysis->process_id)->get();
+            $controles_analiticos = \Modules\LSCEFA\Entities\AnalyticalControl::where('process_id', $analysis->process_id)->get();
             \Log::info('Consulta ampliada de controles analíticos:', [
                 'total_controles_encontrados' => $controles_analiticos->count(),
                 'controles' => $controles_analiticos->toArray()
@@ -1427,9 +1966,8 @@ class ReviewController extends Controller
         
         // Si aún no se encontraron controles, buscar por cualquier campo relacionado
         if ($controles_analiticos->isEmpty()) {
-            $controles_analiticos = AnalyticalControl::where(function($query) use ($analysis) {
+            $controles_analiticos = \Modules\LSCEFA\Entities\AnalyticalControl::where(function($query) use ($analysis) {
                 $query->where('process_id', $analysis->process_id)
-                      ->orWhere('analysis_id', $analysis->analysis_id)
                       ->orWhere('humidity_analysis_id', $analysis->id);
             })->get();
             \Log::info('Consulta final de controles analíticos:', [
@@ -1445,278 +1983,6 @@ class ReviewController extends Controller
             'controles_analiticos' => $controles_analiticos,
         ];
     }
-
-    /**
-     * Prepara los datos específicos para análisis de carbono
-     */
-    protected function prepareCarbonData($analysis)
-    {
-        $items_ensayo = [];
-        $controles_analiticos = [];
-        $muestra_referencia = [];
-        $precision_analitica = [];
-        
-        // Función auxiliar para normalizar un item a estructura común
-        $normalizeItem = function($item) {
-            if (is_object($item)) { $item = (array)$item; }
-            if (!is_array($item)) { return null; }
-            return [
-                'identificacion' => $item['identificacion'] ?? 'N/A',
-                'peso_muestra' => $item['peso_muestra'] ?? 'N/A',
-                'porcentaje_co_total' => $item['porcentaje_co_total'] ?? 'N/A',
-                'porcentaje_cot' => $item['porcentaje_cot'] ?? 'N/A',
-                'porcentaje_mo' => $item['porcentaje_mo'] ?? 'N/A',
-                'porcentaje_humedad' => $item['porcentaje_humedad'] ?? 'N/A',
-                'observaciones' => $item['observaciones'] ?? '',
-            ];
-        };
-
-        // Procesar ítems de ensayo del análisis actual
-        if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
-            foreach ($analysis->items_ensayo as $item) {
-                $norm = $normalizeItem($item);
-                if ($norm !== null) { $items_ensayo[] = $norm; }
-            }
-        }
-
-        // Procesar controles analíticos
-        if (isset($analysis->controles_analiticos)) {
-            if (is_string($analysis->controles_analiticos)) {
-                $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
-            } elseif (is_array($analysis->controles_analiticos)) {
-                $controles_analiticos = $analysis->controles_analiticos;
-            } elseif (is_object($analysis->controles_analiticos)) {
-                $controles_analiticos = (array)$analysis->controles_analiticos;
-            }
-            
-            $controles_analiticos = array_values($controles_analiticos);
-            
-            foreach ($controles_analiticos as $k => $ctrl) {
-                if (is_object($ctrl)) {
-                    $controles_analiticos[$k] = (array) $ctrl;
-                }
-            }
-        }
-        
-        // Procesar precisión analítica
-        if (isset($analysis->precision_analitica)) {
-            if (is_string($analysis->precision_analitica)) {
-                $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
-            } elseif (is_array($analysis->precision_analitica)) {
-                $precision_analitica = $analysis->precision_analitica;
-            } elseif (is_object($analysis->precision_analitica)) {
-                $precision_analitica = (array)$analysis->precision_analitica;
-            }
-            
-            if (isset($precision_analitica['duplicados'])) {
-                $duplicados = $precision_analitica['duplicados'];
-                if (is_string($duplicados)) {
-                    $duplicados = json_decode($duplicados, true) ?? [];
-                }
-                $precision_analitica['duplicados'] = $duplicados;
-            }
-            
-            if (isset($precision_analitica['replicas'])) {
-                $replicas = $precision_analitica['replicas'];
-                if (is_string($replicas)) {
-                    $replicas = json_decode($replicas, true) ?? [];
-                }
-                $precision_analitica['replicas'] = $replicas;
-            }
-        }
-        
-        // Procesar muestra de referencia
-        if (isset($analysis->muestra_referencia)) {
-            if (is_string($analysis->muestra_referencia)) {
-                $muestra_referencia = json_decode($analysis->muestra_referencia, true) ?? [];
-            } elseif (is_array($analysis->muestra_referencia)) {
-                $muestra_referencia = $analysis->muestra_referencia;
-            } elseif (is_object($analysis->muestra_referencia)) {
-                $muestra_referencia = (array)$analysis->muestra_referencia;
-            }
-        } elseif (isset($controles_analiticos[3])) {
-            $muestra_referencia = is_array($controles_analiticos[3]) 
-                ? $controles_analiticos[3] 
-                : (array)$controles_analiticos[3];
-                
-            $muestra_referencia = array_merge([
-                'identificacion' => 'Muestra de referencia o MRC',
-                'lote' => '',
-                'peso' => '',
-                'volumen_agua' => '',
-                'temperatura' => '',
-                'valor_leido' => '',
-                'valor_esperado' => '',
-                'aceptable' => false,
-                'observaciones' => ''
-            ], $muestra_referencia);
-        }
-        
-        // Calcular estadísticas
-        $estadisticas = [];
-        if (!empty($items_ensayo)) {
-            $totalCarbon = 0;
-            $countCarbon = 0;
-            
-            foreach ($items_ensayo as $item) {
-                if (isset($item['porcentaje_co_total']) && is_numeric($item['porcentaje_co_total'])) {
-                    $totalCarbon += $item['porcentaje_co_total'];
-                    $countCarbon++;
-                }
-            }
-            
-            if ($countCarbon > 0) {
-                $estadisticas['promedio_carbono'] = $totalCarbon / $countCarbon;
-            }
-        }
-        
-        return [
-            'items_ensayo' => $items_ensayo,
-            'controles_analiticos' => $controles_analiticos,
-            'muestra_referencia' => $muestra_referencia,
-            'precision_analitica' => $precision_analitica,
-            'estadisticas' => $estadisticas,
-        ];
-    }
-
-    /**
-     * Prepara los datos específicos para análisis de acidez
-     */
-   protected function prepareAcidityData($analysis)
-{
-    \Log::info('prepareAcidityData iniciado para análisis ID: ' . $analysis->id);
-    
-    $items_ensayo = [];
-    $controles_analiticos = [];
-    $muestra_referencia = [];
-    $precision_analitica = [];
-    
-    // Función auxiliar para normalizar un item a estructura común
-    $normalizeItem = function($item) {
-        if (is_object($item)) { $item = (array)$item; }
-        if (!is_array($item)) { return null; }
-        return [
-            'identificacion' => $item['identificacion'] ?? 'N/A',
-            'peso_muestra' => $item['peso_muestra'] ?? 'N/A',
-            'consumido_blanco' => $item['consumido_blanco'] ?? 'N/A',
-            'consumido_muestra' => $item['consumido_muestra'] ?? 'N/A',
-            'acidez' => $item['acidez'] ?? 'N/A',
-            'observaciones' => $item['observaciones'] ?? '',
-        ];
-    };
-
-    // Procesar ítems de ensayo del análisis actual
-    if (isset($analysis->items_ensayo) && is_array($analysis->items_ensayo)) {
-        foreach ($analysis->items_ensayo as $item) {
-            $norm = $normalizeItem($item);
-            if ($norm !== null) { $items_ensayo[] = $norm; }
-        }
-    }
-
-    // Procesar controles analíticos
-    if (isset($analysis->controles_analiticos)) {
-        if (is_string($analysis->controles_analiticos)) {
-            $controles_analiticos = json_decode($analysis->controles_analiticos, true) ?? [];
-        } elseif (is_array($analysis->controles_analiticos)) {
-            $controles_analiticos = $analysis->controles_analiticos;
-        } elseif (is_object($analysis->controles_analiticos)) {
-            $controles_analiticos = (array)$analysis->controles_analiticos;
-        }
-        
-        $controles_analiticos = array_values($controles_analiticos);
-        
-        foreach ($controles_analiticos as $k => $ctrl) {
-            if (is_object($ctrl)) {
-                $controles_analiticos[$k] = (array) $ctrl;
-            }
-        }
-    }
-    
-    // Procesar precisión analítica
-    if (isset($analysis->precision_analitica)) {
-        if (is_string($analysis->precision_analitica)) {
-            $precision_analitica = json_decode($analysis->precision_analitica, true) ?? [];
-        } elseif (is_array($analysis->precision_analitica)) {
-            $precision_analitica = $analysis->precision_analitica;
-        } elseif (is_object($analysis->precision_analitica)) {
-            $precision_analitica = (array)$analysis->precision_analitica;
-        }
-        
-        if (isset($precision_analitica['duplicados'])) {
-            $duplicados = $precision_analitica['duplicados'];
-            if (is_string($duplicados)) {
-                $duplicados = json_decode($duplicados, true) ?? [];
-            }
-            $precision_analitica['duplicados'] = $duplicados;
-        }
-        
-        if (isset($precision_analitica['replicas'])) {
-            $replicas = $precision_analitica['replicas'];
-            if (is_string($replicas)) {
-                $replicas = json_decode($replicas, true) ?? [];
-            }
-            $precision_analitica['replicas'] = $replicas;
-        }
-    }
-    
-    // Procesar muestra de referencia
-    if (isset($analysis->muestra_referencia)) {
-        if (is_string($analysis->muestra_referencia)) {
-            $muestra_referencia = json_decode($analysis->muestra_referencia, true) ?? [];
-        } elseif (is_array($analysis->muestra_referencia)) {
-            $muestra_referencia = $analysis->muestra_referencia;
-        } elseif (is_object($analysis->muestra_referencia)) {
-            $muestra_referencia = (array)$analysis->muestra_referencia;
-        }
-    } elseif (isset($controles_analiticos[3])) {
-        $muestra_referencia = is_array($controles_analiticos[3]) 
-            ? $controles_analiticos[3] 
-            : (array)$controles_analiticos[3];
-            
-        $muestra_referencia = array_merge([
-            'identificacion' => 'Muestra de referencia o MRC',
-            'lote' => '',
-            'peso' => '',
-            'consumido' => '',
-            'valor_leido' => '',
-            'valor_esperado' => '',
-            'aceptable' => false,
-            'observaciones' => ''
-        ], $muestra_referencia);
-    }
-    
-    // Calcular estadísticas
-    $estadisticas = [];
-    if (!empty($items_ensayo)) {
-        $totalAcidez = 0;
-        $countAcidez = 0;
-        
-        foreach ($items_ensayo as $item) {
-            if (isset($item['acidez']) && is_numeric($item['acidez'])) {
-                $totalAcidez += $item['acidez'];
-                $countAcidez++;
-            }
-        }
-        
-        if ($countAcidez > 0) {
-            $estadisticas['promedio_acidez'] = $totalAcidez / $countAcidez;
-            $estadisticas['min_acidez'] = min(array_column($items_ensayo, 'acidez'));
-            $estadisticas['max_acidez'] = max(array_column($items_ensayo, 'acidez'));
-            $estadisticas['total_muestras'] = $countAcidez;
-        }
-    }
-    
-    $result = [
-        'items_ensayo' => $items_ensayo,
-        'controles_analiticos' => $controles_analiticos,
-        'muestra_referencia' => $muestra_referencia,
-        'precision_analitica' => $precision_analitica,
-        'estadisticas' => $estadisticas,
-    ];
-    
-    \Log::info('prepareAcidityData completado. Resultado:', array_keys($result));
-    return $result;
-}
 
     // Ver detalle en modo solo lectura
     public function showDetail(ServiceProcessDetail $detail)
@@ -1735,25 +2001,9 @@ class ReviewController extends Controller
         } elseif (str_contains($serviceName, 'humedad')) {
             $model = 'humidityAnalysis';
             $view = 'lscefa::reviews.humidity_show';
-        } elseif (str_contains($serviceName, 'fosforo')) {
-            $model = 'phosphorusAnalysis';
-            $view = 'lscefa::reviews.ph_review';
-        } elseif (str_contains($serviceName, 'textura')) {
-            $model = 'textureAnalysis';
-            $view = 'lscefa::reviews.ph_review';
-        } elseif (str_contains($serviceName, 'boro')) {
-            $model = 'boronAnalysisDetail';
-            $view = 'lscefa::reviews.ph_review';
-        } elseif (str_contains($serviceName, 'carbono')) {
-            $model = 'carbonoAnalysis';
-            $view = 'lscefa::reviews.carbon_show';
-        } elseif (str_contains($serviceName, 'acidez')) {
-            $model = 'acidezAnalysis';
-            $view = 'lscefa::reviews.acidity';
         } else {
             return view('lscefa::reviews.generic_show', compact('detail'));
         }
-
         
         // Cargar el análisis específico
         $analysis = $detail->{$model};
@@ -1782,11 +2032,7 @@ class ReviewController extends Controller
                     'humidityAnalysis',
                     'phAnalysis.user',
                     'conductivityAnalysis.user',
-                    'humidityAnalysis.user',
-                    'carbonoAnalysis',
-                    'carbonoAnalysis.user',
-                    'acidezAnalysis',
-                    'acidezAnalysis.user'
+                    'humidityAnalysis.user'
                 ]);
             },
             'customer',
@@ -1797,9 +2043,7 @@ class ReviewController extends Controller
         $analyses = [
             'ph' => [],
             'conductivity' => [],
-            'humidity' => [],
-            'carbon' => [],
-            'acidity' => []
+            'humidity' => []
         ];
 
         // Recorrer todos los detalles del proceso
@@ -1828,27 +2072,10 @@ class ReviewController extends Controller
                     'service' => $detail->service
                 ];
             }
-            // Verificar si es un análisis de carbono
-            if ($detail->carbonoAnalysis) {
-                $analyses['carbon'][] = [
-                    'detail' => $detail,
-                    'analysis' => $detail->carbonoAnalysis,
-                    'service' => $detail->service
-                ];
-            }
-            // Verificar si es un análisis de acidez
-            if ($detail->acidezAnalysis) {
-                $analyses['acidity'][] = [
-                    'detail' => $detail,
-                    'analysis' => $detail->acidezAnalysis,
-                    'service' => $detail->service
-                ];
-            }
         }
 
-
         // Verificar si hay análisis para mostrar
-        if (empty($analyses['ph']) && empty($analyses['conductivity']) && empty($analyses['humidity']) && empty($analyses['carbon']) && empty($analyses['acidity'])) {
+        if (empty($analyses['ph']) && empty($analyses['conductivity']) && empty($analyses['humidity'])) {
             return redirect()->route('lscefa.quality.reviews.index')
                 ->with('error', 'No se encontraron análisis para revisar en este proceso.');
         }
@@ -1861,7 +2088,7 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['nullable', 'string', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron,carbon,acidity'],
+            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron,micronutrients,cationic,sulfur'],
         ]);
 
         // Buscar el análisis específico según el tipo
@@ -1877,12 +2104,14 @@ class ReviewController extends Controller
             $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'boron') {
             $analysis = BoronAnalysisDetail::findOrFail($id);
-        } elseif ($validated['analysis_type'] === 'carbon') {
-            $analysis = CarbonoAnalysis::findOrFail($id);
-        } elseif ($validated['analysis_type'] === 'acidity') {
-            $analysis = AcidezAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'micronutrients') {
+            $analysis = MicronutrientsAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'cationic') {
+            $analysis = CationicAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'sulfur') {
+            $analysis = SulfurAnalysis::findOrFail($id);
         }
-      
+
         // Actualizar el estado de revisión
         $analysis->review_status = 'approved';
         if (array_key_exists('observations', $validated)) {
@@ -2004,10 +2233,10 @@ class ReviewController extends Controller
                         if (is_array($samples)) {
                             foreach ($samples as $sample) {
                                 if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
-                                    $resultsOnly[] = [
+                            $resultsOnly[] = [
                                         'identificacion' => $sample['codigo_interno'] ?? null,
                                         'resultado' => $sample['clase_textural'] ?? null,
-                                    ];
+                            ];
                                 }
                             }
                         }
@@ -2017,18 +2246,18 @@ class ReviewController extends Controller
                             'identificacion' => $analysis->internal_code ?? null,
                             'resultado' => $analysis->available_boron_mg_kg ?? $analysis->available_boron_mg_l ?? null,
                         ];
-                    } elseif ($validated['analysis_type'] === 'carbon') {
-                        // Para carbono, extraer datos del análisis individual
-                        $resultsOnly[] = [
-                            'identificacion' => $analysis->codigo_interno ?? null,
-                            'resultado' => $analysis->porcentaje_co_total ?? $analysis->porcentaje_cot ?? null,
-                        ];
-                    } elseif ($validated['analysis_type'] === 'acidity') {
-                        // Para acidez, extraer datos del análisis individual
-                        $resultsOnly[] = [
-                            'identificacion' => $analysis->codigo_interno ?? null,
-                            'resultado' => $analysis->acidez ?? null,
-                        ];
+                    } elseif ($validated['analysis_type'] === 'micronutrients') {
+                        // Para micronutrientes, extraer datos de los items_ensayo
+                        $items = is_array($analysis->items_ensayo) ? $analysis->items_ensayo : [];
+                        foreach ($items as $item) {
+                            if (is_array($item) || is_object($item)) {
+                                $item = is_object($item) ? (array)$item : $item;
+                                $resultsOnly[] = [
+                                    'identificacion' => $item['codigo_interno'] ?? null,
+                                    'resultado' => $item['mn_resultado'] ?? $item['fe_resultado'] ?? $item['zn_resultado'] ?? $item['cu_resultado'] ?? null,
+                                ];
+                            }
+                        }
                     } else { // conductivity
                         foreach ($items as $item) {
                             if (is_object($item)) { $item = (array)$item; }
@@ -2120,29 +2349,14 @@ class ReviewController extends Controller
                 }
             }
             
-            // Verificar análisis de carbono
-            if ($validated['analysis_type'] === 'carbon') {
-                // Para carbono, verificar si hay otros análisis del mismo proceso
-                $otherCarbonAnalyses = CarbonoAnalysis::where('process_id', $analysis->process_id)
+            // Verificar análisis de micronutrientes
+            if ($validated['analysis_type'] === 'micronutrients') {
+                // Para micronutrientes, verificar si hay otros análisis del mismo proceso
+                $otherMicronutrientsAnalyses = MicronutrientsAnalysis::where('analysis_id', $analysis->analysis_id)
                     ->where('id', '!=', $analysis->id)
                     ->get();
                 
-                foreach ($otherCarbonAnalyses as $otherAnalysis) {
-                    if ($otherAnalysis->review_status !== 'approved') {
-                        $allApproved = false;
-                        break;
-                    }
-                }
-            }
-            
-            // Verificar análisis de acidez
-            if ($validated['analysis_type'] === 'acidity') {
-                // Para acidez, verificar si hay otros análisis del mismo proceso
-                $otherAcidityAnalyses = AcidezAnalysis::where('process_id', $analysis->process_id)
-                    ->where('id', '!=', $analysis->id)
-                    ->get();
-                
-                foreach ($otherAcidityAnalyses as $otherAnalysis) {
+                foreach ($otherMicronutrientsAnalyses as $otherAnalysis) {
                     if ($otherAnalysis->review_status !== 'approved') {
                         $allApproved = false;
                         break;
@@ -2157,20 +2371,9 @@ class ReviewController extends Controller
             }
         }
 
-        // Redirigir según el tipo de análisis
-        if ($validated['analysis_type'] === 'humidity') {
-            // Para humedad, redirigir a la página de informes
-            return redirect()
-                ->route('lscefa.quality.reports.index')
-                ->with('success', 'Análisis de humedad aprobado correctamente. Redirigiendo a informes.');
-        } else {
-            // Para otros tipos, mantener la redirección original
-            return redirect()
-                ->route('lscefa.quality.reviews.index')
-                ->with('success', 'Análisis aprobado correctamente.');
-        }
-
-        
+        return redirect()
+            ->route('lscefa.quality.reviews.index')
+            ->with('success', 'Análisis aprobado correctamente.');
     }
 
     // Rechazar reporte (requiere observaciones)
@@ -2178,7 +2381,7 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'observations' => ['required', 'string', 'min:3', 'max:5000'],
-            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron,carbon,acidity'],
+            'analysis_type' => ['required', 'in:ph,conductivity,humidity,phosphorus,texture,boron,micronutrients,cationic,sulfur'],
         ], [
             'observations.required' => 'Debe ingresar observaciones para rechazar el análisis.',
             'observations.min' => 'Las observaciones deben tener al menos :min caracteres.',
@@ -2197,10 +2400,12 @@ class ReviewController extends Controller
             $analysis = \Modules\LSCEFA\Entities\BatchTextureAnalysis::findOrFail($id);
         } elseif ($validated['analysis_type'] === 'boron') {
             $analysis = BoronAnalysisDetail::findOrFail($id);
-        } elseif ($validated['analysis_type'] === 'carbon') {
-            $analysis = CarbonoAnalysis::findOrFail($id);
-        } elseif ($validated['analysis_type'] === 'acidity') {
-            $analysis = AcidezAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'micronutrients') {
+            $analysis = MicronutrientsAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'cationic') {
+            $analysis = CationicAnalysis::findOrFail($id);
+        } elseif ($validated['analysis_type'] === 'sulfur') {
+            $analysis = SulfurAnalysis::findOrFail($id);
         }
 
         // Actualizar el estado de revisión
@@ -2211,20 +2416,20 @@ class ReviewController extends Controller
         $analysis->save();
 
         // Marcar el detalle según el tipo de análisis
-        if ($validated['analysis_type'] === 'phosphorus' || $validated['analysis_type'] === 'boron' || $validated['analysis_type'] === 'carbon' || $validated['analysis_type'] === 'acidity') {
+        if ($validated['analysis_type'] === 'phosphorus' || $validated['analysis_type'] === 'boron' || $validated['analysis_type'] === 'micronutrients' || $validated['analysis_type'] === 'cationic' || $validated['analysis_type'] === 'sulfur') {
             $detail = ServiceProcessDetail::where('process_id', $analysis->process_id)
-                ->where('service_id', $analysis->process->serviceProcessDetails->first()->service_id ?? null)
+                ->where('service_id', $analysis->service_id)
                 ->first();
         } else {
             $detail = $analysis->analysis;
         }
         if ($detail) {
-            if ($validated['analysis_type'] === 'texture' || $validated['analysis_type'] === 'boron' || $validated['analysis_type'] === 'carbon' || $validated['analysis_type'] === 'acidity') {
-                // Para textura, boro, carbono y acidez, poner en pending para que aparezca en la tabla de análisis devueltos
+            if ($validated['analysis_type'] === 'texture' || $validated['analysis_type'] === 'boron' || $validated['analysis_type'] === 'sulfur') {
+                // Para textura, boro y azufre, poner en pending para que aparezca en la tabla de análisis devueltos
                 $detail->status = 'pending';
             } else {
                 // Para otros análisis, mantener como rejected
-                $detail->status = 'rejected';
+            $detail->status = 'rejected';
             }
             $detail->save();
         }
@@ -2342,4 +2547,922 @@ class ReviewController extends Controller
             ->with('success', 'Proceso rechazado correctamente.');
     }
 
+    /**
+     * Obtiene estadísticas de los análisis de textura filtrados
+     */
+    protected function getTextureAnalysisStats($textureAnalyses)
+    {
+        $stats = [
+            'total_analisis' => $textureAnalyses->count(),
+            'por_estado' => [],
+            'por_analista' => [],
+            'por_metodologia' => [],
+            'por_equipo' => [],
+            'clases_texturales' => [],
+            'rangos_fechas' => [],
+            'porcentajes_componentes' => [
+                'arena' => ['min' => null, 'max' => null, 'promedio' => 0],
+                'arcilla' => ['min' => null, 'max' => null, 'promedio' => 0],
+                'limo' => ['min' => null, 'max' => null, 'promedio' => 0]
+            ],
+            'controles_analiticos' => [
+                'total_controles' => 0,
+                'duplicados' => 0,
+                'material_referencia' => 0,
+                'aceptables' => 0,
+                'no_aceptables' => 0
+            ]
+        ];
+
+        $totalArena = 0;
+        $totalArcilla = 0;
+        $totalLimo = 0;
+        $countComponentes = 0;
+
+        foreach ($textureAnalyses as $analysis) {
+            // Estadísticas por estado de revisión
+            $estado = $analysis->review_status ?? 'pending';
+            $stats['por_estado'][$estado] = ($stats['por_estado'][$estado] ?? 0) + 1;
+
+            // Estadísticas por analista
+            $analista = $analysis->analyst_name ?? 'Sin especificar';
+            $stats['por_analista'][$analista] = ($stats['por_analista'][$analista] ?? 0) + 1;
+
+            // Estadísticas por metodología
+            $metodologia = $analysis->methodology_used ?? 'Sin especificar';
+            $stats['por_metodologia'][$metodologia] = ($stats['por_metodologia'][$metodologia] ?? 0) + 1;
+
+            // Estadísticas por equipo
+            $equipo = $analysis->equipment_used ?? 'Sin especificar';
+            $stats['por_equipo'][$equipo] = ($stats['por_equipo'][$equipo] ?? 0) + 1;
+
+            // Estadísticas de fechas
+            if ($analysis->analysis_date) {
+                $fecha = \Carbon\Carbon::parse($analysis->analysis_date);
+                $mes = $fecha->format('Y-m');
+                $stats['rangos_fechas'][$mes] = ($stats['rangos_fechas'][$mes] ?? 0) + 1;
+            }
+
+            // Estadísticas de componentes texturales
+            $samples = is_array($analysis->samples) ? $analysis->samples : [];
+            foreach ($samples as $sample) {
+                if (is_array($sample)) {
+                    // Clases texturales
+                    if (isset($sample['clase_textural'])) {
+                        $clase = $sample['clase_textural'];
+                        $stats['clases_texturales'][$clase] = ($stats['clases_texturales'][$clase] ?? 0) + 1;
+                    }
+
+                    // Porcentajes de componentes
+                    if (isset($sample['arena']) && is_numeric($sample['arena'])) {
+                        $arena = (float)$sample['arena'];
+                        $stats['porcentajes_componentes']['arena']['min'] = 
+                            $stats['porcentajes_componentes']['arena']['min'] === null ? 
+                            $arena : min($stats['porcentajes_componentes']['arena']['min'], $arena);
+                        $stats['porcentajes_componentes']['arena']['max'] = 
+                            $stats['porcentajes_componentes']['arena']['max'] === null ? 
+                            $arena : max($stats['porcentajes_componentes']['arena']['max'], $arena);
+                        $totalArena += $arena;
+                        $countComponentes++;
+                    }
+
+                    if (isset($sample['arcilla']) && is_numeric($sample['arcilla'])) {
+                        $arcilla = (float)$sample['arcilla'];
+                        $stats['porcentajes_componentes']['arcilla']['min'] = 
+                            $stats['porcentajes_componentes']['arcilla']['min'] === null ? 
+                            $arcilla : min($stats['porcentajes_componentes']['arcilla']['min'], $arcilla);
+                        $stats['porcentajes_componentes']['arcilla']['max'] = 
+                            $stats['porcentajes_componentes']['arcilla']['max'] === null ? 
+                            $arcilla : max($stats['porcentajes_componentes']['arcilla']['max'], $arcilla);
+                        $totalArcilla += $arcilla;
+                    }
+
+                    if (isset($sample['limo']) && is_numeric($sample['limo'])) {
+                        $limo = (float)$sample['limo'];
+                        $stats['porcentajes_componentes']['limo']['min'] = 
+                            $stats['porcentajes_componentes']['limo']['min'] === null ? 
+                            $limo : min($stats['porcentajes_componentes']['limo']['min'], $limo);
+                        $stats['porcentajes_componentes']['limo']['max'] = 
+                            $stats['porcentajes_componentes']['limo']['max'] === null ? 
+                            $limo : max($stats['porcentajes_componentes']['limo']['max'], $limo);
+                        $totalLimo += $limo;
+                    }
+                }
+            }
+
+            // Estadísticas de controles analíticos
+            if (isset($analysis->analytical_controls) && !empty($analysis->analytical_controls)) {
+                $jsonControls = is_array($analysis->analytical_controls) ? 
+                    $analysis->analytical_controls : 
+                    json_decode($analysis->analytical_controls, true);
+                
+                if (is_array($jsonControls)) {
+                    foreach ($jsonControls as $key => $controlData) {
+                        if (is_array($controlData)) {
+                            $stats['controles_analiticos']['total_controles']++;
+                            
+                            // Contar duplicados
+                            if (isset($controlData['identificacion']) && 
+                                (strpos(strtolower($controlData['identificacion']), 'duplicado') !== false ||
+                                 strpos(strtolower($controlData['identificacion']), 'duplicate') !== false)) {
+                                $stats['controles_analiticos']['duplicados']++;
+                            }
+                            
+                            // Contar material de referencia
+                            if (isset($controlData['identificacion']) && 
+                                (strpos(strtolower($controlData['identificacion']), 'material de referencia') !== false ||
+                                 strpos(strtolower($controlData['identificacion']), 'reference material') !== false)) {
+                                $stats['controles_analiticos']['material_referencia']++;
+                            }
+                            
+                            // Contar por aceptabilidad
+                            if (isset($controlData['aceptabilidad_control'])) {
+                                $aceptable = strtolower($controlData['aceptabilidad_control']);
+                                if (strpos($aceptable, 'aceptable') !== false || strpos($aceptable, 'acceptable') !== false) {
+                                    $stats['controles_analiticos']['aceptables']++;
+                                } else {
+                                    $stats['controles_analiticos']['no_aceptables']++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calcular promedios
+        if ($countComponentes > 0) {
+            $stats['porcentajes_componentes']['arena']['promedio'] = round($totalArena / $countComponentes, 2);
+            $stats['porcentajes_componentes']['arcilla']['promedio'] = round($totalArcilla / $countComponentes, 2);
+            $stats['porcentajes_componentes']['limo']['promedio'] = round($totalLimo / $countComponentes, 2);
+        }
+
+        // Ordenar estadísticas
+        arsort($stats['por_estado']);
+        arsort($stats['por_analista']);
+        arsort($stats['por_metodologia']);
+        arsort($stats['por_equipo']);
+        arsort($stats['clases_texturales']);
+        arsort($stats['rangos_fechas']);
+
+        return $stats;
+    }
+
+    /**
+     * Exporta los análisis de textura filtrados a Excel
+     */
+    public function exportTextureAnalyses(Request $request)
+    {
+        try {
+            // Obtener análisis de textura con filtros
+            $textureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where(function($q) {
+                $q->whereNotNull('process_id')
+                  ->whereNotNull('service_id');
+            })->get()->filter(function($item) {
+                $spd = \Modules\LSCEFA\Models\ServiceProcessDetail::where('process_id', $item->process_id)
+                    ->where('service_id', $item->service_id)
+                    ->first();
+                return $spd && $spd->status === 'completed';
+            });
+
+            // Aplicar filtros si existen
+            if ($request->filled('texture_filter')) {
+                $textureFilter = $request->get('texture_filter');
+                $textureAnalyses = $this->applyTextureFilters($textureAnalyses, $textureFilter);
+            }
+
+            // Preparar datos para exportación
+            $exportData = [];
+            foreach ($textureAnalyses as $analysis) {
+                $samples = is_array($analysis->samples) ? $analysis->samples : [];
+                
+                foreach ($samples as $sample) {
+                    if (is_array($sample) && isset($sample['codigo_interno']) && $sample['codigo_interno'] !== 'Blanco del proceso') {
+                        $exportData[] = [
+                            'ID Análisis' => $analysis->id,
+                            'Consecutivo' => $analysis->consecutive_no,
+                            'Fecha Análisis' => $analysis->analysis_date ? \Carbon\Carbon::parse($analysis->analysis_date)->format('d/m/Y') : 'N/A',
+                            'Analista' => $analysis->analyst_name ?? 'N/A',
+                            'Metodología' => $analysis->methodology_used ?? 'N/A',
+                            'Equipo Utilizado' => $analysis->equipment_used ?? 'N/A',
+                            'Código Termómetro' => $analysis->thermometer_code ?? 'N/A',
+                            'Código Hidrómetro' => $analysis->hydrometer_code ?? 'N/A',
+                            'Código Muestra' => $sample['codigo_interno'] ?? 'N/A',
+                            'Clase Textural' => $sample['clase_textural'] ?? 'N/A',
+                            'Arena (%)' => $sample['arena'] ?? 'N/A',
+                            'Arcilla (%)' => $sample['arcilla'] ?? 'N/A',
+                            'Limo (%)' => $sample['limo'] ?? 'N/A',
+                                                                'Estado Revisión' => $analysis->review_status ?? 'pending',
+                                    'Observaciones' => $analysis->general_observations ?? 'N/A',
+                                    'Fecha Creación' => $analysis->created_at ? \Carbon\Carbon::parse($analysis->created_at)->format('d/m/Y H:i:s') : 'N/A',
+                                    'Tipo Control' => 'Muestra'
+                        ];
+                    }
+                }
+                
+                // Agregar controles analíticos si existen
+                if (isset($analysis->analytical_controls) && !empty($analysis->analytical_controls)) {
+                    $jsonControls = is_array($analysis->analytical_controls) ? 
+                        $analysis->analytical_controls : 
+                        json_decode($analysis->analytical_controls, true);
+                    
+                    if (is_array($jsonControls)) {
+                        foreach ($jsonControls as $key => $controlData) {
+                            if (is_array($controlData)) {
+                                $exportData[] = [
+                                    'ID Análisis' => $analysis->id . ' (Control)',
+                                    'Consecutivo' => $analysis->consecutive_no,
+                                    'Fecha Análisis' => $analysis->analysis_date ? \Carbon\Carbon::parse($analysis->analysis_date)->format('d/m/Y') : 'N/A',
+                                    'Analista' => $analysis->analyst_name ?? 'N/A',
+                                    'Metodología' => $analysis->methodology_used ?? 'N/A',
+                                    'Equipo Utilizado' => $analysis->equipment_used ?? 'N/A',
+                                    'Código Termómetro' => $analysis->thermometer_code ?? 'N/A',
+                                    'Código Hidrómetro' => $analysis->hydrometer_code ?? 'N/A',
+                                    'Código Muestra' => $controlData['codigo_interno'] ?? $controlData['identificacion'] ?? 'N/A',
+                                    'Clase Textural' => 'Control Analítico',
+                                    'Arena (%)' => $controlData['arena_1'] ?? $controlData['arena'] ?? 'N/A',
+                                    'Arcilla (%)' => $controlData['arcilla_1'] ?? $controlData['arcilla'] ?? 'N/A',
+                                    'Limo (%)' => $controlData['limo_1'] ?? $controlData['limo'] ?? 'N/A',
+                                    'Estado Revisión' => $analysis->review_status ?? 'pending',
+                                    'Observaciones' => $controlData['observaciones'] ?? 'N/A',
+                                    'Fecha Creación' => $analysis->created_at ? \Carbon\Carbon::parse($analysis->created_at)->format('d/m/Y H:i:s') : 'N/A',
+                                    'Tipo Control' => 'Control Analítico'
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generar nombre del archivo
+            $filename = 'analisis_textura_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+            // Exportar usando Laravel Excel si está disponible
+            if (class_exists('\Maatwebsite\Excel\Facades\Excel')) {
+                return \Maatwebsite\Excel\Facades\Excel::download(
+                    new \Modules\LSCEFA\Exports\TextureAnalysisExport($exportData),
+                    $filename
+                );
+            } else {
+                // Fallback: exportar como CSV
+                $headers = [
+                    'Content-Type' => 'text/csv',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                ];
+
+                $callback = function() use ($exportData) {
+                    $file = fopen('php://output', 'w');
+                    
+                    // Encabezados
+                    if (!empty($exportData)) {
+                        fputcsv($file, array_keys($exportData[0]));
+                        
+                        // Datos
+                        foreach ($exportData as $row) {
+                            fputcsv($file, $row);
+                        }
+                    }
+                    
+                    fclose($file);
+                };
+
+                return response()->stream($callback, 200, $headers);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Error exportando análisis de textura: ' . $e->getMessage());
+            return back()->with('error', 'Error al exportar los análisis de textura: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Obtiene un resumen de los filtros aplicados a los análisis de textura
+     */
+    protected function getTextureFiltersSummary($filters)
+    {
+        if (!$filters || !is_array($filters)) {
+            return null;
+        }
+
+        $summary = [];
+        
+        if (isset($filters['codigo_muestra']) && !empty($filters['codigo_muestra'])) {
+            $summary[] = "Código de muestra: " . $filters['codigo_muestra'];
+        }
+        
+        if (isset($filters['analista']) && !empty($filters['analista'])) {
+            $summary[] = "Analista: " . $filters['analista'];
+        }
+        
+        if (isset($filters['fecha_desde']) && !empty($filters['fecha_desde'])) {
+            $summary[] = "Desde: " . $filters['fecha_desde'];
+        }
+        
+        if (isset($filters['fecha_hasta']) && !empty($filters['fecha_hasta'])) {
+            $summary[] = "Hasta: " . $filters['fecha_hasta'];
+        }
+        
+        if (isset($filters['metodologia']) && !empty($filters['metodologia'])) {
+            $summary[] = "Metodología: " . $filters['metodologia'];
+        }
+        
+        if (isset($filters['equipo']) && !empty($filters['equipo'])) {
+            $summary[] = "Equipo: " . $filters['equipo'];
+        }
+        
+        if (isset($filters['estado_revision']) && !empty($filters['estado_revision'])) {
+            $summary[] = "Estado: " . $filters['estado_revision'];
+        }
+        
+        if (isset($filters['codigo_termometro']) && !empty($filters['codigo_termometro'])) {
+            $summary[] = "Termómetro: " . $filters['codigo_termometro'];
+        }
+        
+        if (isset($filters['codigo_hidrometro']) && !empty($filters['codigo_hidrometro'])) {
+            $summary[] = "Hidrómetro: " . $filters['codigo_hidrometro'];
+        }
+        
+        if (isset($filters['muestra_especifica']) && !empty($filters['muestra_especifica'])) {
+            $summary[] = "Muestra específica: " . $filters['muestra_especifica'];
+        }
+        
+        if (isset($filters['blanco_metodo']) && !empty($filters['blanco_metodo'])) {
+            $summary[] = "Blanco del método: " . $filters['blanco_metodo'];
+        }
+        
+        if (isset($filters['clase_textural']) && !empty($filters['clase_textural'])) {
+            $summary[] = "Clase textural: " . $filters['clase_textural'];
+        }
+        
+        if (isset($filters['porcentaje_min']) && is_numeric($filters['porcentaje_min'])) {
+            $summary[] = "Porcentaje mínimo: " . $filters['porcentaje_min'] . "%";
+        }
+        
+        if (isset($filters['porcentaje_max']) && is_numeric($filters['porcentaje_max'])) {
+            $summary[] = "Porcentaje máximo: " . $filters['porcentaje_max'] . "%";
+        }
+        
+        // Filtros de controles analíticos
+        if (isset($filters['tipo_control']) && !empty($filters['tipo_control'])) {
+            $summary[] = "Tipo de control: " . $filters['tipo_control'];
+        }
+        
+        if (isset($filters['aceptabilidad_control']) && !empty($filters['aceptabilidad_control'])) {
+            $summary[] = "Aceptabilidad: " . $filters['aceptabilidad_control'];
+        }
+        
+        if (isset($filters['dpr_min']) && is_numeric($filters['dpr_min'])) {
+            $summary[] = "DPR mínimo: " . $filters['dpr_min'] . "%";
+        }
+        
+        if (isset($filters['dpr_max']) && is_numeric($filters['dpr_max'])) {
+            $summary[] = "DPR máximo: " . $filters['dpr_max'] . "%";
+        }
+        
+        if (isset($filters['tiene_controles'])) {
+            if ($filters['tiene_controles'] === '1') {
+                $summary[] = "Con controles analíticos";
+            } else {
+                $summary[] = "Sin controles analíticos";
+            }
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Obtiene filtros predefinidos comunes para análisis de textura
+     */
+    protected function getPredefinedTextureFilters()
+    {
+        return [
+            'pendientes_revision' => [
+                'name' => 'Pendientes de Revisión',
+                'filters' => ['estado_revision' => 'pending']
+            ],
+            'ultima_semana' => [
+                'name' => 'Última Semana',
+                'filters' => [
+                    'fecha_desde' => now()->subWeek()->format('Y-m-d'),
+                    'fecha_hasta' => now()->format('Y-m-d')
+                ]
+            ],
+            'ultimo_mes' => [
+                'name' => 'Último Mes',
+                'filters' => [
+                    'fecha_desde' => now()->subMonth()->format('Y-m-d'),
+                    'fecha_hasta' => now()->format('Y-m-d')
+                ]
+            ],
+            'alta_arena' => [
+                'name' => 'Alta Arena (>70%)',
+                'filters' => ['porcentaje_min' => 70]
+            ],
+            'alta_arcilla' => [
+                'name' => 'Alta Arcilla (>40%)',
+                'filters' => ['porcentaje_min' => 40]
+            ],
+            'alta_limo' => [
+                'name' => 'Alto Limo (>50%)',
+                'filters' => ['porcentaje_min' => 50]
+            ],
+            'con_controles' => [
+                'name' => 'Con Controles Analíticos',
+                'filters' => ['tiene_controles' => '1']
+            ],
+            'sin_controles' => [
+                'name' => 'Sin Controles Analíticos',
+                'filters' => ['tiene_controles' => '0']
+            ],
+            'controles_aceptables' => [
+                'name' => 'Controles Aceptables',
+                'filters' => ['aceptabilidad_control' => 'aceptable']
+            ],
+            'controles_no_aceptables' => [
+                'name' => 'Controles No Aceptables',
+                'filters' => ['aceptabilidad_control' => 'no aceptable']
+            ],
+            'con_duplicados' => [
+                'name' => 'Con Duplicados',
+                'filters' => ['tipo_control' => 'duplicado']
+            ],
+            'con_material_referencia' => [
+                'name' => 'Con Material de Referencia',
+                'filters' => ['tipo_control' => 'material de referencia']
+            ],
+            'dpr_alto' => [
+                'name' => 'DPR Alto (>5%)',
+                'filters' => ['dpr_min' => 5]
+            ],
+            'dpr_bajo' => [
+                'name' => 'DPR Bajo (<2%)',
+                'filters' => ['dpr_max' => 2]
+            ],
+            'con_blanco' => [
+                'name' => 'Con Blanco del Método',
+                'filters' => ['blanco_metodo' => 'blanco']
+            ]
+        ];
+    }
+
+    /**
+     * Limpia los filtros de textura aplicados
+     */
+    public function clearTextureFilters()
+    {
+        return redirect()->route('lscefa.quality.reviews.index')
+            ->with('success', 'Filtros de textura limpiados correctamente.');
+    }
+
+    public function analyticalControls()
+    {
+        return $this->hasMany(AnalyticalControl::class, 'process_id', 'process_id')
+            ->where('analysis_type', 'texture');
+    }
+
+    /**
+     * Aplica filtros específicos para análisis de boro
+     */
+    protected function applyBoronFilters($boronAnalyses, $filters)
+    {
+        return $boronAnalyses->filter(function($item) use ($filters) {
+            // Filtro por código de muestra (consecutivo)
+            if (isset($filters['codigo_muestra']) && !empty($filters['codigo_muestra'])) {
+                $codigoMuestra = strtolower(trim($filters['codigo_muestra']));
+                $itemConsecutivo = strtolower($item->consecutive_no ?? '');
+                if (strpos($itemConsecutivo, $codigoMuestra) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por analista
+            if (isset($filters['analista']) && !empty($filters['analista'])) {
+                $analista = strtolower(trim($filters['analista']));
+                $itemAnalista = strtolower($item->analyst_name ?? '');
+                if (strpos($itemAnalista, $analista) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por fecha de análisis
+            if (isset($filters['fecha_desde']) && !empty($filters['fecha_desde'])) {
+                try {
+                    $fechaDesde = \Carbon\Carbon::parse($filters['fecha_desde']);
+                    $itemFecha = \Carbon\Carbon::parse($item->analysis_date);
+                    if ($itemFecha->lt($fechaDesde)) {
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error parsing fecha_desde: ' . $e->getMessage());
+                }
+            }
+            
+            if (isset($filters['fecha_hasta']) && !empty($filters['fecha_hasta'])) {
+                try {
+                    $fechaHasta = \Carbon\Carbon::parse($filters['fecha_hasta']);
+                    $itemFecha = \Carbon\Carbon::parse($item->analysis_date);
+                    if ($itemFecha->gt($fechaHasta)) {
+                        return false;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error parsing fecha_hasta: ' . $e->getMessage());
+                }
+            }
+            
+            // Filtro por metodología
+            if (isset($filters['metodologia']) && !empty($filters['metodologia'])) {
+                $metodologia = strtolower(trim($filters['metodologia']));
+                $itemMetodologia = strtolower($item->methodology_used ?? '');
+                if (strpos($itemMetodologia, $metodologia) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por equipo utilizado
+            if (isset($filters['equipo']) && !empty($filters['equipo'])) {
+                $equipo = strtolower(trim($filters['equipo']));
+                $itemEquipo = strtolower($item->equipment_used ?? '');
+                if (strpos($itemEquipo, $equipo) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por estado de revisión específico
+            if (isset($filters['estado_revision']) && !empty($filters['estado_revision'])) {
+                $estado = $filters['estado_revision'];
+                $itemEstado = $item->review_status ?? 'pending';
+                if ($estado !== $itemEstado) {
+                    return false;
+                }
+            }
+            
+            // Filtro por código interno
+            if (isset($filters['codigo_interno']) && !empty($filters['codigo_interno'])) {
+                $codigoInterno = strtolower(trim($filters['codigo_interno']));
+                $itemCodigoInterno = strtolower($item->codigo_interno ?? $item->internal_code ?? '');
+                if (strpos($itemCodigoInterno, $codigoInterno) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por valor de boro
+            if (isset($filters['valor_boro_min']) && is_numeric($filters['valor_boro_min'])) {
+                $valorMin = (float)$filters['valor_boro_min'];
+                $itemValor = (float)($item->boron_value ?? $item->valor_boro ?? 0);
+                if ($itemValor < $valorMin) {
+                    return false;
+                }
+            }
+            
+            if (isset($filters['valor_boro_max']) && is_numeric($filters['valor_boro_max'])) {
+                $valorMax = (float)$filters['valor_boro_max'];
+                $itemValor = (float)($item->boron_value ?? $item->valor_boro ?? 0);
+                if ($itemValor > $valorMax) {
+                    return false;
+                }
+            }
+            
+            // Filtro por unidad de medida
+            if (isset($filters['unidad_medida']) && !empty($filters['unidad_medida'])) {
+                $unidad = strtolower(trim($filters['unidad_medida']));
+                $itemUnidad = strtolower($item->unit ?? $item->unidad ?? '');
+                if (strpos($itemUnidad, $unidad) === false) {
+                    return false;
+                }
+            }
+            
+            // Filtro por observaciones
+            if (isset($filters['observaciones']) && !empty($filters['observaciones'])) {
+                $observaciones = strtolower(trim($filters['observaciones']));
+                $itemObservaciones = strtolower($item->observations ?? $item->observaciones ?? '');
+                if (strpos($itemObservaciones, $observaciones) === false) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+    }
+
+    /**
+     * Obtiene un resumen de los filtros aplicados para análisis de boro
+     */
+    protected function getBoronFiltersSummary($filters)
+    {
+        if (!$filters || !is_array($filters)) {
+            return null;
+        }
+
+        $summary = [];
+        
+        if (isset($filters['codigo_muestra']) && !empty($filters['codigo_muestra'])) {
+            $summary[] = "Código de muestra: " . $filters['codigo_muestra'];
+        }
+        
+        if (isset($filters['analista']) && !empty($filters['analista'])) {
+            $summary[] = "Analista: " . $filters['analista'];
+        }
+        
+        if (isset($filters['fecha_desde']) && !empty($filters['fecha_desde'])) {
+            $summary[] = "Desde: " . $filters['fecha_desde'];
+        }
+        
+        if (isset($filters['fecha_hasta']) && !empty($filters['fecha_hasta'])) {
+            $summary[] = "Hasta: " . $filters['fecha_hasta'];
+        }
+        
+        if (isset($filters['metodologia']) && !empty($filters['metodologia'])) {
+            $summary[] = "Metodología: " . $filters['metodologia'];
+        }
+        
+        if (isset($filters['equipo']) && !empty($filters['equipo'])) {
+            $summary[] = "Equipo: " . $filters['equipo'];
+        }
+        
+        if (isset($filters['estado_revision']) && !empty($filters['estado_revision'])) {
+            $summary[] = "Estado: " . $filters['estado_revision'];
+        }
+        
+        if (isset($filters['codigo_interno']) && !empty($filters['codigo_interno'])) {
+            $summary[] = "Código interno: " . $filters['codigo_interno'];
+        }
+        
+        if (isset($filters['valor_boro_min']) && is_numeric($filters['valor_boro_min'])) {
+            $summary[] = "Valor mínimo: " . $filters['valor_boro_min'];
+        }
+        
+        if (isset($filters['valor_boro_max']) && is_numeric($filters['valor_boro_max'])) {
+            $summary[] = "Valor máximo: " . $filters['valor_boro_max'];
+        }
+        
+        if (isset($filters['unidad_medida']) && !empty($filters['unidad_medida'])) {
+            $summary[] = "Unidad: " . $filters['unidad_medida'];
+        }
+        
+        if (isset($filters['observaciones']) && !empty($filters['observaciones'])) {
+            $summary[] = "Observaciones: " . $filters['observaciones'];
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Obtiene filtros predefinidos comunes para análisis de boro
+     */
+    protected function getPredefinedBoronFilters()
+    {
+        return [
+            'pendientes_revision' => [
+                'name' => 'Pendientes de Revisión',
+                'filters' => ['estado_revision' => 'pending']
+            ],
+            'ultima_semana' => [
+                'name' => 'Última Semana',
+                'filters' => [
+                    'fecha_desde' => now()->subWeek()->format('Y-m-d'),
+                    'fecha_hasta' => now()->format('Y-m-d')
+                ]
+            ],
+            'ultimo_mes' => [
+                'name' => 'Último Mes',
+                'filters' => [
+                    'fecha_desde' => now()->subMonth()->format('Y-m-d'),
+                    'fecha_hasta' => now()->format('Y-m-d')
+                ]
+            ],
+            'valor_alto' => [
+                'name' => 'Valor Alto (>2.0)',
+                'filters' => ['valor_boro_min' => 2.0]
+            ],
+            'valor_bajo' => [
+                'name' => 'Valor Bajo (<0.5)',
+                'filters' => ['valor_boro_max' => 0.5]
+            ],
+            'valor_medio' => [
+                'name' => 'Valor Medio (0.5 - 2.0)',
+                'filters' => [
+                    'valor_boro_min' => 0.5,
+                    'valor_boro_max' => 2.0
+                ]
+            ],
+            'mg_kg' => [
+                'name' => 'Unidad mg/kg',
+                'filters' => ['unidad_medida' => 'mg/kg']
+            ],
+            'mg_l' => [
+                'name' => 'Unidad mg/L',
+                'filters' => ['unidad_medida' => 'mg/l']
+            ],
+            'ppm' => [
+                'name' => 'Unidad ppm',
+                'filters' => ['unidad_medida' => 'ppm']
+            ]
+        ];
+    }
+
+    /**
+     * Obtiene estadísticas de los análisis de boro filtrados
+     */
+    protected function getBoronAnalysisStats($boronAnalyses)
+    {
+        $stats = [
+            'total_analisis' => $boronAnalyses->count(),
+            'por_estado' => [],
+            'por_analista' => [],
+            'por_metodologia' => [],
+            'por_equipo' => [],
+            'rangos_fechas' => [],
+            'valores_boro' => [
+                'min' => null,
+                'max' => null,
+                'promedio' => 0,
+                'total' => 0
+            ],
+            'unidades_medida' => [],
+            'rangos_valores' => [
+                'bajo' => 0,      // < 0.5
+                'medio' => 0,     // 0.5 - 2.0
+                'alto' => 0       // > 2.0
+            ]
+        ];
+
+        $totalValor = 0;
+        $countValores = 0;
+
+        foreach ($boronAnalyses as $analysis) {
+            // Estadísticas por estado de revisión
+            $estado = $analysis->review_status ?? 'pending';
+            $stats['por_estado'][$estado] = ($stats['por_estado'][$estado] ?? 0) + 1;
+
+            // Estadísticas por analista
+            $analista = $analysis->analyst_name ?? 'Sin especificar';
+            $stats['por_analista'][$analista] = ($stats['por_analista'][$analista] ?? 0) + 1;
+
+            // Estadísticas por metodología
+            $metodologia = $analysis->methodology_used ?? 'Sin especificar';
+            $stats['por_metodologia'][$metodologia] = ($stats['por_metodologia'][$metodologia] ?? 0) + 1;
+
+            // Estadísticas por equipo
+            $equipo = $analysis->equipment_used ?? 'Sin especificar';
+            $stats['por_equipo'][$equipo] = ($stats['por_equipo'][$equipo] ?? 0) + 1;
+
+            // Estadísticas de fechas
+            if ($analysis->analysis_date) {
+                $fecha = \Carbon\Carbon::parse($analysis->analysis_date);
+                $mes = $fecha->format('Y-m');
+                $stats['rangos_fechas'][$mes] = ($stats['rangos_fechas'][$mes] ?? 0) + 1;
+            }
+
+            // Estadísticas de valores de boro
+            $valorBoro = $analysis->boron_value ?? $analysis->valor_boro ?? null;
+            if (is_numeric($valorBoro)) {
+                $valorBoro = (float)$valorBoro;
+                
+                // Mínimo y máximo
+                $stats['valores_boro']['min'] = 
+                    $stats['valores_boro']['min'] === null ? 
+                    $valorBoro : min($stats['valores_boro']['min'], $valorBoro);
+                $stats['valores_boro']['max'] = 
+                    $stats['valores_boro']['max'] === null ? 
+                    $valorBoro : max($stats['valores_boro']['max'], $valorBoro);
+                
+                $totalValor += $valorBoro;
+                $countValores++;
+
+                // Rango de valores
+                if ($valorBoro < 0.5) {
+                    $stats['rangos_valores']['bajo']++;
+                } elseif ($valorBoro <= 2.0) {
+                    $stats['rangos_valores']['medio']++;
+                } else {
+                    $stats['rangos_valores']['alto']++;
+                }
+            }
+
+            // Estadísticas de unidades de medida
+            $unidad = $analysis->unit ?? $analysis->unidad ?? 'Sin especificar';
+            $stats['unidades_medida'][$unidad] = ($stats['unidades_medida'][$unidad] ?? 0) + 1;
+        }
+
+        // Calcular promedio
+        if ($countValores > 0) {
+            $stats['valores_boro']['promedio'] = round($totalValor / $countValores, 3);
+            $stats['valores_boro']['total'] = $countValores;
+        }
+
+        // Ordenar estadísticas
+        arsort($stats['por_estado']);
+        arsort($stats['por_analista']);
+        arsort($stats['por_metodologia']);
+        arsort($stats['por_equipo']);
+        arsort($stats['rangos_fechas']);
+        arsort($stats['unidades_medida']);
+
+        return $stats;
+    }
+
+    /**
+     * Prepara los datos específicos para análisis de intercambio catiónico
+     */
+    protected function prepareCationicData($analysis)
+    {
+        $controles_analiticos = [];
+        
+        // Procesar controles analíticos desde campos individuales de la tabla analytical_controls
+        if (isset($analysis->analyticalControl) && $analysis->analyticalControl) {
+            $control = $analysis->analyticalControl;
+            
+            // Agregar datos de blanco si existen
+            if ($control->blanco_identificacion) {
+                $controles_analiticos[] = [
+                    'tipo' => 'blanco',
+                    'datos_completos' => [
+                        'identificacion' => $control->blanco_identificacion,
+                        'lcm' => $control->blanco_lcm,
+                        'valor_leido' => $control->blanco_valor_leido,
+                        'aceptable' => $control->blanco_aceptable,
+                        'observaciones' => $control->blanco_observaciones
+                    ]
+                ];
+            }
+            
+            // Agregar datos de error si existen
+            if ($control->error_identificacion) {
+                $controles_analiticos[] = [
+                    'tipo' => 'error',
+                    'datos_completos' => [
+                        'identificacion' => $control->error_identificacion,
+                        'valor_teorico' => $control->error_valor_teorico,
+                        'valor_leido' => $control->error_valor_leido,
+                        'porcentaje' => $control->error_porcentaje,
+                        'aceptable' => $control->error_aceptable,
+                        'observaciones' => $control->error_observaciones
+                    ]
+                ];
+            }
+            
+            // Agregar datos de recuperación si existen
+            if ($control->recuperacion_identificacion) {
+                $controles_analiticos[] = [
+                    'tipo' => 'recuperacion',
+                    'datos_completos' => [
+                        'identificacion' => $control->recuperacion_identificacion,
+                        'valor_teorico' => $control->recuperacion_valor_teorico,
+                        'valor_leido' => $control->recuperacion_valor_leido,
+                        'porcentaje' => $control->recuperacion_porcentaje,
+                        'aceptable' => $control->recuperacion_aceptable,
+                        'observaciones' => $control->recuperacion_observaciones
+                    ]
+                ];
+            }
+            
+            // Agregar datos de duplicados si existen
+            if ($control->dpr_identificacion) {
+                $controles_analiticos[] = [
+                    'tipo' => 'duplicados',
+                    'datos_completos' => [
+                        'identificacion' => $control->dpr_identificacion,
+                        'replica1' => $control->dpr_replica1,
+                        'replica2' => $control->dpr_replica2,
+                        'porcentaje' => $control->dpr_porcentaje,
+                        'aceptable' => $control->dpr_aceptable,
+                        'observaciones' => $control->dpr_observaciones
+                    ]
+                ];
+            }
+        }
+        
+        return [
+            'controles_analiticos' => $controles_analiticos,
+            'effectiveConsecutivo' => $analysis->consecutivo_no ?? 'N/A'
+        ];
+    }
+
+    /**
+     * Prepara los datos específicos para análisis de azufre
+     */
+    protected function prepareSulfurData($analysis)
+    {
+        $controles_analiticos = [];
+        
+        // Procesar controles analíticos desde la tabla analytical_controls
+        if (isset($analysis->analyticalControl) && $analysis->analyticalControl) {
+            $control = $analysis->analyticalControl;
+            
+            // Si hay controles analíticos en formato JSON
+            if (isset($control->controles_analiticos) && is_array($control->controles_analiticos)) {
+                foreach ($control->controles_analiticos as $controlData) {
+                    $controles_analiticos[] = [
+                        'tipo' => 'control_analitico',
+                        'datos_completos' => $controlData
+                    ];
+                }
+            }
+        }
+        
+        return [
+            'controles_analiticos' => $controles_analiticos,
+            'effectiveConsecutivo' => $analysis->consecutive_no ?? 'N/A'
+        ];
+    }
 }

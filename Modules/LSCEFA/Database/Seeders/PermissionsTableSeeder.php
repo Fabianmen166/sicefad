@@ -477,6 +477,23 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_technical[] = $permision->id;
 
+        // Permisos para análisis de intercambio catiónico rechazados
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.edit_rejected'], [
+            'name' => 'Editar Análisis de Intercambio Catiónico Rechazado (Technical)',
+            'description' => 'Puede editar análisis de intercambio catiónico rechazados (technical)',
+            'description_english' => 'Can edit rejected cationic exchange analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
+        $permision = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.cationic.update_rejected'], [
+            'name' => 'Actualizar Análisis de Intercambio Catiónico Rechazado (Technical)',
+            'description' => 'Puede actualizar análisis de intercambio catiónico rechazados (technical)',
+            'description_english' => 'Can update rejected cationic exchange analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permissions_technical[] = $permision->id;
+
         $rol_technical = Role::where('slug', 'lscefa.technical')->first();
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
 
@@ -1562,5 +1579,117 @@ class PermissionsTableSeeder extends Seeder
 
         // Asignar permisos de textura y boro al rol técnico
         $rol_technical->permissions()->syncWithoutDetaching($permissions_technical);
+
+        // Permisos para Análisis de Azufre (Personal Técnico)
+        $permisos_technical_sulfur = [];
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.index'], [
+            'name' => 'Ver listado de Análisis de Azufre (Technical)',
+            'description' => 'Puede ver el listado de análisis de azufre (technical)',
+            'description_english' => 'Can view sulfur analysis list (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.process'], [
+            'name' => 'Procesar Análisis de Azufre (Technical)',
+            'description' => 'Puede procesar análisis de azufre (technical)',
+            'description_english' => 'Can process sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.store'], [
+            'name' => 'Guardar Análisis de Azufre (Technical)',
+            'description' => 'Puede guardar análisis de azufre (technical)',
+            'description_english' => 'Can save sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.edit'], [
+            'name' => 'Editar Análisis de Azufre (Technical)',
+            'description' => 'Puede editar análisis de azufre (technical)',
+            'description_english' => 'Can edit sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.update'], [
+            'name' => 'Actualizar Análisis de Azufre (Technical)',
+            'description' => 'Puede actualizar análisis de azufre (technical)',
+            'description_english' => 'Can update sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.destroy'], [
+            'name' => 'Eliminar Análisis de Azufre (Technical)',
+            'description' => 'Puede eliminar análisis de azufre (technical)',
+            'description_english' => 'Can delete sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.show'], [
+            'name' => 'Ver detalle de Análisis de Azufre (Technical)',
+            'description' => 'Puede ver el detalle de análisis de azufre (technical)',
+            'description_english' => 'Can view sulfur analysis details (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.report'], [
+            'name' => 'Generar reporte de Análisis de Azufre (Technical)',
+            'description' => 'Puede generar reportes de análisis de azufre (technical)',
+            'description_english' => 'Can generate sulfur analysis reports (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        // Permisos para procesamiento por lotes de análisis de azufre
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch'], [
+            'name' => 'Procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede procesar múltiples análisis de azufre por lotes (technical)',
+            'description_english' => 'Can process multiple sulfur analyses in batches (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch.post'], [
+            'name' => 'Acceso al formulario de procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede acceder al formulario de procesamiento por lotes de análisis de azufre (technical)',
+            'description_english' => 'Can access the batch processing form for sulfur analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.batch_store'], [
+            'name' => 'Guardar procesamiento por lotes de Análisis de Azufre (Technical)',
+            'description' => 'Puede guardar el procesamiento por lotes de análisis de azufre (technical)',
+            'description_english' => 'Can save batch processing of sulfur analyses (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        // Permisos para edición de análisis rechazados
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.edit_rejected'], [
+            'name' => 'Editar Análisis de Azufre Rechazado (Technical)',
+            'description' => 'Puede editar análisis de azufre rechazados (technical)',
+            'description_english' => 'Can edit rejected sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        $perm = Permission::updateOrCreate(['slug' => 'lscefa.technical.analyses.sulfur.update_rejected'], [
+            'name' => 'Actualizar Análisis de Azufre Rechazado (Technical)',
+            'description' => 'Puede actualizar análisis de azufre rechazados (technical)',
+            'description_english' => 'Can update rejected sulfur analysis (technical)',
+            'app_id' => $app->id
+        ]);
+        $permisos_technical_sulfur[] = $perm->id;
+
+        // Asignar permisos de azufre al rol técnico
+        $rol_technical->permissions()->syncWithoutDetaching($permisos_technical_sulfur);
     }
 }

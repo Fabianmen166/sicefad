@@ -877,26 +877,32 @@
         // Cálculo automático de % ERROR para control de estándar
         function calcularErrorEstandar() {
             try {
-                document.querySelectorAll('#datos_analisis_excel ~ .card table tbody tr, #datos_analisis_excel').forEach(function(){}); // no-op guard
-                // Recalcular por cada fila del bloque Control de estándar
-                document.querySelectorAll('table tbody tr').forEach(function(row) {
+                // Buscar específicamente las filas de control estándar
+                document.querySelectorAll('input[name*="control_estandar"][name*="concentracion"], input[name*="control_estandar"][name*="valor_leido"]').forEach(function(input) {
+                    const row = input.closest('tr');
+                    if (!row) return;
+                    
                     const concEl = row.querySelector('input[name*="[concentracion]"]');
                     const readEl = row.querySelector('input[name*="[valor_leido]"]');
                     const errEl = row.querySelector('input[name*="[porcentaje_error]"]');
                     const accEl = row.querySelector('input[name*="[aceptabilidad]"]');
+                    
                     if (!concEl || !readEl || !errEl || !accEl) return;
 
-                    const c = parseFloat(concEl.value);
-                    const r = parseFloat(readEl.value);
+                    const concentracion = parseFloat(concEl.value) || 0;
+                    const valorLeido = parseFloat(readEl.value) || 0;
 
-                    if (isFinite(c) && c > 0 && isFinite(r)) {
-                        const err = Math.abs((r - c) / c) * 100;
-                        errEl.value = err.toFixed(2);
-                        accEl.value = err <= 10 ? 'Aceptable' : 'No Aceptable';
-                        } else {
+                    if (concentracion > 0 && valorLeido > 0) {
+                        // Fórmula: % Error = |Valor Leído - Concentración| / Concentración × 100
+                        const error = Math.abs((valorLeido - concentracion) / concentracion) * 100;
+                        errEl.value = error.toFixed(2);
+                        
+                        // Criterio de aceptabilidad: % Error ≤ 10%
+                        accEl.value = error <= 10 ? 'Aceptable' : 'No Aceptable';
+                    } else {
                         errEl.value = '';
                         accEl.value = '';
-                        }
+                    }
                 });
             } catch (error) {
                 console.log('Error en calcularErrorEstandar:', error);
@@ -906,7 +912,7 @@
         // Ejecutar al cambiar cualquier input de concentración o valor leído
     document.addEventListener('input', function(e) {
         const name = e.target && e.target.name ? e.target.name : '';
-        if (name.includes('[concentracion]') || name.includes('[valor_leido]')) {
+        if (name.includes('control_estandar') && (name.includes('[concentracion]') || name.includes('[valor_leido]'))) {
             calcularErrorEstandar();
         }
     });

@@ -70,7 +70,7 @@
                                     <td>{{ $analysis->process_id }}</td>
                                     <td>{{ $analysis->description ?? 'N/A' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($analysis->reception_date)->format('d/m/Y') }}</td>
-                                    <td>{{ $analysis->acidezAnalyses->count() }}</td>
+                                    <td>0</td>
                                     <td>
                                         <a href="{{ route('lscefa.technical.analyses.acidity.process', [
                                             'processId' => $analysis->process_id, 

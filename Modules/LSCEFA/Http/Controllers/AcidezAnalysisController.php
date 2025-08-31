@@ -32,7 +32,7 @@ public function index()
 
         if ($acidityService) {
             // Obtener análisis pendientes (para el procesamiento por lotes)
-            $pendingAnalyses = Process::with(['serviceProcessDetails.service', 'acidezAnalyses'])
+            $pendingAnalyses = Process::with(['serviceProcessDetails.service'])
                 ->whereHas('serviceProcessDetails', function($query) use ($acidityService) {
                     $query->where('service_id', $acidityService->services_id);
                 })
@@ -44,7 +44,7 @@ public function index()
                 ->get();
 
             // Obtener análisis devueltos (si los manejas)
-            $returnedAnalyses = Process::with(['serviceProcessDetails.service', 'acidezAnalyses'])
+            $returnedAnalyses = Process::with(['serviceProcessDetails.service'])
                 ->whereHas('serviceProcessDetails', function($query) use ($acidityService) {
                     $query->where('service_id', $acidityService->services_id);
                 })

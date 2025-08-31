@@ -14,6 +14,7 @@ use Modules\LSCEFA\Models\PhAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
 use Modules\LSCEFA\Entities\BatchTextureAnalysis;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
+use Modules\LSCEFA\Entities\CationicAnalysis;
 
 class ReportsController extends Controller
 {
@@ -51,6 +52,16 @@ class ReportsController extends Controller
                             ->from('boron_analysis_details')
                             ->whereColumn('boron_analysis_details.process_id', 'processes.process_id')
                             ->where('boron_analysis_details.review_status', 'approved');
+                    });
+                }
+
+                // Solo agregar condición de intercambio catiónico si la columna review_status existe
+                if (Schema::hasColumn('cationic_analyses', 'review_status')) {
+                    $q->orWhereExists(function($existsQ) {
+                        $existsQ->select(DB::raw(1))
+                            ->from('cationic_analyses')
+                            ->whereColumn('cationic_analyses.process_id', 'processes.process_id')
+                            ->where('cationic_analyses.review_status', 'approved');
                     });
                 }
             });
@@ -254,11 +265,10 @@ class ReportsController extends Controller
 
             // Humedad
             if (strpos($serviceNameNorm, 'humedad') !== false || strpos($serviceNameNorm, 'humidity') !== false) {
-                // Buscar fecha_analisis en tabla humidity_analyses por process_id y service_id
+                // Buscar fecha_analisis en tabla humidity_analyses por process_id
                 $fechaAnalisis = '';
                 try {
                     $ha = HumidityAnalysis::where('process_id', $spd->process_id)
-                        ->where('service_id', $spd->service_id)
                         ->latest('fecha_analisis')
                         ->first();
                     if ($ha && !empty($ha->fecha_analisis)) {
@@ -267,7 +277,6 @@ class ReportsController extends Controller
                 } catch (\Throwable $e) {
                     Log::warning('No se pudo obtener fecha_analisis de humedad para reporte', [
                         'process_id' => $spd->process_id,
-                        'service_id' => $spd->service_id,
                         'error' => $e->getMessage(),
                     ]);
                 }
@@ -278,6 +287,47 @@ class ReportsController extends Controller
                     'unidad' => '%',
                     'fecha_analisis' => $fechaAnalisis,
                     'tecnica' => 'Gravimétrico por secado en estufa',
+                    'documento' => 'NTC 5264:2023',
+                ];
+                continue;
+            }
+
+            // Intercambio Catiónico
+            if (strpos($serviceNameNorm, 'intercambio') !== false || strpos($serviceNameNorm, 'cationico') !== false || strpos($serviceNameNorm, 'cationic') !== false) {
+                // Buscar análisis de intercambio catiónico por process_id y service_id
+                $fechaAnalisis = '';
+                $resultadoCationic = '';
+                try {
+                    $ca = CationicAnalysis::where('process_id', $spd->process_id)
+                        ->where('service_id', $spd->service_id)
+                        ->latest('fecha_analisis')
+                        ->first();
+                    if ($ca) {
+                        if (!empty($ca->fecha_analisis)) {
+                            $fechaAnalisis = $ca->fecha_analisis;
+                        }
+                        // Obtener el resultado desde el campo cic_resultado
+                        if (!empty($ca->cic_resultado)) {
+                            $resultadoCationic = (string) $ca->cic_resultado;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener datos de intercambio catiónico para reporte', [
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                // Usar el resultado de cationic_analyses si está disponible, sino usar el de ServiceProcessDetail
+                $resultadoFinal = !empty($resultadoCationic) ? $resultadoCationic : $resultadoDisplay;
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Capacidad de Intercambio Catiónico',
+                    'resultado' => $resultadoFinal,
+                    'unidad' => 'cmol(+)/kg',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Extracción con acetato de amonio 1N pH 7.0',
                     'documento' => 'NTC 5264:2023',
                 ];
                 continue;
@@ -439,6 +489,45 @@ class ReportsController extends Controller
                     'fecha_analisis' => $fechaAnalisis,
                     'tecnica' => 'Fotométrico',
                     'documento' => 'NTC 5350:2020 Bray II',
+                ];
+                continue;
+            }
+
+            if (strpos($serviceNameNorm, 'intercambio') !== false || strpos($serviceNameNorm, 'cationico') !== false || strpos($serviceNameNorm, 'cationic') !== false) {
+                $fechaAnalisis = '';
+                $resultadoCationic = '';
+                try {
+                    $ca = CationicAnalysis::where('process_id', $spd->process_id)
+                        ->where('service_id', $spd->service_id)
+                        ->latest('fecha_analisis')
+                        ->first();
+                    if ($ca) {
+                        if (!empty($ca->fecha_analisis)) {
+                            $fechaAnalisis = $ca->fecha_analisis;
+                        }
+                        // Obtener el resultado desde el campo cic_resultado
+                        if (!empty($ca->cic_resultado)) {
+                            $resultadoCationic = (string) $ca->cic_resultado;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener datos de intercambio catiónico para reporte (PDF)', [
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                // Usar el resultado de cationic_analyses si está disponible, sino usar el de ServiceProcessDetail
+                $resultadoFinal = !empty($resultadoCationic) ? $resultadoCationic : $resultadoDisplay;
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Capacidad de Intercambio Catiónico',
+                    'resultado' => $resultadoFinal,
+                    'unidad' => 'cmol(+)/kg',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Extracción con acetato de amonio 1N pH 7.0',
+                    'documento' => 'NTC 5264:2023',
                 ];
                 continue;
             }

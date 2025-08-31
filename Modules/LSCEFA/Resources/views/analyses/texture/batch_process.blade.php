@@ -2134,4 +2134,29 @@ $(document).ready(function() {
         });
     });
 </script>
+
+<!-- Botón de Submit para el formulario -->
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <div class="card">
+            <div class="card-body">
+                @if(isset($analysis))
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="fas fa-save"></i> Actualizar Análisis Rechazado
+                    </button>
+                    <p class="text-muted mt-2">
+                        <i class="fas fa-info-circle"></i> 
+                        Al actualizar, el análisis será enviado nuevamente para revisión.
+                    </p>
+                @else
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Guardar Análisis de Textura
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+</form>
 @endpush

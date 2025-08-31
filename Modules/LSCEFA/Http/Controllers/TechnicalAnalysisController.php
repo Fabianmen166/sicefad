@@ -10,6 +10,7 @@ use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Illuminate\Support\Facades\Schema;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
 use Modules\LSCEFA\Entities\BoronAnalysisDetail;
+use Modules\LSCEFA\Entities\SulfurAnalysis;
 
 class TechnicalAnalysisController extends Controller
 {
@@ -50,6 +51,34 @@ class TechnicalAnalysisController extends Controller
             ->where('status', 'rejected')
             ->get();
 
+        // Incluir análisis de textura devueltos/rechazados (están en estado 'pending' cuando se rechazan)
+        $textureReturned = collect();
+        try {
+            $textureReturned = ServiceProcessDetail::with(['service', 'batchTextureAnalysis'])
+                ->where('status', 'pending')
+                ->whereHas('batchTextureAnalysis', function($query) {
+                    $query->where('review_status', 'rejected');
+                })
+                ->get();
+            
+            \Log::info('Texture returned query result', [
+                'count' => $textureReturned->count(),
+                'items' => $textureReturned->map(function($spd) {
+                    $textureAnalysis = $spd->batchTextureAnalysis;
+                    return [
+                        'id' => $textureAnalysis->id ?? null,
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'review_status' => $textureAnalysis->review_status ?? null,
+                        'review_date' => $textureAnalysis->review_date ?? null,
+                        'consecutivo_no' => $textureAnalysis->consecutive_no ?? null,
+                    ];
+                })->toArray()
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudieron cargar análisis de textura devueltos: ' . $e->getMessage());
+        }
+
         // Incluir análisis de Boro devueltos/rechazados (tabla independiente)
         $boronReturned = collect();
         try {
@@ -85,16 +114,72 @@ class TechnicalAnalysisController extends Controller
             \Log::warning('No se pudieron cargar análisis de fósforo devueltos: ' . $e->getMessage());
         }
 
+        // Incluir análisis de Intercambio Catiónico devueltos/rechazados (tabla independiente)
+        $cationicReturned = collect();
+        try {
+            if (Schema::hasColumn('cationic_analyses', 'review_status')) {
+                $cationicReturned = \Modules\LSCEFA\Entities\CationicAnalysis::with(['service'])
+                    ->whereIn('review_status', ['returned', 'rejected'])
+                    ->get();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudieron cargar análisis de intercambio catiónico devueltos: ' . $e->getMessage());
+        }
+
+        // Incluir análisis de Azufre devueltos/rechazados (tabla independiente)
+        $sulfurReturned = collect();
+        try {
+            if (Schema::hasColumn('sulfur_analyses', 'review_status')) {
+                $sulfurReturned = \Modules\LSCEFA\Entities\SulfurAnalysis::with(['process.quote.customer'])
+                    ->whereIn('review_status', ['returned', 'rejected'])
+                    ->get();
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('No se pudieron cargar análisis de azufre devueltos: ' . $e->getMessage());
+        }
+
         \Log::info('TechnicalAnalysis@index metrics', [
             'processes_page_count' => $processes->count(),
             'returned_total_ph_cond' => $returnedQuery->count(),
+            'returned_total_texture' => $textureReturned->count(),
             'returned_total_phosphorus' => $phosphorusReturned->count(),
             'returned_total_boron' => $boronReturned->count(),
+            'returned_total_cationic' => $cationicReturned->count(),
+            'returned_total_sulfur' => $sulfurReturned->count(),
         ]);
 
         foreach ($returnedQuery as $spd) {
             $returned[$spd->process_id] = $returned[$spd->process_id] ?? [];
             $returned[$spd->process_id][] = $spd;
+        }
+
+        // Agregar análisis de textura al arreglo de devueltos (objetos simplificados compatibles con la vista)
+        foreach ($textureReturned as $spd) {
+            $textureAnalysis = $spd->batchTextureAnalysis;
+            if ($textureAnalysis) {
+                $returned[$spd->process_id] = $returned[$spd->process_id] ?? [];
+                // Empaquetar un objeto con los campos esperados por la vista
+                $returned[$spd->process_id][] = (object) [
+                    'id' => $textureAnalysis->id, // Agregar ID para las rutas de acción
+                    'process_id' => $spd->process_id,
+                    'service_id' => $spd->service_id,
+                    'service' => $spd->service ?? null,
+                    'service_name' => optional($spd->service)->descripcion ?? 'Servicio',
+                    'type' => 'texture',
+                    'consecutivo_no' => $textureAnalysis->consecutive_no ?? null,
+                    'review_date' => $textureAnalysis->review_date ?? $textureAnalysis->updated_at ?? null,
+                    'review_observations' => $textureAnalysis->review_observations ?? null,
+                ];
+                
+                \Log::info('Texture analysis added to returned array', [
+                    'texture_id' => $textureAnalysis->id,
+                    'process_id' => $spd->process_id,
+                    'service_id' => $spd->service_id,
+                    'type' => 'texture',
+                    'review_status' => $textureAnalysis->review_status,
+                    'review_date' => $textureAnalysis->review_date,
+                ]);
+            }
         }
 
         // Agregar fósforo al arreglo de devueltos (objetos simplificados compatibles con la vista)
@@ -140,10 +225,74 @@ class TechnicalAnalysisController extends Controller
             ]);
         }
 
+        // Agregar intercambio catiónico al arreglo de devueltos (objetos simplificados compatibles con la vista)
+        foreach ($cationicReturned as $ca) {
+            $returned[$ca->process_id] = $returned[$ca->process_id] ?? [];
+            // Empaquetar un objeto con los campos esperados por la vista
+            $returned[$ca->process_id][] = (object) [
+                'id' => $ca->id, // Agregar ID para las rutas de acción
+                'process_id' => $ca->process_id,
+                'service_id' => $ca->service_id,
+                'service' => $ca->service ?? null,
+                'service_name' => optional($ca->service)->descripcion ?? 'Servicio',
+                'type' => 'cationic',
+                'consecutivo_no' => $ca->consecutivo_no ?? null,
+                'review_date' => $ca->review_date ?? $ca->updated_at ?? null,
+                'review_observations' => $ca->review_observations ?? null,
+            ];
+            
+            \Log::info('Cationic analysis added to returned array', [
+                'cationic_id' => $ca->id,
+                'process_id' => $ca->process_id,
+                'service_id' => $ca->service_id,
+                'type' => 'cationic',
+                'review_status' => $ca->review_status,
+                'review_date' => $ca->review_date,
+            ]);
+        }
+
+        // Agregar azufre al arreglo de devueltos (objetos simplificados compatibles con la vista)
+        foreach ($sulfurReturned as $sa) {
+            $returned[$sa->process_id] = $returned[$sa->process_id] ?? [];
+            // Empaquetar un objeto con los campos esperados por la vista
+            $returned[$sa->process_id][] = (object) [
+                'id' => $sa->id, // Agregar ID para las rutas de acción
+                'process_id' => $sa->process_id,
+                'service_id' => $sa->service_id,
+                'service' => null, // El servicio se obtiene del ServiceProcessDetail
+                'service_name' => 'Azufre', // Nombre fijo del servicio
+                'type' => 'sulfur',
+                'consecutivo_no' => $sa->consecutive_no ?? null,
+                'review_date' => $sa->review_date ?? $sa->updated_at ?? null,
+                'review_observations' => $sa->review_observations ?? null,
+            ];
+            
+            \Log::info('Sulfur analysis added to returned array', [
+                'sulfur_id' => $sa->id,
+                'process_id' => $sa->process_id,
+                'service_id' => $sa->service_id,
+                'type' => 'sulfur',
+                'review_status' => $sa->review_status,
+                'review_date' => $sa->review_date,
+            ]);
+        }
+
         // Log per-process returned counts
         foreach ($returned as $pid => $arr) {
             \Log::info('Returned per process', [ 'process_id' => $pid, 'count' => count($arr) ]);
         }
+        
+        // Log final para debuggear la vista
+        \Log::info('Final returned array for view', [
+            'total_processes' => count($returned),
+            'total_items' => collect($returned)->flatten(1)->count(),
+            'texture_items' => collect($returned)->flatten(1)->where('type', 'texture')->count(),
+            'ph_items' => collect($returned)->flatten(1)->where('type', 'ph')->count(),
+            'conductivity_items' => collect($returned)->flatten(1)->where('type', 'conductivity')->count(),
+            'phosphorus_items' => collect($returned)->flatten(1)->where('type', 'phosphorus')->count(),
+            'boron_items' => collect($returned)->flatten(1)->where('type', 'boron')->count(),
+        ]);
+        
         return view('lscefa::technical.analyses_index', compact('processes', 'pending', 'completed', 'returned'));
     }
 } 

@@ -29,6 +29,10 @@ class SulfurAnalysis extends Model
         'available_sulfur_mg_l',
         'available_sulfur_mg_kg',
         'item_observations',
+        'review_status',
+        'review_observations',
+        'reviewed_by',
+        'review_date',
         'created_at',
         'updated_at'
     ];
@@ -52,6 +56,11 @@ class SulfurAnalysis extends Model
     public function service()
     {
         return $this->belongsTo(\Modules\LSCEFA\Models\Service::class, 'service_id', 'services_id');
+    }
+
+    public function analyticalControl()
+    {
+        return $this->hasOne(\Modules\LSCEFA\Entities\AnalyticalControl::class, 'process_id', 'process_id');
     }
 
     protected static function newFactory()

@@ -44,6 +44,21 @@ class AnalyticalControl extends Model
         'estado',
         'observaciones',
 
+        // Campos de blanco (intercambio catiónico)
+        'blanco_identificacion',
+        'blanco_lcm',
+        'blanco_valor_leido',
+        'blanco_aceptable',
+        'blanco_observaciones',
+
+        // Campos de error (intercambio catiónico)
+        'error_identificacion',
+        'error_valor_teorico',
+        'error_valor_leido',
+        'error_porcentaje',
+        'error_aceptable',
+        'error_observaciones',
+
         // Campos de recuperación
         'recuperacion_identificacion',
         'recuperacion_valor_teorico',
@@ -95,6 +110,19 @@ class AnalyticalControl extends Model
         'dpr_result' => 'decimal:4',
         'curve_measured_value' => 'decimal:4',
         'curve_error_percentage' => 'decimal:4',
+
+        // Campos específicos para intercambio catiónico
+        'blanco_lcm' => 'decimal:2',
+        'blanco_valor_leido' => 'decimal:2',
+        'error_valor_teorico' => 'decimal:2',
+        'error_valor_leido' => 'decimal:2',
+        'error_porcentaje' => 'decimal:2',
+        'recuperacion_valor_teorico' => 'decimal:2',
+        'recuperacion_valor_leido' => 'decimal:2',
+        'recuperacion_porcentaje' => 'decimal:2',
+        'dpr_replica1' => 'decimal:2',
+        'dpr_replica2' => 'decimal:2',
+        'dpr_porcentaje' => 'decimal:2',
 
         // JSON
         'controles_analiticos' => 'array',

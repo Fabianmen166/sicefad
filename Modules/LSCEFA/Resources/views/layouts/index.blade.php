@@ -196,39 +196,77 @@
         .btn-intern:hover {
             background: linear-gradient(135deg, #F57C00, #FF9800);
         }
+
+        .help-button {
+            background-color: #FF9800;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .help-button:hover {
+            background-color: #F57C00;
+            transform: scale(1.05);
+            color: white;
+            text-decoration: none;
+        }
+
+        .help-button i {
+            font-size: 16px;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
     </style>
 </head>
 
 <body>
     <!-- Menú con logo del SENA -->
     <div class="navbar">
-    <div class="logo-container">
-        <img src="https://www.soydebuenaventura.com/media/transparent/20230802_logosena.png" width="100px">
-        <a href="/">Inicio</a>
+        <div class="logo-container">
+            <img src="https://www.soydebuenaventura.com/media/transparent/20230802_logosena.png" width="100px">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="navbar-right">
+            @if(Auth::check() && checkRol('lscefa.admin'))
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{{ route('lscefa.admin.welcome') }}" class="nav-link @if (Route::is('lscefa.admin.*')) active @endif">Administración</a>
+                </li>
+            @endif
+            @if(Auth::check() && checkRol('lscefa.intern'))
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{{ route('lscefa.intern.panelpas') }}" class="nav-link @if (Route::is('lscefa.intern.*')) active @endif">Pasante</a>
+                </li>
+            @endif
+            @if(Auth::check() && checkRol('lscefa.technical'))
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{{ route('lscefa.technical.panel') }}" class="nav-link @if (Route::is('lscefa.technical.*')) active @endif">Personal Técnico</a>
+                </li>
+            @endif
+            @if(Auth::check() && checkRol('lscefa.quality'))
+                <li class="nav-item d-none d-sm-inline-block">
+                    <a href="{{ route('lscefa.quality.dashboard') }}" class="nav-link @if (Route::is('lscefa.quality.*')) active @endif">Gestión de Calidad</a>
+                </li>
+            @endif
+            
+            <a href="#" class="help-button" onclick="downloadManual()">
+                <i>📄</i>
+                Manual Técnico
+            </a>
+        </div>
     </div>
-
-  @if(Auth::check() && checkRol('lscefa.admin'))
-                    <li class="nav-item d-none d-sm-inline-block">
-                        <a href="{{ route('lscefa.admin.welcome') }}" class="nav-link @if (Route::is('lscefa.admin.*')) active @endif">Administración</a>
-                    </li>
-          @endif
-          @if(Auth::check() && checkRol('lscefa.intern'))
-                    <li class="nav-item d-none d-sm-inline-block">
-                        <a href="{{ route('lscefa.intern.panelpas') }}" class="nav-link @if (Route::is('lscefa.intern.*')) active @endif">Pasante</a>
-                    </li>
-          @endif
-          @if(Auth::check() && checkRol('lscefa.technical'))
-                    <li class="nav-item d-none d-sm-inline-block">
-                        <a href="{{ route('lscefa.technical.panel') }}" class="nav-link @if (Route::is('lscefa.technical.*')) active @endif">Personal Técnico</a>
-                    </li>
-          @endif
-          @if(Auth::check() && checkRol('lscefa.quality'))
-                    <li class="nav-item d-none d-sm-inline-block">
-                        <a href="{{ route('lscefa.quality.dashboard') }}" class="nav-link @if (Route::is('lscefa.quality.*')) active @endif">Gestión de Calidad</a>
-                    </li>
-          @endif
-</div>
-
 
     <!-- Contenido principal -->
     <div class="container">
@@ -270,6 +308,23 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function downloadManual() {
+            // Crear un enlace temporal para descargar el PDF
+            const link = document.createElement('a');
+            link.href = '/modules/lscefa/Manual Tecnico.pdf';
+            link.download = 'Manual Tecnico.pdf';
+            link.target = '_blank';
+            
+            // Agregar el enlace al DOM y hacer clic
+            document.body.appendChild(link);
+            link.click();
+            
+            // Remover el enlace temporal
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 
 </html>

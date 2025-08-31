@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('micronutrients_analyses', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('analysis_id');
+            $table->string('process_id');
+            $table->unsignedBigInteger('service_id');
             $table->string('consecutivo_no');
             $table->date('fecha_analisis');
             $table->unsignedBigInteger('user_id');
@@ -44,6 +46,8 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('analysis_id')->references('id')->on('service_process_details')->onDelete('cascade');
+            $table->foreign('process_id')->references('process_id')->on('processes')->onDelete('cascade');
+            $table->foreign('service_id')->references('services_id')->on('services')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users');
         });
     }

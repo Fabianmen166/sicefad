@@ -103,7 +103,7 @@
                                                         <input type="hidden" name="processes[{{ $process->process_id }}][{{ $detail->service_id }}][process_id]" value="{{ $process->process_id }}">
                                                         <input type="hidden" name="processes[{{ $process->process_id }}][{{ $detail->service_id }}][service_id]" value="{{ $detail->service_id }}">
                                                         <div class="table-responsive items-table-responsive">
-                                                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1800px;">
+                                                            <table class="table table-sm table-bordered table-hover mb-0" style="min-width: 1800px;" id="items-table-{{ $process->process_id }}-{{ $detail->service_id }}">
                                                             <thead class="thead-light">
                                                                 <tr>
                                                                     <th colspan="5" class="text-center bg-light">Información de la muestra</th>
@@ -134,7 +134,7 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <tr class="fila-muestra">
+                                                                <tr class="fila-muestra" data-row-index="0">
                                                                     <td><input type="text" class="form-control form-control-sm text-monospace" style="min-width:100px; font-size: 11px;" value="{{ $process->process_id }}" readonly></td>
                                                                     <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][codigo_interno]"></td>
                                                                     <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[{{ $process->process_id }}][{{ $detail->service_id }}][0][peso_muestra]"></td>
@@ -160,6 +160,18 @@
                                                                 </tr>
                                                             </tbody>
                                                             </table>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <button type="button" class="btn btn-success btn-sm agregar-fila" 
+                                                                    data-process-id="{{ $process->process_id }}" 
+                                                                    data-service-id="{{ $detail->service_id }}">
+                                                                <i class="fas fa-plus"></i> Agregar Fila
+                                                            </button>
+                                                            <button type="button" class="btn btn-danger btn-sm eliminar-fila" 
+                                                                    data-process-id="{{ $process->process_id }}" 
+                                                                    data-service-id="{{ $detail->service_id }}">
+                                                                <i class="fas fa-minus"></i> Eliminar Última Fila
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -468,7 +480,7 @@
 
                         <div class="row mt-4">
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" onclick="console.log('🚨 BOTÓN SUBMIT CLICKEADO');">
                                     <i class="fas fa-save"></i> Guardar Análisis por Lotes
                                 </button>
                                 <a href="{{ route('lscefa.technical.analyses.micronutrients.index') }}" class="btn btn-secondary">
@@ -529,6 +541,15 @@
 <script>
 // Cálculos automáticos para micronutrientes
     document.addEventListener('DOMContentLoaded', function() {
+        // Debug: Verificar si el formulario se está enviando
+        const form = document.getElementById('batchMicronutrientsForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                console.log('🚨 FORMULARIO ENVIÁNDOSE');
+                console.log('Form action:', form.action);
+                console.log('Form method:', form.method);
+            });
+        }
         // Cálculos para items de micronutrientes
         document.addEventListener('input', function(e) {
             if (e.target.name && (e.target.name.includes('zn_lectura') || e.target.name.includes('zn_factor') ||
@@ -682,28 +703,32 @@
     // Cálculo automático de % ERROR para control de estándar
     function calcularErrorEstandar() {
         try {
-            document.querySelectorAll('input[name*="[concentracion]"], input[name*="[valor_leido]"]').forEach(function(input) {
+            // Buscar específicamente las filas de control estándar
+            document.querySelectorAll('input[name*="control_estandar"][name*="concentracion"], input[name*="control_estandar"][name*="valor_leido"]').forEach(function(input) {
                 const row = input.closest('tr');
-                const concentracion = parseFloat(row.querySelector('input[name*="[concentracion]"]').value) || 0;
-                const valorLeido = parseFloat(row.querySelector('input[name*="[valor_leido]"]').value) || 0;
+                if (!row) return;
                 
-                let porcentajeError = 0;
-                let aceptabilidad = '';
+                const concEl = row.querySelector('input[name*="[concentracion]"]');
+                const readEl = row.querySelector('input[name*="[valor_leido]"]');
+                const errEl = row.querySelector('input[name*="[porcentaje_error]"]');
+                const accEl = row.querySelector('input[name*="[aceptabilidad]"]');
                 
-                if (concentracion > 0) {
-                    // Fórmula: % Error = |(Valor leído - Concentración) / Concentración| × 100
-                    porcentajeError = Math.abs((valorLeido - concentracion) / concentracion) * 100;
+                if (!concEl || !readEl || !errEl || !accEl) return;
+
+                const concentracion = parseFloat(concEl.value) || 0;
+                const valorLeido = parseFloat(readEl.value) || 0;
+
+                if (concentracion > 0 && valorLeido > 0) {
+                    // Fórmula: % Error = |Valor Leído - Concentración| / Concentración × 100
+                    const error = Math.abs((valorLeido - concentracion) / concentracion) * 100;
+                    errEl.value = error.toFixed(2);
                     
                     // Criterio de aceptabilidad: % Error ≤ 10%
-                    if (porcentajeError <= 10) {
-                        aceptabilidad = 'Aceptable';
-                    } else {
-                        aceptabilidad = 'No Aceptable';
-                    }
+                    accEl.value = error <= 10 ? 'Aceptable' : 'No Aceptable';
+                } else {
+                    errEl.value = '';
+                    accEl.value = '';
                 }
-                
-                row.querySelector('input[name*="[porcentaje_error]"]').value = porcentajeError > 0 ? porcentajeError.toFixed(2) : '';
-                row.querySelector('input[name*="[aceptabilidad]"]').value = aceptabilidad;
             });
         } catch (error) {
             console.log('Error en calcularErrorEstandar:', error);
@@ -712,7 +737,8 @@
     
     // Ejecutar al cambiar cualquier input de concentración o valor leído
     document.addEventListener('input', function(e) {
-        if (e.target.name && (e.target.name.includes('[concentracion]') || e.target.name.includes('[valor_leido]'))) {
+        const name = e.target && e.target.name ? e.target.name : '';
+        if (name.includes('control_estandar') && (name.includes('[concentracion]') || name.includes('[valor_leido]'))) {
             calcularErrorEstandar();
         }
     });
@@ -762,6 +788,71 @@
         // Show corresponding content
         var target = $(this).data('bs-target');
         $(target).addClass('show active');
+    });
+
+    // Funcionalidad para agregar filas dinámicamente
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('agregar-fila') || e.target.closest('.agregar-fila')) {
+            const button = e.target.classList.contains('agregar-fila') ? e.target : e.target.closest('.agregar-fila');
+            const processId = button.getAttribute('data-process-id');
+            const serviceId = button.getAttribute('data-service-id');
+            const tableId = `items-table-${processId}-${serviceId}`;
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const existingRows = tbody.querySelectorAll('.fila-muestra');
+            const newRowIndex = existingRows.length;
+
+            // Crear nueva fila
+            const newRow = document.createElement('tr');
+            newRow.className = 'fila-muestra';
+            newRow.setAttribute('data-row-index', newRowIndex);
+            
+                         newRow.innerHTML = `
+                 <td><input type="text" class="form-control form-control-sm text-monospace" style="min-width:100px; font-size: 11px;" value="" readonly></td>
+                 <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][codigo_interno]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][peso_muestra]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:90px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][humedad]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:110px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][volumen_final]"></td>
+                <!-- Mn -->
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][mn_lectura]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][mn_factor]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][mn_resultado]" readonly></td>
+                <!-- Fe -->
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][fe_lectura]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][fe_factor]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][fe_resultado]" readonly></td>
+                <!-- Zn -->
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][zn_lectura]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][zn_factor]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][zn_resultado]" readonly></td>
+                <!-- Cu -->
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][cu_lectura]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:100px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][cu_factor]"></td>
+                <td><input type="number" step="any" class="form-control form-control-lg" style="min-width:120px; background-color: #e9ecef;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][cu_resultado]" readonly></td>
+                <td><input type="text" class="form-control form-control-lg" style="min-width:120px;" name="items_ensayo[${processId}][${serviceId}][${newRowIndex}][observaciones]"></td>
+            `;
+
+            tbody.appendChild(newRow);
+        }
+
+        // Funcionalidad para eliminar la última fila
+        if (e.target.classList.contains('eliminar-fila') || e.target.closest('.eliminar-fila')) {
+            const button = e.target.classList.contains('eliminar-fila') ? e.target : e.target.closest('.eliminar-fila');
+            const processId = button.getAttribute('data-process-id');
+            const serviceId = button.getAttribute('data-service-id');
+            const tableId = `items-table-${processId}-${serviceId}`;
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const existingRows = tbody.querySelectorAll('.fila-muestra');
+
+            // Solo eliminar si hay más de una fila
+            if (existingRows.length > 1) {
+                const lastRow = existingRows[existingRows.length - 1];
+                lastRow.remove();
+            } else {
+                alert('No se puede eliminar la última fila. Debe haber al menos una fila.');
+            }
+        }
     });
 
 });

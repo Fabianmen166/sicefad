@@ -90,14 +90,22 @@
             @else
                 <p>Sin servicios ni paquetes.</p>
             @endif
-            <div class="mt-4 d-flex flex-wrap gap-2">
-                <a href="{{ route('lscefa.quality.quotes.index') }}" class="btn btn-secondary">Volver</a>
-                <a href="{{ route('lscefa.quality.quotes.edit', $quote->quote_id) }}" class="btn btn-primary">Editar</a>
-                <a href="{{ route('lscefa.quality.quotes.pdf', $quote->quote_id) }}" class="btn btn-info">Descargar PDF</a>
+            <div class="mt-4 d-flex flex-wrap gap-2 action-buttons">
+                <a href="{{ route('lscefa.quality.quotes.index') }}" class="btn btn-secondary" title="Volver" data-toggle="tooltip" data-placement="top">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <a href="{{ route('lscefa.quality.quotes.edit', $quote->quote_id) }}" class="btn btn-primary" title="Editar" data-toggle="tooltip" data-placement="top">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ route('lscefa.quality.quotes.pdf', $quote->quote_id) }}" class="btn btn-info" title="Descargar PDF" data-toggle="tooltip" data-placement="top">
+                    <i class="fas fa-file-pdf"></i>
+                </a>
                 <form action="{{ route('lscefa.quality.quotes.destroy', $quote->quote_id) }}" method="POST" style="display:inline-block;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de eliminar esta cotización?')">Eliminar</button>
+                    <button type="submit" class="btn btn-danger" title="Eliminar" data-toggle="tooltip" data-placement="top" onclick="return confirm('¿Está seguro de eliminar esta cotización?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </form>
                 @php
                     $user = auth()->user();
@@ -105,10 +113,54 @@
                     $hasAdminRole = $user && $user->roles->contains('slug', 'lscefa.admin');
                 @endphp
                 @if($hasQualityRole || $hasAdminRole)
-                    <a href="{{ route('lscefa.quality.quotes.upload', $quote->quote_id) }}" class="btn btn-success">Subir Comprobante</a>
+                    <a href="{{ route('lscefa.quality.quotes.upload', $quote->quote_id) }}" class="btn btn-success" title="Subir Comprobante" data-toggle="tooltip" data-placement="top">
+                        <i class="fas fa-upload"></i>
+                    </a>
                 @endif
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.action-buttons .btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.action-buttons .btn i {
+    font-size: 16px;
+}
+</style>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Add hover effects for better UX
+    $('.action-buttons .btn').hover(
+        function() {
+            $(this).tooltip('show');
+        },
+        function() {
+            $(this).tooltip('hide');
+        }
+    );
+});
+</script>
+@endpush
+
 @endsection 

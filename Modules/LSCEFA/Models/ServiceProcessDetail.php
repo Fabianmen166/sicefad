@@ -37,12 +37,12 @@ class ServiceProcessDetail extends Model
     }
     public function HumidityAnalysis()
     {
-        return $this->hasOne(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'analysis_id');
+        return $this->hasOne(\Modules\LSCEFA\Entities\HumidityAnalysis::class, 'process_id', 'process_id');
     }
-    public function AcidezAnalysis()
-    {
-        return $this->hasOne(\Modules\LSCEFA\Entities\AcidezAnalysis::class, 'analysis_id');
-    }
+    // public function AcidezAnalysis()
+    // {
+    //     return $this->hasOne(\Modules\LSCEFA\Entities\AcidezAnalysis::class, 'analysis_id');
+    // }
    
 
     public function batchTextureAnalysis()

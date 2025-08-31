@@ -123,6 +123,38 @@ class MicronutrientsAnalysisController2 extends Controller
                 'curva_calibracion' => $request->input('curva_calibracion', []),
             ];
 
+            // 1. Blanco del método (Method blank)
+            if ($request->has('blanco_metodo')) {
+                foreach ($request->input('blanco_metodo', []) as $index => $blanco) {
+                    if (!empty($blanco['identificacion'])) {
+                        $controlesAnaliticos[] = [
+                            'tipo' => 'blanco_metodo',
+                            'identificacion' => $blanco['identificacion'],
+                            'resultado' => $blanco['resultado'] ?? null,
+                            'lcm' => $blanco['lcm'] ?? null,
+                            'aceptabilidad' => $blanco['aceptabilidad'] ?? null,
+                        ];
+                    }
+                }
+            }
+
+            // 2. Duplicado de muestra (Duplicate sample)
+            if ($request->has('duplicado_muestra')) {
+                foreach ($request->input('duplicado_muestra', []) as $index => $duplicado) {
+                    if (!empty($duplicado['identificacion_muestra'])) {
+                        $controlesAnaliticos[] = [
+                            'tipo' => 'duplicado_muestra',
+                            'identificacion_muestra' => $duplicado['identificacion_muestra'],
+                            'replica_1' => $duplicado['replica_1'] ?? null,
+                            'replica_2' => $duplicado['replica_2'] ?? null,
+                            'dpr' => $duplicado['dpr'] ?? null,
+                            'elemento' => $duplicado['elemento'] ?? null,
+                            'aceptabilidad' => $duplicado['aceptabilidad'] ?? null,
+                        ];
+                    }
+                }
+            }
+
             $itemsEnsayo = array_values($request->input('items_ensayo', []));
 
             MicronutrientsAnalysis::updateOrCreate(
@@ -202,113 +234,329 @@ class MicronutrientsAnalysisController2 extends Controller
 
     public function batchStore(Request $request)
     {
+        Log::info('🚨 MÉTODO BATCH STORE EJECUTÁNDOSE');
         try {
+            Log::info('=== INICIANDO BATCH STORE ===');
+            Log::info('Request method: ' . $request->method());
+            Log::info('Request URL: ' . $request->url());
+            Log::info('User ID: ' . Auth::id());
+            
             DB::beginTransaction();
+            Log::info('Transaction started successfully');
 
-            $request->validate([
-                'processes' => 'required|array',
-                'processes.*.process_id' => 'required|string',
-                'processes.*.service_id' => 'required|integer',
-                'processes.*.consecutivo_no' => 'required|string',
-                'processes.*.fecha_analisis' => 'required|date',
-                'processes.*.equipo_utilizado' => 'nullable|string',
-                'processes.*.intervalo_metodo' => 'nullable|string',
-                'processes.*.analista' => 'nullable|string',
-                'processes.*.controles_analiticos' => 'required|array',
-                'processes.*.items' => 'required|array',
-            ]);
-
-            // Validar que no se procesen más de 10 procesos a la vez
-            if (count($request->processes) > 10) {
-                return back()->with('error', 'No se pueden procesar más de 10 procesos a la vez. Por favor, reduce la cantidad de procesos.')
-                    ->withInput();
-            }
-
-            $savedCount = 0;
-
-            foreach ($request->processes as $processData) {
-                $processId = $processData['process_id'];
-                $serviceId = $processData['service_id'];
-
-                // Create or update micronutrients analysis
-                $micronutrientsAnalysis = MicronutrientsAnalysis::updateOrCreate(
-                    ['process_id' => $processId, 'service_id' => $serviceId],
-                    [
-                        'consecutivo_no' => $processData['consecutivo_no'],
-                        'fecha_analisis' => $processData['fecha_analisis'],
-                        'equipo_utilizado' => $processData['equipo_utilizado'] ?? null,
-                        'intervalo_metodo' => $processData['intervalo_metodo'] ?? null,
-                        'analista' => $processData['analista'] ?? Auth::user()->name,
-                    ]
-                );
-
-                // Save analytical controls
-                foreach ($processData['controles_analiticos'] as $control) {
-                    AnalyticalControl::updateOrCreate(
-                        [
-                            'analysis_type' => 'micronutrients',
-                            'analysis_id' => $micronutrientsAnalysis->id,
-                            'identificacion' => $control['identificacion']
-                        ],
-                        [
-                            'valor_esperado' => $control['valor_esperado'] ?? null,
-                            'valor_leido' => $control['valor_leido'] ?? null,
-                            'porcentaje_error' => $control['porcentaje_error'] ?? null,
-                            'aceptabilidad_error' => $control['aceptabilidad_error'] ?? null,
-                            'porcentaje_recuperacion' => $control['porcentaje_recuperacion'] ?? null,
-                            'aceptabilidad_recuperacion' => $control['aceptabilidad_recuperacion'] ?? null,
-                            'porcentaje_dpr' => $control['porcentaje_dpr'] ?? null,
-                            'aceptabilidad_dpr' => $control['aceptabilidad_dpr'] ?? null,
-                        ]
-                    );
-                }
-
-                // Save test items
-                foreach ($processData['items'] as $item) {
-                    $micronutrientsAnalysis->items()->updateOrCreate(
-                        [
-                            'codigo_interno' => $item['codigo_interno'] ?? 'Item-' . uniqid(),
-                        ],
-                        [
-                            'peso_muestra' => $item['peso_muestra'] ?? null,
-                            'vol_extractante' => $item['vol_extractante'] ?? null,
-                            'lectura_blanco' => $item['lectura_blanco'] ?? null,
-                            'factor_dilucion' => $item['factor_dilucion'] ?? null,
-                            'concentracion_mg_l' => $item['concentracion_mg_l'] ?? null,
-                            'concentracion_mg_kg' => $item['concentracion_mg_kg'] ?? null,
-                            'observaciones_item' => $item['observaciones_item'] ?? null,
-                        ]
-                    );
-                }
-
-                // Update service process detail status
-                ServiceProcessDetail::where('process_id', $processId)
-                    ->where('service_id', $serviceId)
-                    ->update(['status' => 'completed']);
-
-                $savedCount++;
-            }
-
-            DB::commit();
-
-            Log::info('Procesamiento en lote de micronutrientes completado', [
-                'saved_count' => $savedCount,
+            // Log the request data for debugging
+            Log::info('Batch store request data:', [
+                'request_data' => $request->all(),
                 'user_id' => Auth::id()
             ]);
 
-            return redirect()->route('lscefa.technical.analyses.micronutrients.index')
-                ->with('success', "Se procesaron exitosamente {$savedCount} análisis de micronutrientes.");
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error en procesamiento en lote de micronutrientes: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'exception' => $e
+            Log::info('Starting validation...');
+            $request->validate([
+                'processes' => 'required|array',
+                'consecutivo_no' => 'required|string',
+                'fecha_analisis' => 'required|date',
+                'equipo_utilizado' => 'nullable|string',
+                'intervalo_metodo' => 'nullable|string',
+                'nombre_analista' => 'nullable|string',
             ]);
 
-            return back()->with('error', 'Error al procesar los análisis en lote. Por favor, intente nuevamente.')
-                ->withInput();
-        }
+            // Log validation passed
+            Log::info('✅ Validation passed successfully');
+
+            $savedCount = 0;
+
+            // Get common analysis data
+            $consecutivoNo = $request->input('consecutivo_no');
+            $fechaAnalisis = $request->input('fecha_analisis');
+            $equipoUtilizado = $request->input('equipo_utilizado');
+            $intervaloMetodo = $request->input('intervalo_metodo');
+            $nombreAnalista = $request->input('nombre_analista', Auth::user()->name);
+
+            Log::info('Starting to process processes...');
+            $processes = $request->input('processes', []);
+            Log::info('Number of processes to process: ' . count($processes));
+            
+            foreach ($processes as $processId => $services) {
+                Log::info("🔄 Processing process: {$processId}", ['services' => $services]);
+                Log::info("Number of services in process {$processId}: " . count($services));
+                
+                foreach ($services as $serviceId => $serviceData) {
+                    Log::info("🔄 Processing service: {$serviceId}", ['service_data' => $serviceData]);
+                    
+                    try {
+                        Log::info("🔍 Starting to process process {$processId}, service {$serviceId}");
+                    
+                    // Extract process_id and service_id from serviceData if they exist
+                    $actualProcessId = $serviceData['process_id'] ?? $processId;
+                    $actualServiceId = $serviceData['service_id'] ?? $serviceId;
+                    
+                                         Log::info("Creating analysis for process: {$actualProcessId}, service: {$actualServiceId}");
+                     
+                     Log::info("🔍 Looking for ServiceProcessDetail with process_id: {$actualProcessId}, service_id: {$actualServiceId}");
+                     
+                     // Get the service process detail to get the analysis_id
+                     $serviceProcessDetail = ServiceProcessDetail::where('process_id', $actualProcessId)
+                         ->where('service_id', $actualServiceId)
+                         ->orderBy('id', 'desc')
+                         ->first();
+                     
+                     if (!$serviceProcessDetail) {
+                         Log::error("❌ ServiceProcessDetail not found for process: {$actualProcessId}, service: {$actualServiceId}");
+                         throw new \Exception("No se encontró el detalle del proceso para process_id: {$actualProcessId}, service_id: {$actualServiceId}");
+                     }
+                     
+                     Log::info("✅ ServiceProcessDetail found with ID: {$serviceProcessDetail->id}");
+                     
+                                          Log::info("🔧 Creating/updating MicronutrientsAnalysis...");
+                     Log::info("Data to save:", [
+                         'analysis_id' => $serviceProcessDetail->id,
+                         'process_id' => $actualProcessId,
+                         'service_id' => $actualServiceId,
+                         'consecutivo_no' => $consecutivoNo,
+                         'fecha_analisis' => $fechaAnalisis,
+                         'user_id' => Auth::id(),
+                         'equipo_utilizado' => $equipoUtilizado,
+                         'intervalo_metodo' => $intervaloMetodo,
+                         'analista' => $nombreAnalista,
+                         'review_status' => 'pending',
+                     ]);
+                     
+                                           // Create or update micronutrients analysis
+                      $micronutrientsAnalysis = MicronutrientsAnalysis::updateOrCreate(
+                          ['analysis_id' => $serviceProcessDetail->id],
+                          [
+                              'process_id' => $actualProcessId,
+                              'service_id' => $actualServiceId,
+                              'consecutivo_no' => $consecutivoNo,
+                              'fecha_analisis' => $fechaAnalisis,
+                              'user_id' => Auth::id(),
+                              'equipo_utilizado' => $equipoUtilizado,
+                              'intervalo_metodo' => $intervaloMetodo,
+                              'analista' => $nombreAnalista,
+                              'review_status' => 'pending',
+                              'controles_analiticos' => [], // Inicializar como array vacío
+                              'items_ensayo' => [], // Inicializar como array vacío
+                          ]
+                      );
+                     
+                     Log::info("✅ Analysis created/updated with ID: {$micronutrientsAnalysis->id}");
+
+                                         Log::info("📊 Starting to collect analytical controls...");
+                     
+                                          // Collect all analytical controls from different tables
+                     $controlesAnaliticos = [];
+
+                     // 1. Blanco del método (Method blank) - TODOS LOS CAMPOS
+                     if ($request->has('blanco_metodo')) {
+                         foreach ($request->input('blanco_metodo', []) as $index => $blanco) {
+                            // Capturar TODOS los campos sin excepción
+                            $controlesAnaliticos[] = [
+                                'tipo' => 'blanco_metodo',
+                                'indice' => $index,
+                                'identificacion' => $blanco['identificacion'] ?? null,
+                                'resultado' => $blanco['resultado'] ?? null,
+                                'lcm' => $blanco['lcm'] ?? null,
+                                'aceptabilidad' => $blanco['aceptabilidad'] ?? null,
+                                // Capturar cualquier campo adicional que pueda existir
+                                'datos_completos' => $blanco,
+                            ];
+                        }
+                    }
+
+                    // 2. Duplicado de muestra (Duplicate sample) - TODOS LOS CAMPOS
+                    if ($request->has('duplicado_muestra')) {
+                        foreach ($request->input('duplicado_muestra', []) as $index => $duplicado) {
+                            // Capturar TODOS los campos sin excepción
+                            $controlesAnaliticos[] = [
+                                'tipo' => 'duplicado_muestra',
+                                'indice' => $index,
+                                'identificacion_muestra' => $duplicado['identificacion_muestra'] ?? null,
+                                'replica_1' => $duplicado['replica_1'] ?? null,
+                                'replica_2' => $duplicado['replica_2'] ?? null,
+                                'dpr' => $duplicado['dpr'] ?? null,
+                                'elemento' => $duplicado['elemento'] ?? null,
+                                'aceptabilidad' => $duplicado['aceptabilidad'] ?? null,
+                                // Capturar cualquier campo adicional que pueda existir
+                                'datos_completos' => $duplicado,
+                            ];
+                        }
+                    }
+
+                    // 3. Controles de calidad (Quality controls - MRC) - TODOS LOS CAMPOS
+                    if ($request->has('controles_calidad')) {
+                        foreach ($request->input('controles_calidad', []) as $index => $control) {
+                            // Capturar TODOS los campos sin excepción
+                            $controlesAnaliticos[] = [
+                                'tipo' => 'controles_calidad',
+                                'indice' => $index,
+                                'controles_calidad' => $control['controles_calidad'] ?? null,
+                                'identificacion' => $control['identificacion'] ?? null,
+                                'valor_esperado' => $control['valor_esperado'] ?? null,
+                                'valor_leido' => $control['valor_leido'] ?? null,
+                                'porcentaje_recuperacion' => $control['porcentaje_recuperacion'] ?? null,
+                                'aceptabilidad' => $control['aceptabilidad'] ?? null,
+                                'observaciones' => $control['observaciones'] ?? null,
+                                // Capturar cualquier campo adicional que pueda existir
+                                'datos_completos' => $control,
+                            ];
+                        }
+                    }
+
+                    // 4. Control de estándar (Standard control) - TODOS LOS CAMPOS
+                    if ($request->has('control_estandar')) {
+                        foreach ($request->input('control_estandar', []) as $index => $estandar) {
+                            // Capturar TODOS los campos sin excepción
+                            $controlesAnaliticos[] = [
+                                'tipo' => 'control_estandar',
+                                'indice' => $index,
+                                'estandar' => $estandar['estandar'] ?? null,
+                                'concentracion' => $estandar['concentracion'] ?? null,
+                                'valor_leido' => $estandar['valor_leido'] ?? null,
+                                'porcentaje_error' => $estandar['porcentaje_error'] ?? null,
+                                'aceptabilidad' => $estandar['aceptabilidad'] ?? null,
+                                'observaciones' => $estandar['observaciones'] ?? null,
+                                // Capturar cualquier campo adicional que pueda existir
+                                'datos_completos' => $estandar,
+                            ];
+                        }
+                    }
+
+                    // 5. Curva de calibración (Calibration curve) - TODOS LOS CAMPOS
+                    if ($request->has('curva_calibracion')) {
+                        foreach ($request->input('curva_calibracion', []) as $index => $curva) {
+                            // Capturar TODOS los campos sin excepción
+                            $controlesAnaliticos[] = [
+                                'tipo' => 'curva_calibracion',
+                                'indice' => $index,
+                                'elemento' => $curva['elemento'] ?? null,
+                                'r2_obtenido' => $curva['r2_obtenido'] ?? null,
+                                'r2_esperado' => $curva['r2_esperado'] ?? null,
+                                'aceptabilidad' => $curva['aceptabilidad'] ?? null,
+                                'observaciones' => $curva['observaciones'] ?? null,
+                                // Capturar cualquier campo adicional que pueda existir
+                                'datos_completos' => $curva,
+                            ];
+                        }
+                    }
+
+                                         // Save all analytical controls to the analytical_controls table
+                     if (!empty($controlesAnaliticos)) {
+                         AnalyticalControl::updateOrCreate(
+                             [
+                                 'analysis_type' => 'micronutrients',
+                                 'analysis_id' => $micronutrientsAnalysis->id,
+                                 'identificacion' => 'controles_analiticos_completos'
+                             ],
+                             [
+                                 'controles_analiticos' => $controlesAnaliticos,
+                             ]
+                         );
+                         
+                         // También actualizar el campo controles_analiticos en la tabla micronutrients_analyses
+                         $micronutrientsAnalysis->update([
+                             'controles_analiticos' => $controlesAnaliticos
+                         ]);
+                     }
+
+                    // Save test items (items_ensayo) as JSON array
+                    $itemsEnsayo = [];
+                    if ($request->has('items_ensayo')) {
+                        $allItems = $request->input('items_ensayo');
+                        Log::info("All items_ensayo data:", ['all_items' => $allItems]);
+                        
+                        // Buscar items para este proceso y servicio específico
+                        if (isset($allItems[$processId][$serviceId])) {
+                            $items = $allItems[$processId][$serviceId];
+                            Log::info("Found items for process {$processId}, service {$serviceId}:", ['items' => $items]);
+                        } elseif (isset($allItems[$actualProcessId][$actualServiceId])) {
+                            $items = $allItems[$actualProcessId][$actualServiceId];
+                            Log::info("Found items for actual process {$actualProcessId}, service {$actualServiceId}:", ['items' => $items]);
+                        } else {
+                            Log::warning("No items found for process {$processId}, service {$serviceId} or {$actualProcessId}, {$actualServiceId}");
+                            $items = [];
+                        }
+                            
+                        foreach ($items as $itemIndex => $item) {
+                            // Guardar todos los items, incluso si no tienen código interno
+                            $itemsEnsayo[] = [
+                                'codigo_interno' => $item['codigo_interno'] ?? null,
+                                'peso_muestra' => $item['peso_muestra'] ?? null,
+                                'humedad' => $item['humedad'] ?? null,
+                                'volumen_final' => $item['volumen_final'] ?? null,
+                                'mn_lectura' => $item['mn_lectura'] ?? null,
+                                'mn_factor' => $item['mn_factor'] ?? null,
+                                'mn_resultado' => $item['mn_resultado'] ?? null,
+                                'fe_lectura' => $item['fe_lectura'] ?? null,
+                                'fe_factor' => $item['fe_factor'] ?? null,
+                                'fe_resultado' => $item['fe_resultado'] ?? null,
+                                'zn_lectura' => $item['zn_lectura'] ?? null,
+                                'zn_factor' => $item['zn_factor'] ?? null,
+                                'zn_resultado' => $item['zn_resultado'] ?? null,
+                                'cu_lectura' => $item['cu_lectura'] ?? null,
+                                'cu_factor' => $item['cu_factor'] ?? null,
+                                'cu_resultado' => $item['cu_resultado'] ?? null,
+                                'observaciones' => $item['observaciones'] ?? null,
+                            ];
+                        }
+                    } else {
+                        Log::warning("No items_ensayo data in request");
+                    }
+
+                    // Update the analysis with items_ensayo
+                    Log::info("Updating analysis with items_ensayo:", ['items_ensayo' => $itemsEnsayo]);
+                    $micronutrientsAnalysis->update([
+                        'items_ensayo' => $itemsEnsayo
+                    ]);
+                    Log::info("Analysis updated successfully");
+
+                    // Update service process detail status
+                    ServiceProcessDetail::where('process_id', $processId)
+                        ->where('service_id', $serviceId)
+                        ->update(['status' => 'completed']);
+
+                    $savedCount++;
+                    } catch (\Exception $innerException) {
+                        Log::error("Error processing process {$processId}, service {$serviceId}: " . $innerException->getMessage());
+                        throw $innerException;
+                    }
+                }
+            }
+
+                         Log::info("💾 Committing transaction...");
+             DB::commit();
+             Log::info("✅ Transaction committed successfully");
+
+             Log::info('🎉 Procesamiento en lote de micronutrientes completado', [
+                 'saved_count' => $savedCount,
+                 'user_id' => Auth::id()
+             ]);
+
+             Log::info("🔄 Redirecting to index page...");
+             return redirect()->route('lscefa.technical.analyses.micronutrients.index')
+                 ->with('success', "✅ ¡Éxito! Se procesaron exitosamente {$savedCount} análisis de micronutrientes. Todos los datos han sido guardados correctamente. Los items de ensayo y controles analíticos se han guardado en la base de datos.");
+
+                 } catch (\Exception $e) {
+             Log::error('🚨 EXCEPCIÓN CAPTURADA EN BATCH STORE');
+             Log::error('Error message: ' . $e->getMessage());
+             Log::error('Error code: ' . $e->getCode());
+             Log::error('Error file: ' . $e->getFile());
+             Log::error('Error line: ' . $e->getLine());
+             Log::error('Full trace: ' . $e->getTraceAsString());
+             
+             Log::info('🔄 Rolling back transaction...');
+             DB::rollBack();
+             Log::info('✅ Transaction rolled back successfully');
+             
+             Log::error('❌ Error en procesamiento en lote de micronutrientes: ' . $e->getMessage(), [
+                 'user_id' => Auth::id(),
+                 'exception' => $e,
+                 'trace' => $e->getTraceAsString()
+             ]);
+
+             Log::info('🔄 Redirecting back with error...');
+             return back()->with('error', '❌ Error al procesar los análisis en lote: ' . $e->getMessage() . '. Por favor, verifique los datos e intente nuevamente.')
+                 ->withInput();
+         }
     }
 
     public function show($id)

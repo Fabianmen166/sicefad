@@ -10,7 +10,7 @@ use Modules\LSCEFA\Models\ServiceProcessDetail;
 use Modules\LSCEFA\Entities\HumidityAnalysis;
 use Modules\LSCEFA\Entities\CationicAnalysis;
 use Modules\LSCEFA\Entities\PhosphorusAnalysis;
-use Modules\LSCEFA\Entities\CarbonoAnalysis;
+// use Modules\LSCEFA\Entities\CarbonoAnalysis;
 use Modules\LSCEFA\Models\Service;
 
 class Process extends Model
@@ -56,16 +56,16 @@ class Process extends Model
 {
     return $this->hasMany(HumidityAnalysis::class, 'process_id', 'process_id');
 }
-  // Relación con CarbonoAnalysis
- public function carbonoAnalyses()
-{
-    return $this->hasMany(CarbonoAnalysis::class, 'process_id', 'process_id');
-}
+    // Relación con CarbonoAnalysis
+    // public function carbonoAnalyses()
+    // {
+    //     return $this->hasMany(CarbonoAnalysis::class, 'process_id', 'process_id');
+    // }
     // Relación con AcidezAnalysis
-  public function acidezAnalyses()
-{
-    return $this->hasMany(\Modules\LSCEFA\Entities\AcidezAnalysis::class, 'process_id', 'process_id');
-}
+    // public function acidezAnalyses()
+    // {
+    //     return $this->hasMany(\Modules\LSCEFA\Entities\AcidezAnalysis::class, 'process_id', 'process_id');
+    // }
 
     // relación con humidityAnalysis
     public function humidityAnalyses()

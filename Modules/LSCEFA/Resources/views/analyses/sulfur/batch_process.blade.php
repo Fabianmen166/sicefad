@@ -38,11 +38,26 @@
                 </div>
                 <a href="{{ route('lscefa.technical.analyses.sulfur.index') }}" class="btn btn-secondary">Regresar</a>
             @else
+                @if(isset($analysis) && $analysis->review_status === 'rejected')
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>Análisis Rechazado:</strong> 
+                        @if($analysis->review_observations)
+                            <span class="text-danger">{{ $analysis->review_observations }}</span>
+                        @endif
+                    </div>
+                @endif
                 @php $firstProcess = $pendingProcesses->first(); @endphp
                 <!-- Información General del Proceso -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Información del Proceso</h3>
+                        <h3 class="card-title">
+                            @if(isset($analysis) && $analysis->review_status === 'rejected')
+                                <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Análisis Rechazado - Edición</span>
+                            @else
+                                Información del Proceso
+                            @endif
+                        </h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -56,34 +71,43 @@
                         </div>
                     </div>
                 </div>
-                <!-- Tabla de Datos del Análisis (antes de la tarjeta) -->
+                            <form action="{{ isset($analysis) && $analysis->review_status === 'rejected' ? route('lscefa.technical.analyses.sulfur.update_rejected', $analysis->id) : route('lscefa.technical.analyses.sulfur.batch_store') }}" method="POST" id="sulfurBatchForm">
+                @csrf
+                @if(isset($analysis) && $analysis->review_status === 'rejected')
+                    <input type="hidden" name="rejected_analysis_id" value="{{ $analysis->id }}">
+                @else
+                    @foreach ($pendingProcesses as $index => $process)
+                        <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
+                    @endforeach
+                @endif
+
+                <!-- Tabla de Datos del Análisis (dentro del formulario) -->
                 <div class="table-responsive mb-4">
                     <table class="table table-borderless align-middle" style="background: #f8f9fa; border-radius: 8px;">
                         <tr>
                             <td class="fw-bold" style="width: 10%">Consecutivo:</td>
-                            <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no') }}"></td>
+                            <td style="width: 18%"><input type="text" class="form-control" name="consecutivo_no" value="{{ old('consecutivo_no', $analysis->consecutive_no ?? '') }}"></td>
                             <td class="fw-bold" style="width: 16%">Metodología aplicada:</td>
-                            <td colspan="2" style="width: 30%"><input type="text" class="form-control" name="metodologia_aplicada" value="{{ old('metodologia_aplicada', 'Extracción por Bray (II) y cuantificación por ácido ascórbico') }}"></td>
+                            <td colspan="2" style="width: 30%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo', $analysis->method_interval ?? 'Extracción por Bray (II) y cuantificación por ácido ascórbico') }}"></td>
                             <td class="fw-bold" style="width: 10%">Intervalo:</td>
-                            <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo') }}"></td>
+                            <td style="width: 16%"><input type="text" class="form-control" name="intervalo_metodo" value="{{ old('intervalo_metodo', $analysis->method_interval ?? '') }}"></td>
                         </tr>
                         <tr style="height: 10px;"></tr>
                         <tr>
                             <td class="fw-bold">Fecha:</td>
-                            <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis') }}"></td>
+                            <td><input type="date" class="form-control" name="fecha_analisis" value="{{ old('fecha_analisis', $analysis->analysis_date ?? '') }}"></td>
                             <td class="fw-bold">Equipo:</td>
-                            <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado') }}"></td>
+                            <td><input type="text" class="form-control" name="equipo_utilizado" value="{{ old('equipo_utilizado', $analysis->equipment_used ?? '') }}"></td>
                             <td></td>
                             <td class="fw-bold">Analista:</td>
-                            <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista') }}"></td>
+                            <td><input type="text" class="form-control" name="nombre_analista" value="{{ old('nombre_analista', $analysis->analyst_name ?? '') }}"></td>
+                                                </tr>
+                        <tr>
+                            <td class="fw-bold">Observaciones:</td>
+                            <td colspan="6"><textarea class="form-control" name="observations" rows="2">{{ old('observations', $analysis->observations ?? '') }}</textarea></td>
                         </tr>
                     </table>
                 </div>
-                <form action="{{ route('lscefa.technical.analyses.sulfur.batch_store') }}" method="POST" id="sulfurBatchForm">
-                    @csrf
-                    @foreach ($pendingProcesses as $index => $process)
-                        <input type="hidden" name="process_ids[]" value="{{ $process->process_id }}">
-                    @endforeach
 
                     <!-- Horizontal Navigation Bar -->
                     <div class="mt-4 mb-3">
@@ -127,28 +151,58 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
-                                        </tr>
-                                        <tr>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
-                                            <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
-                                            <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
-                                        </tr>
+                                        @if($analysis->review_status === 'rejected' && $analysis->analyticalControl)
+                                            @php
+                                                $controles = $analysis->analyticalControl->controles_analiticos ?? [];
+                                                $control0 = $controles[0] ?? [];
+                                                $control1 = $controles[1] ?? [];
+                                            @endphp
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="{{ old('controles_analiticos.0.identificacion', $control0['identificacion'] ?? 'Estándar A') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]" value="{{ old('controles_analiticos.0.valor_esperado', $control0['valor_esperado'] ?? '') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]" value="{{ old('controles_analiticos.0.valor_leido', $control0['valor_leido'] ?? '') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" value="{{ old('controles_analiticos.0.porcentaje_error', $control0['porcentaje_error'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" value="{{ old('controles_analiticos.0.aceptabilidad_error', $control0['aceptabilidad_error'] ?? '') }}" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" value="{{ old('controles_analiticos.0.porcentaje_recuperacion', $control0['porcentaje_recuperacion'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" value="{{ old('controles_analiticos.0.aceptabilidad_recuperacion', $control0['aceptabilidad_recuperacion'] ?? '') }}" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" value="{{ old('controles_analiticos.0.porcentaje_dpr', $control0['porcentaje_dpr'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" value="{{ old('controles_analiticos.0.aceptabilidad_dpr', $control0['aceptabilidad_dpr'] ?? '') }}" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="{{ old('controles_analiticos.1.identificacion', $control1['identificacion'] ?? 'Estándar B') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]" value="{{ old('controles_analiticos.1.valor_esperado', $control1['valor_esperado'] ?? '') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]" value="{{ old('controles_analiticos.1.valor_leido', $control1['valor_leido'] ?? '') }}"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" value="{{ old('controles_analiticos.1.porcentaje_error', $control1['porcentaje_error'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" value="{{ old('controles_analiticos.1.aceptabilidad_error', $control1['aceptabilidad_error'] ?? '') }}" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" value="{{ old('controles_analiticos.1.porcentaje_recuperacion', $control1['porcentaje_recuperacion'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" value="{{ old('controles_analiticos.1.aceptabilidad_recuperacion', $control1['aceptabilidad_recuperacion'] ?? '') }}" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" value="{{ old('controles_analiticos.1.porcentaje_dpr', $control1['porcentaje_dpr'] ?? '') }}" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" value="{{ old('controles_analiticos.1.aceptabilidad_dpr', $control1['aceptabilidad_dpr'] ?? '') }}" readonly></td>
+                                            </tr>
+                                        @else
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][identificacion]" value="Estándar A"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_error]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_recuperacion]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[0][porcentaje_dpr]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[0][aceptabilidad_dpr]" readonly></td>
+                                            </tr>
+                                            <tr>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][identificacion]" value="Estándar B"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_esperado]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][valor_leido]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_error]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_error]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_recuperacion]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_recuperacion]" readonly></td>
+                                                <td><input type="number" step="any" class="form-control" name="controles_analiticos[1][porcentaje_dpr]" readonly></td>
+                                                <td><input type="text" class="form-control" name="controles_analiticos[1][aceptabilidad_dpr]" readonly></td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -175,18 +229,18 @@
                                 <tr>
                                     <td rowspan="2">Curva de calibración</td>
                                     <td rowspan="2"><input type="number" class="form-control" value="0.995" readonly></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido"></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_error_porcentaje" id="curva_error_porcentaje" readonly></td>
-                                    <td rowspan="2"><input type="text" class="form-control" name="curva_error_aceptabilidad" id="curva_error_aceptabilidad" readonly></td>
+                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_valor_leido" id="curva_valor_leido" value="{{ old('curva_valor_leido', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->curva_valor_leido : '') }}"></td>
+                                    <td rowspan="2"><input type="number" step="any" class="form-control" name="curva_error_porcentaje" id="curva_error_porcentaje" value="{{ old('curva_error_porcentaje', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->curva_error_porcentaje : '') }}" readonly></td>
+                                    <td rowspan="2"><input type="text" class="form-control" name="curva_aceptabilidad" id="curva_aceptabilidad" value="{{ old('curva_aceptabilidad', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->curva_aceptabilidad : '') }}" readonly></td>
                                     <td colspan="2" rowspan="2"></td>
                                     <td>Duplicado A</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a"></td>
-                                    <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" readonly></td>
-                                    <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" readonly></td>
+                                    <td><input type="number" step="any" class="form-control" id="duplicado_a" name="duplicado_a" value="{{ old('duplicado_a', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->dpr_duplicado_a : '') }}"></td>
+                                    <td rowspan="2"><input type="number" step="any" class="form-control" id="dpr_resultado" name="dpr_resultado" value="{{ old('dpr_resultado', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->dpr_resultado : '') }}" readonly></td>
+                                    <td rowspan="2"><input type="text" class="form-control" id="dpr_aceptabilidad" name="dpr_aceptabilidad" value="{{ old('dpr_aceptabilidad', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->dpr_aceptabilidad : '') }}" readonly></td>
                                 </tr>
                                 <tr>
                                     <td>Duplicado B</td>
-                                    <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b"></td>
+                                    <td><input type="number" step="any" class="form-control" id="duplicado_b" name="duplicado_b" value="{{ old('duplicado_b', isset($analysis) && $analysis->analyticalControl ? $analysis->analyticalControl->dpr_duplicado_b : '') }}"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -222,20 +276,35 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($pendingProcesses as $index => $process)
+                                    @if($analysis->review_status === 'rejected')
                                         <tr>
-                                            <td>{{ $process->process_id }}</td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][azufre_disponible_mg_l]"></td>
-                                            <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][azufre_disponible_mg_kg]" readonly></td>
-                                            <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]"></td>
+                                            <td>{{ $analysis->process_id }}</td>
+                                            <td><input type="text" class="form-control" name="internal_code" value="{{ old('internal_code', $analysis->internal_code) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="sample_weight" value="{{ old('sample_weight', $analysis->sample_weight) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="pw" value="{{ old('pw', $analysis->pw) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="extractant_volume" value="{{ old('extractant_volume', $analysis->extractant_volume) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="blank_reading" value="{{ old('blank_reading', $analysis->blank_reading) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="dilution_factor" value="{{ old('dilution_factor', $analysis->dilution_factor) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="available_sulfur_mg_l" value="{{ old('available_sulfur_mg_l', $analysis->available_sulfur_mg_l) }}"></td>
+                                            <td><input type="number" step="any" class="form-control" name="available_sulfur_mg_kg" value="{{ old('available_sulfur_mg_kg', $analysis->available_sulfur_mg_kg) }}" readonly></td>
+                                            <td><input type="text" class="form-control" name="item_observations" value="{{ old('item_observations', $analysis->item_observations) }}"></td>
                                         </tr>
-                                    @endforeach
+                                    @else
+                                        @foreach ($pendingProcesses as $index => $process)
+                                            <tr>
+                                                <td>{{ $process->process_id }}</td>
+                                                <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][lectura_blanco]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][factor_dilucion]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][azufre_disponible_mg_l]"></td>
+                                                <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][azufre_disponible_mg_kg]" readonly></td>
+                                                <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][observaciones_item]"></td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
                                 </tbody>
                             </table>
                             </div>
@@ -243,7 +312,13 @@
                         </div>
                         <!-- End of Tab Content -->
 
-                        <button type="submit" class="btn btn-primary">Guardar Análisis de Azufre (Lote)</button>
+                        <button type="submit" class="btn btn-primary">
+                            @if($analysis->review_status === 'rejected')
+                                Actualizar y Enviar para Revisión
+                            @else
+                                Guardar Análisis de Azufre (Lote)
+                            @endif
+                        </button>
                 </form>
             @endif
         </div>
@@ -290,21 +365,61 @@
         font-size: 14px;
     }
 }
+
+/* Ensure tab content is visible when active */
+.tab-pane.show.active {
+    display: block !important;
+}
+
+.tab-pane:not(.show):not(.active) {
+    display: none !important;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
     $(document).ready(function() {
+        console.log('Document ready iniciado');
+        
+        // Manejo general de errores para evitar que el JavaScript se rompa
+        window.addEventListener('error', function(e) {
+            console.log('Error capturado:', e.error);
+            return false;
+        });
         // Cálculo automático de Azufre disponible (mg/kg)
         function calcularAzufreEnsayo() {
             $('#items_ensayo_table tbody tr').each(function() {
-                const azufreMgL = parseFloat($(this).find('input[name$="[azufre_disponible_mg_l]"]').val().replace(',', '.')) || 0;
-                const pesoMuestra = parseFloat($(this).find('input[name$="[peso_muestra]"]').val().replace(',', '.')) || 0;
-                const vExtractante = parseFloat($(this).find('input[name$="[v_extractante]"]').val().replace(',', '.')) || 0;
-                const factorDilucion = parseFloat($(this).find('input[name$="[factor_dilucion]"]').val().replace(',', '.')) || 0;
-                const pw = parseFloat($(this).find('input[name$="[pw]"]').val().replace(',', '.')) || 0;
-                const lecturaBlanco = parseFloat($(this).find('input[name$="[lectura_blanco]"]').val().replace(',', '.')) || 0;
+                // Verificar si estamos en modo de análisis rechazado (campos individuales) o modo batch (arrays)
+                let azufreMgL, pesoMuestra, vExtractante, factorDilucion, pw, lecturaBlanco, azufreMgKgField;
+                
+                // Intentar obtener valores del modo batch (arrays)
+                azufreMgL = $(this).find('input[name$="[azufre_disponible_mg_l]"]').val();
+                pesoMuestra = $(this).find('input[name$="[peso_muestra]"]').val();
+                vExtractante = $(this).find('input[name$="[v_extractante]"]').val();
+                factorDilucion = $(this).find('input[name$="[factor_dilucion]"]').val();
+                pw = $(this).find('input[name$="[pw]"]').val();
+                lecturaBlanco = $(this).find('input[name$="[lectura_blanco]"]').val();
+                azufreMgKgField = $(this).find('input[name$="[azufre_disponible_mg_kg]"]');
+                
+                // Si no encontramos campos de array, intentar campos individuales (modo rechazado)
+                if (azufreMgL === undefined || azufreMgL === '') {
+                    azufreMgL = $(this).find('input[name="available_sulfur_mg_l"]').val();
+                    pesoMuestra = $(this).find('input[name="sample_weight"]').val();
+                    vExtractante = $(this).find('input[name="extractant_volume"]').val();
+                    factorDilucion = $(this).find('input[name="dilution_factor"]').val();
+                    pw = $(this).find('input[name="pw"]').val();
+                    lecturaBlanco = $(this).find('input[name="blank_reading"]').val();
+                    azufreMgKgField = $(this).find('input[name="available_sulfur_mg_kg"]');
+                }
+                
+                // Convertir valores a números, manejando valores undefined o vacíos
+                azufreMgL = parseFloat((azufreMgL || '0').toString().replace(',', '.')) || 0;
+                pesoMuestra = parseFloat((pesoMuestra || '0').toString().replace(',', '.')) || 0;
+                vExtractante = parseFloat((vExtractante || '0').toString().replace(',', '.')) || 0;
+                factorDilucion = parseFloat((factorDilucion || '0').toString().replace(',', '.')) || 0;
+                pw = parseFloat((pw || '0').toString().replace(',', '.')) || 0;
+                lecturaBlanco = parseFloat((lecturaBlanco || '0').toString().replace(',', '.')) || 0;
                 
                 let azufreMgKg = "";
                 if (azufreMgL === 0) {
@@ -313,11 +428,27 @@
                     // Fórmula corregida según Excel: ((Azufre disponible (mg/L) × Factor de dilución) - Lectura Blanco) × V. Extractante / Peso muestra × (100 + pW) / 100
                     azufreMgKg = ((azufreMgL * factorDilucion) - lecturaBlanco) * vExtractante / pesoMuestra * (100 + pw) / 100;
                 }
-                $(this).find('input[name$="[azufre_disponible_mg_kg]"]').val(azufreMgKg === "" ? '' : azufreMgKg.toFixed(2));
+                
+                if (azufreMgKgField.length > 0) {
+                    azufreMgKgField.val(azufreMgKg === "" ? '' : azufreMgKg.toFixed(2));
+                }
             });
         }
-        $(document).on('input', '#items_ensayo_table input', calcularAzufreEnsayo);
-        calcularAzufreEnsayo();
+        // Manejo seguro de eventos para evitar errores
+        $(document).on('input', '#items_ensayo_table input', function() {
+            try {
+                calcularAzufreEnsayo();
+            } catch (error) {
+                console.log('Error en cálculo de azufre:', error);
+            }
+        });
+        
+        // Ejecutar cálculo inicial de forma segura
+        try {
+            calcularAzufreEnsayo();
+        } catch (error) {
+            console.log('Error en cálculo inicial de azufre:', error);
+        }
 
         // Cálculos automáticos para controles analíticos (exactamente dos filas)
         function calcularControlesAnaliticos() {
@@ -361,8 +492,19 @@
             row0.find('input[name$="[aceptabilidad_dpr]"]').val(aceptabilidadDpr);
             row1.find('input[name$="[aceptabilidad_dpr]"]').val(aceptabilidadDpr);
         }
-        $(document).on('input', '#controles_analiticos_table input', calcularControlesAnaliticos);
-        calcularControlesAnaliticos();
+        $(document).on('input', '#controles_analiticos_table input', function() {
+            try {
+                calcularControlesAnaliticos();
+            } catch (error) {
+                console.log('Error en cálculo de controles analíticos:', error);
+            }
+        });
+        
+        try {
+            calcularControlesAnaliticos();
+        } catch (error) {
+            console.log('Error en cálculo inicial de controles analíticos:', error);
+        }
 
         // Cálculo automático de % DPR y aceptabilidad para duplicados (curva)
         function calcularDPR() {
@@ -378,8 +520,19 @@
             $('#dpr_resultado').val(dpr.toFixed(2));
             $('#dpr_aceptabilidad').val(aceptabilidad);
         }
-        $(document).on('input', '#duplicado_a, #duplicado_b', calcularDPR);
-        calcularDPR();
+        $(document).on('input', '#duplicado_a, #duplicado_b', function() {
+            try {
+                calcularDPR();
+            } catch (error) {
+                console.log('Error en cálculo de DPR:', error);
+            }
+        });
+        
+        try {
+            calcularDPR();
+        } catch (error) {
+            console.log('Error en cálculo inicial de DPR:', error);
+        }
 
         // Cálculo automático de % ERROR para curva de calibración
                 function calcularErrorCurva() {
@@ -394,26 +547,57 @@
             }
 
             $('#curva_error_porcentaje').val(errorPorcentaje.toFixed(2));
-            $('#curva_error_aceptabilidad').val(aceptabilidad);
+            $('#curva_aceptabilidad').val(aceptabilidad);
         }
-        $(document).on('input', '#curva_valor_leido', calcularErrorCurva);
-        calcularErrorCurva();
+        $(document).on('input', '#curva_valor_leido', function() {
+            try {
+                calcularErrorCurva();
+            } catch (error) {
+                console.log('Error en cálculo de error de curva:', error);
+            }
+        });
+        
+        try {
+            calcularErrorCurva();
+        } catch (error) {
+            console.log('Error en cálculo inicial de error de curva:', error);
+        }
 
-        // Tab switching functionality
-        $('#analysisTabs .nav-link').on('click', function(e) {
+        // Simple and reliable tab switching
+        $('#analysisTabs .nav-link').off('click').on('click', function(e) {
             e.preventDefault();
             
-            // Remove active class from all tabs and content
-            $('#analysisTabs .nav-link').removeClass('active');
-            $('.tab-pane').removeClass('show active');
+            var targetId = $(this).attr('data-bs-target');
+            console.log('Tab clicked:', $(this).attr('id'), 'Target:', targetId);
             
-            // Add active class to clicked tab
-            $(this).addClass('active');
-            
-            // Show corresponding content
-            var target = $(this).data('bs-target');
-            $(target).addClass('show active');
+            if (targetId) {
+                // Hide all tab content
+                $('.tab-pane').removeClass('show active');
+                
+                // Remove active class from all tabs
+                $('#analysisTabs .nav-link').removeClass('active');
+                
+                // Show the target content
+                $(targetId).addClass('show active');
+                
+                // Add active class to clicked tab
+                $(this).addClass('active');
+                
+                console.log('Tab switched to:', targetId);
+            }
         });
+        
+        // Test tab functionality on page load
+        console.log('Testing tab elements:');
+        console.log('Controls tab exists:', $('#controls-tab').length > 0);
+        console.log('Items tab exists:', $('#items-tab').length > 0);
+        console.log('Controls content exists:', $('#controls-content').length > 0);
+        console.log('Items content exists:', $('#items-content').length > 0);
+        
+        // Add a test button to manually switch tabs
+        if ($('#items-content').length > 0) {
+            console.log('Items content is available');
+        }
     });
 </script>
 @endpush
