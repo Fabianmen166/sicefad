@@ -478,6 +478,235 @@ class ReviewController extends Controller
     }
 
     /**
+     * Historial de consecutivos (solo lectura): muestra todos los análisis realizados (completados)
+     * sin filtrar por estado de revisión, reutilizando la misma presentación de consecutivos.
+     */
+    public function history(Request $request)
+    {
+        try {
+            // PH y Conductividad: análisis hijos con relación analysis(status completed)
+            $phAnalyses = PhAnalysis::with(['analysis.process.quote.customer','analysis.service','user'])
+                ->whereHas('analysis', function($q){ $q->where('status', 'completed'); });
+
+            $conductivityAnalyses = ConductivityAnalysis::with(['analysis.process.quote.customer','analysis.service','user'])
+                ->whereHas('analysis', function($q){ $q->where('status', 'completed'); });
+
+            // Humedad: requiere detalle de proceso completado
+            $humidityAnalyses = HumidityAnalysis::with(['process.quote.customer','user'])
+                ->whereExists(function($sub){
+                    $sub->selectRaw('1')
+                        ->from('service_process_details as spd')
+                        ->whereColumn('spd.process_id', 'humidity_analyses.process_id')
+                        ->where('spd.status', 'completed');
+                });
+
+            // Fósforo: por ítem, requiere detalle completado
+            $phosphorusAnalyses = PhosphorusAnalysis::with(['process.quote.customer','service'])
+                ->whereExists(function($sub){
+                    $sub->selectRaw('1')
+                        ->from('service_process_details as spd')
+                        ->whereColumn('spd.process_id', 'phosphorus_analyses.process_id')
+                        ->whereColumn('spd.service_id', 'phosphorus_analyses.service_id')
+                        ->where('spd.status', 'completed');
+                });
+
+            // Textura: filtrar por SPD completado
+            $textureAnalyses = \Modules\LSCEFA\Entities\BatchTextureAnalysis::with(['analyticalControls'])
+                ->whereNotNull('process_id')
+                ->whereNotNull('service_id')
+                ->get()
+                ->filter(function($item){
+                    $spd = ServiceProcessDetail::where('process_id', $item->process_id)
+                        ->where('service_id', $item->service_id)
+                        ->first();
+                    return $spd && $spd->status === 'completed';
+                });
+
+            // Boro: proceso con SPD completado
+            $boronAnalyses = BoronAnalysisDetail::with(['process.quote.customer','service'])
+                ->whereHas('process.serviceProcessDetails', function($q){ $q->where('status','completed'); });
+
+            // Micronutrientes: hijo con analysis(status completed)
+            $micronutrientsAnalyses = MicronutrientsAnalysis::with(['analysis.process.quote.customer','analysis.service','user'])
+                ->whereHas('analysis', function($q){ $q->where('status','completed'); });
+
+            // Catiónico: SPD del servicio correspondiente completado
+            $cationicAnalyses = CationicAnalysis::with(['process.quote.customer','analyticalControl'])
+                ->whereHas('process.serviceProcessDetails', function($q){
+                    $q->where('service_id', 11)->where('status','completed');
+                });
+
+            // Azufre: SPD del servicio correspondiente completado
+            $sulfurAnalyses = SulfurAnalysis::with(['process.quote.customer','analyticalControl'])
+                ->whereHas('process.serviceProcessDetails', function($q){
+                    $q->where('service_id', 6)->where('status','completed');
+                });
+
+            // Búsqueda general (q)
+            if ($request->filled('q')) {
+                $search = trim($request->get('q'));
+                $searchCallback = function($query) use ($search) {
+                    $query->where('consecutivo_no', 'like', "%{$search}%")
+                          ->orWhereHas('analysis.process.quote.customer', function($q) use ($search) {
+                              $q->where('applicant', 'like', "%{$search}%");
+                          });
+                };
+                $phAnalyses->where($searchCallback);
+                $conductivityAnalyses->where($searchCallback);
+                $humidityAnalyses->where(function($q) use ($search){
+                    $q->where('consecutivo_no', 'like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){ $qq->where('applicant','like', "%{$search}%"); });
+                });
+                $phosphorusAnalyses->where(function($q) use ($search){
+                    $q->where(function($qq) use ($search){
+                        $qq->where('consecutive_no', 'like', "%{$search}%")
+                           ->orWhere('consecutivo_no', 'like', "%{$search}%");
+                    })
+                    ->orWhere(function($qq) use ($search){
+                        $qq->where('codigo_interno', 'like', "%{$search}%")
+                           ->orWhere('internal_code', 'like', "%{$search}%");
+                    })
+                    ->orWhereExists(function($sub) use ($search){
+                        $sub->selectRaw('1')->from('service_process_details as spd')
+                            ->whereColumn('spd.process_id','phosphorus_analyses.process_id')
+                            ->whereColumn('spd.service_id','phosphorus_analyses.service_id')
+                            ->where('spd.consecutivo_no','like', "%{$search}%");
+                    })
+                    ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                        $qq->where('applicant','like', "%{$search}%")
+                           ->orWhere('nombre','like', "%{$search}%")
+                           ->orWhere('name','like', "%{$search}%");
+                    });
+                });
+                $boronAnalyses->where(function($q) use ($search){
+                    $q->where('consecutive_no','like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){ $qq->where('applicant','like', "%{$search}%"); });
+                });
+                $micronutrientsAnalyses->where(function($q) use ($search){
+                    $q->where('consecutivo_no','like', "%{$search}%")
+                      ->orWhereHas('analysis.process.quote.customer', function($qq) use ($search){ $qq->where('applicant','like', "%{$search}%"); });
+                });
+                $cationicAnalyses->where(function($q) use ($search){
+                    $q->where('consecutivo_no','like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){
+                          $qq->where('applicant','like', "%{$search}%")
+                             ->orWhere('nombre','like', "%{$search}%")
+                             ->orWhere('name','like', "%{$search}%");
+                      });
+                });
+                $sulfurAnalyses->where(function($q) use ($search){
+                    $q->where('consecutive_no','like', "%{$search}%")
+                      ->orWhere('internal_code','like', "%{$search}%")
+                      ->orWhere('process_id','like', "%{$search}%")
+                      ->orWhereHas('process.quote.customer', function($qq) use ($search){ $qq->where('applicant','like', "%{$search}%"); });
+                });
+            }
+
+            // Filtro por muestra (codigo_probeta / internos)
+            if ($request->filled('muestra') && trim($request->get('muestra')) !== '') {
+                $muestra = trim($request->get('muestra'));
+                $muestraCallback = function($query) use ($muestra) { $query->where('codigo_probeta', 'like', "%{$muestra}%"); };
+                $phAnalyses->where($muestraCallback);
+                $conductivityAnalyses->where($muestraCallback);
+                if (Schema::hasColumn('humidity_analyses', 'codigo_interno')) {
+                    $humidityAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                }
+                $phosphorusAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                $boronAnalyses->where('codigo_interno', 'like', "%{$muestra}%");
+                $micronutrientsAnalyses->whereRaw('JSON_SEARCH(items_ensayo, "one", ?, null, "$[*].codigo_interno")', ["%{$muestra}%"]);
+                $cationicAnalyses->where('consecutivo_no', 'like', "%{$muestra}%");
+                $sulfurAnalyses->where(function($q) use ($muestra){
+                    $q->where('internal_code','like', "%{$muestra}%")
+                      ->orWhere('consecutive_no','like', "%{$muestra}%")
+                      ->orWhere('process_id','like', "%{$muestra}%");
+                });
+            }
+
+            // Filtro por tipo
+            $typeFilter = $request->get('type');
+            if ($typeFilter && $typeFilter !== 'all' && trim($typeFilter) !== '') {
+                $validTypes = ['ph','conductivity','humidity','phosphorus','texture','boron','micronutrients','cationic','sulfur'];
+                if (in_array($typeFilter, $validTypes, true)) {
+                    if ($typeFilter !== 'ph') { $phAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'conductivity') { $conductivityAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'humidity') { $humidityAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'phosphorus') { $phosphorusAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'texture') { $textureAnalyses = collect(); }
+                    if ($typeFilter !== 'boron') { $boronAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'micronutrients') { $micronutrientsAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'cationic') { $cationicAnalyses->whereRaw('1=0'); }
+                    if ($typeFilter !== 'sulfur') { $sulfurAnalyses->whereRaw('1=0'); }
+                }
+            }
+
+            // Transformar
+            $phResults = $phAnalyses->get()->map(fn($item) => $this->transformAnalysis($item, 'ph'));
+            $conductivityResults = $conductivityAnalyses->get()->map(fn($item) => $this->transformAnalysis($item, 'conductivity'));
+            $humidityResults = $humidityAnalyses->get()->map(fn($item) => $this->transformAnalysis($item, 'humidity'));
+            $phosphorusResults = $phosphorusAnalyses->get()->map(fn($item) => $this->transformAnalysis($item, 'phosphorus'));
+            $textureResults = $textureAnalyses->map(fn($item) => $this->transformTextureAnalysis($item, 'texture'));
+            $boronResults = $boronAnalyses->get()->map(fn($item) => $this->transformBoronAnalysis($item, 'boron'));
+            $micronutrientsResults = $micronutrientsAnalyses->get()->map(fn($item) => $this->transformMicronutrientsAnalysis($item, 'micronutrients'));
+            $cationicResults = $cationicAnalyses->get()->map(fn($item) => $this->transformCationicAnalysis($item, 'cationic'));
+            $sulfurResults = $sulfurAnalyses->get()->map(fn($item) => $this->transformSulfurAnalysis($item, 'sulfur'));
+
+            // Combinar y agrupar
+            $allResults = $phResults
+                ->concat($conductivityResults)
+                ->concat($humidityResults)
+                ->concat($phosphorusResults)
+                ->concat($textureResults)
+                ->concat($boronResults)
+                ->concat($micronutrientsResults)
+                ->concat($cationicResults)
+                ->concat($sulfurResults);
+
+            $groupedResults = $allResults->groupBy(function($item){
+                if ($item->type === 'humidity') {
+                    return 'humidity_' . $item->service_id . '_' . $item->analysis_id;
+                }
+                return $item->consecutivo_no;
+            })->map(function($group){
+                $first = $group->first();
+                if ($group->count() === 1) {
+                    $first->analysis_count = 1;
+                    $first->analysis_types = [$first->type];
+                    $first->items_ensayo = is_array($first->items_ensayo) ? $first->items_ensayo : [];
+                    return $first;
+                }
+                $first->items_ensayo = $group->flatMap(fn($item) => is_array($item->items_ensayo) ? $item->items_ensayo : [])->toArray();
+                $first->analysis_count = $group->count();
+                $first->analysis_types = $group->pluck('type')->unique()->toArray();
+                if ($first->type === 'humidity') {
+                    $first->consecutivo_no = $group->first()->consecutivo_no . ' (+' . ($group->count() - 1) . ' más)';
+                }
+                return $first;
+            });
+
+            // Ordenar y paginar
+            $sortedResults = $groupedResults->sortByDesc(fn($item) => $item->created_at);
+            $perPage = 10;
+            $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
+            $currentPageResults = $sortedResults->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $analyses = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentPageResults,
+                $sortedResults->count(),
+                $perPage,
+                $currentPage,
+                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+            );
+
+            return view('lscefa::reviews.history', [
+                'allAnalyses' => $analyses,
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Error en ReviewController@history: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error al cargar el historial. Detalle: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Prepara datos para vista de Fósforo (analytical controls, consecutivo, etc.)
      */
     protected function preparePhosphorusData($analysis): array
@@ -1662,19 +1891,37 @@ class ReviewController extends Controller
                 }
         }
         
-        // Determinar qué vista usar según el tipo de análisis
-        $view = match($type) {
-            'ph' => 'lscefa::reviews.ph_review',
-            'conductivity' => 'lscefa::reviews.conductivity_show',
+        // Si el tipo resuelto es fósforo, redirigir a la vista de procesamiento por lotes
+            if ($type === 'phosphorus') {
+                try {
+                    // Usar siempre el identificador de proceso en formato string (e.g. PRC-123...), no el id numérico
+                    $procId = $analysis->process_id ?? ($process->process_id ?? null);
+                    $itemCode = $analysis->internal_code ?? ($analysis->codigo_interno ?? null);
+                    if ($procId) {
+                        // Redirigir a la ruta de procesamiento por lotes con el proceso seleccionado y, si existe, el código de ítem
+                        return redirect()->route('lscefa.technical.analyses.phosphorus.batch', array_filter([
+                            'processes' => $procId,
+                            'item_code' => $itemCode,
+                        ], function ($v) { return $v !== null && $v !== ''; }));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Redirect phosphorus to batch failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Determinar qué vista usar según el tipo de análisis
+            $view = match($type) {
+                'ph' => 'lscefa::reviews.ph_review',
+                'conductivity' => 'lscefa::reviews.conductivity_show',
                 'humidity' => 'lscefa::reviews.humidity_show',
-            'phosphorus' => 'lscefa::reviews.phosphorus_review',
-            'texture' => 'lscefa::reviews.texture_readonly',
-            'boron' => 'lscefa::reviews.boron_readonly',
-            'micronutrients' => 'lscefa::reviews.micronutrients_readonly',
-            'cationic' => 'lscefa::reviews.cationic_readonly',
-            'sulfur' => 'lscefa::reviews.sulfur_readonly',
-            default => 'lscefa::reviews.ph_review'
-        };
+                'phosphorus' => 'lscefa::reviews.phosphorus_review',
+                'texture' => 'lscefa::reviews.texture_readonly',
+                'boron' => 'lscefa::reviews.boron_readonly',
+                'micronutrients' => 'lscefa::reviews.micronutrients_readonly',
+                'cationic' => 'lscefa::reviews.cationic_readonly',
+                'sulfur' => 'lscefa::reviews.sulfur_readonly',
+                default => 'lscefa::reviews.ph_review'
+            };
         
             // Preparar datos específicos según el tipo de análisis
             $viewData = [

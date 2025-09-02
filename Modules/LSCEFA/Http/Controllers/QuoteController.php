@@ -608,29 +608,8 @@ class QuoteController extends Controller
 
     public function processesIndex($quote_id)
     {
-        $quote = Quote::with(['processes'])->findOrFail($quote_id);
-        $processes = $quote->processes;
-        return view('lscefa::quotes.processes_index', compact('quote', 'processes'));
-    }
-
-    public function allProcessesIndex(Request $request)
-    {
-        $user = auth()->user();
-        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
-            abort(403, 'No tienes permisos para ver el listado global de procesos.');
-        }
-        $processes = \Modules\LSCEFA\Models\Process::with('quote')->orderBy('created_at', 'desc')->paginate(20);
-        return view('lscefa::quotes.processes_global', compact('processes'));
-    }
-
-    public function processShow($process_id)
-    {
-        $user = auth()->user();
-        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
-            abort(403, 'No tienes permisos para ver el detalle del proceso.');
-        }
-        $process = Process::with('quote')->findOrFail($process_id);
-        return view('lscefa::quotes.process_show', compact('process'));
+        // Mantener redirección a la lista global de procesos
+        return redirect()->route('lscefa.quality.processes.index');
     }
 
     public function destroyProcess($process_id)
@@ -642,5 +621,21 @@ class QuoteController extends Controller
         $process = Process::findOrFail($process_id);
         $process->delete();
         return redirect()->route('lscefa.quality.processes.index')->with('success', 'Proceso eliminado correctamente.');
+    }
+
+    public function allProcessesIndex(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->havePermission('lscefa.quality.processes.index') && !$user->havePermission('lscefa.admin.processes.index'))) {
+            abort(403, 'No tienes permisos para ver el listado global de procesos.');
+        }
+        // Solo procesos con al menos un servicio pendiente
+        $processes = Process::with('quote')
+            ->whereHas('serviceProcessDetails', function($q){
+                $q->where('status', 'pending');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        return view('lscefa::quotes.processes_global', compact('processes'));
     }
 }

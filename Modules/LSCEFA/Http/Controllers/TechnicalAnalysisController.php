@@ -24,6 +24,10 @@ class TechnicalAnalysisController extends Controller
                     $q->with(['service', 'phAnalysis', 'conductivityAnalysis', 'batchTextureAnalysis']);
                 }
             ])
+            // Mostrar únicamente procesos que tengan al menos un servicio pendiente
+            ->whereHas('serviceProcessDetails', function($q){
+                $q->where('status', 'pending');
+            })
             ->orderBy('reception_date', 'desc')
             ->paginate(20);
 

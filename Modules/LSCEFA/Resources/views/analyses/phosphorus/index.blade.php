@@ -57,7 +57,6 @@
                                     <th>ID Proceso</th>
                                     <th>Servicio</th>
                                     <th>Estado</th>
-                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -75,16 +74,10 @@
                                             <td>{{ $process->process_id }}</td>
                                             <td>{{ $phosphorusService->service->descripcion ?? 'Análisis de Fósforo' }}</td>
                                             <td><span class="badge badge-warning">Pendiente</span></td>
-                                            <td>
-                                                <a href="{{ route('lscefa.technical.analyses.phosphorus.process', ['processId' => $process->process_id, 'serviceId' => $phosphorusService->service_id]) }}"
-                                                   class="btn btn-primary btn-sm">
-                                                    Procesar Análisis
-                                                </a>
-                                            </td>
                                         </tr>
                                     @endif
                                 @empty
-                                    <tr><td colspan="5" class="text-center">No hay análisis pendientes</td></tr>
+                                    <tr><td colspan="4" class="text-center">No hay análisis pendientes</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
