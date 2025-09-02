@@ -25,6 +25,7 @@ class ReportsController extends Controller
     {
         $itemFilter = trim((string) $request->query('item', ''));
 
+        // Solo listar procesos que aún tengan al menos un servicio pendiente
         $query = Process::with([
                 'serviceProcessDetails' => function ($q) {
                     $q->with('service');
@@ -33,37 +34,8 @@ class ReportsController extends Controller
                 'quote.customer',
                 'customer',
             ])
-            ->where(function($q) {
-                $q->whereIn('status', ['pending', 'processing', 'in_progress'])
-                  ->orWhereHas('serviceProcessDetails', function($subQ) {
-                      $subQ->where('status', 'approved')
-                           ->whereHas('service', function($serviceQ) {
-                               $serviceQ->where(function($serviceSubQ) {
-                                   $serviceSubQ->whereRaw('LOWER(descripcion) LIKE ?', ['%textura%'])
-                                           ->orWhereRaw('LOWER(descripcion) LIKE ?', ['%texture%']);
-                               });
-                           });
-                  });
-
-                // Solo agregar condición de boro si la columna review_status existe
-                if (Schema::hasColumn('boron_analysis_details', 'review_status')) {
-                    $q->orWhereExists(function($existsQ) {
-                        $existsQ->select(DB::raw(1))
-                            ->from('boron_analysis_details')
-                            ->whereColumn('boron_analysis_details.process_id', 'processes.process_id')
-                            ->where('boron_analysis_details.review_status', 'approved');
-                    });
-                }
-
-                // Solo agregar condición de intercambio catiónico si la columna review_status existe
-                if (Schema::hasColumn('cationic_analyses', 'review_status')) {
-                    $q->orWhereExists(function($existsQ) {
-                        $existsQ->select(DB::raw(1))
-                            ->from('cationic_analyses')
-                            ->whereColumn('cationic_analyses.process_id', 'processes.process_id')
-                            ->where('cationic_analyses.review_status', 'approved');
-                    });
-                }
+            ->whereHas('serviceProcessDetails', function($q){
+                $q->where('status', 'pending');
             });
 
         if ($itemFilter !== '') {
@@ -489,6 +461,66 @@ class ReportsController extends Controller
                     'fecha_analisis' => $fechaAnalisis,
                     'tecnica' => 'Fotométrico',
                     'documento' => 'NTC 5350:2020 Bray II',
+                ];
+                continue;
+            }
+
+            // Textura
+            if (strpos($serviceNameNorm, 'textura') !== false || strpos($serviceNameNorm, 'texture') !== false) {
+                // Buscar fecha_analisis en tabla batch_texture_analyses por process_id y service_id
+                $fechaAnalisis = '';
+                try {
+                    $ta = \Modules\LSCEFA\Entities\BatchTextureAnalysis::where('process_id', $spd->process_id)
+                        ->where('service_id', $spd->service_id)
+                        ->latest('analysis_date')
+                        ->first();
+                    if ($ta && !empty($ta->analysis_date)) {
+                        $fechaAnalisis = $ta->analysis_date;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener fecha_analisis de textura para reporte (PDF)', [
+                        'process_id' => $spd->process_id,
+                        'service_id' => $spd->service_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Textura',
+                    'resultado' => $resultadoDisplay,
+                    'unidad' => 'Clase textural',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Hidrómetro de Bouyoucos',
+                    'documento' => 'NTC 5264:2023',
+                ];
+                continue;
+            }
+
+            // Humedad
+            if (strpos($serviceNameNorm, 'humedad') !== false || strpos($serviceNameNorm, 'humidity') !== false) {
+                // Buscar fecha_analisis en tabla humidity_analyses por process_id
+                $fechaAnalisis = '';
+                try {
+                    $ha = HumidityAnalysis::where('process_id', $spd->process_id)
+                        ->latest('fecha_analisis')
+                        ->first();
+                    if ($ha && !empty($ha->fecha_analisis)) {
+                        $fechaAnalisis = $ha->fecha_analisis;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('No se pudo obtener fecha_analisis de humedad para reporte (PDF)', [
+                        'process_id' => $spd->process_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                $rows[] = [
+                    'ensayo' => 'Determinación de Humedad',
+                    'resultado' => $resultadoDisplay,
+                    'unidad' => '%',
+                    'fecha_analisis' => $fechaAnalisis,
+                    'tecnica' => 'Gravimétrico por secado en estufa',
+                    'documento' => 'NTC 5264:2023',
                 ];
                 continue;
             }

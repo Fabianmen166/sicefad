@@ -201,6 +201,9 @@ Route::middleware(['lang'])->group(function(){
                 // Lista de análisis pendientes de revisión
                 Route::get('/', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'index'])
                     ->name('index');
+                // Historial de consecutivos (solo lectura)
+                Route::get('/history', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'history'])
+                    ->name('history');
                 
                 // Ver detalle de un análisis específico
                 Route::get('/{id}', [\Modules\LSCEFA\Http\Controllers\ReviewController::class, 'show'])

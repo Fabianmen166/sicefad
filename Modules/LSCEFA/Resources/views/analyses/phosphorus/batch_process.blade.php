@@ -224,7 +224,7 @@
                                             @foreach ($pendingProcesses as $index => $process)
                                                 <tr>
                                                     <td>{{ $process->process_id }}</td>
-                                                    <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]"></td>
+                                                    <td><input type="text" class="form-control" name="items_ensayo[{{$index}}][codigo_interno]" value="{{ old('items_ensayo.'.$index.'.codigo_interno', request('item_code')) }}"></td>
                                                     <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][peso_muestra]"></td>
                                                     <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][pw]"></td>
                                                     <td><input type="number" step="any" class="form-control" name="items_ensayo[{{$index}}][v_extractante]"></td>

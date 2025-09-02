@@ -33,29 +33,33 @@ class PhosphorusAnalysisController extends Controller
 
     public function process($processId, $serviceId)
     {
-        $process = Process::with(['serviceProcessDetails.service'])->findOrFail($processId);
-        $service = Service::findOrFail($serviceId);
-        
-        // Get pending items for this process and service
-        $pendingItems = [];
-        $serviceProcessDetail = $process->serviceProcessDetails()
-            ->where('service_id', $serviceId)
-            ->where('status', 'pending')
-            ->first();
+        // Unify workflow: redirect any single-process access to the batch form
+        try {
+            // Determine the external string process identifier (e.g., PRC-...)
+            $procId = null;
+            if (is_string($processId) && preg_match('/^PRC-/', (string)$processId)) {
+                $procId = (string)$processId;
+            } else {
+                $proc = Process::where('id', $processId)
+                    ->orWhere('process_id', (string)$processId)
+                    ->first();
+                $procId = $proc ? (string)$proc->process_id : (string)$processId;
+            }
 
-        if ($serviceProcessDetail) {
-            // For now, create a default item
-            $pendingItems[] = [
-                'identificacion' => 'Muestra 1',
-                'peso' => '',
-                'vol_naoh_muestra' => '',
-                'vol_naoh_blanco' => '',
-                'humedad' => '',
-                'valor_leido' => ''
-            ];
+            $params = ['processes' => $procId];
+            // Pass through optional item_code to prefill in batch form if present
+            if (request()->has('item_code')) {
+                $params['item_code'] = request()->get('item_code');
+            }
+
+            return redirect()->route('lscefa.technical.analyses.phosphorus.batch', $params);
+        } catch (\Throwable $e) {
+            Log::warning('Phosphorus process() redirect to batch failed: ' . $e->getMessage(), [
+                'processId' => $processId,
+                'serviceId' => $serviceId,
+            ]);
+            return redirect()->route('lscefa.technical.analyses.phosphorus.batch');
         }
-
-        return view('lscefa::analyses.phosphorus.process', compact('process', 'service', 'pendingItems'));
     }
 
     public function storePhosphorusAnalysis(Request $request)

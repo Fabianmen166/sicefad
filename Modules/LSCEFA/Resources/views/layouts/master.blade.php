@@ -301,7 +301,6 @@
                             </li>
                         @endif
 
-                        <!-- Menú de Administración - Solo visible para administradores -->
                         @if($isAdmin)
                             <li class="nav-item">
                                 <a href="{{ route('lscefa.admin.users.index') }}" class="nav-link {{ request()->routeIs('lscefa.admin.users.*') ? 'active' : '' }}">
@@ -313,6 +312,12 @@
                                 <a href="{{ route('lscefa.quality.reviews.index') }}" class="nav-link {{ request()->routeIs('lscefa.quality.reviews.*') ? 'active' : '' }}">
                                     <i class="nav-icon fas fa-clipboard-check"></i>
                                     <p>Revisiones</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('lscefa.quality.reviews.history') }}" class="nav-link {{ request()->routeIs('lscefa.quality.reviews.history') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-list"></i>
+                                    <p>Historial de Consecutivos</p>
                                 </a>
                             </li>
                             <li class="nav-item">

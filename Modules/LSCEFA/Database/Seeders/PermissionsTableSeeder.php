@@ -184,6 +184,15 @@ class PermissionsTableSeeder extends Seeder
         ]);
         $permissions_admin[] = $permission->id;
 
+        // Permiso para historial de consecutivos (vista de solo lectura)
+        $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.reviews.history'], [
+            'name' => 'Revisiones - Historial de consecutivos (Quality route name)',
+            'description' => 'Habilita acceso por nombre de ruta lscefa.quality.reviews.history',
+            'description_english' => 'Enable access by route name',
+            'app_id' => $app->id
+        ]);
+        $permissions_admin[] = $permission->id;
+
         // Permisos para la nueva sección de Reportes (solo Admin, usando nombres de ruta quality)
         $permission = Permission::updateOrCreate(['slug' => 'lscefa.quality.reports.index'], [
             'name' => 'Reportes - Listado (Admin)',
