@@ -16,7 +16,7 @@
                     <form action="{{ route('lscefa.technical.analyses.exchangeable_bases.batch_store') }}" method="POST" id="batchExchangeableBasesForm">
                         @csrf
                         
-                        <!-- Datos del Análisis (como en la imagen) -->
+                        <!-- Datos del Análisis -->
                         <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">Datos del Análisis</h3>
